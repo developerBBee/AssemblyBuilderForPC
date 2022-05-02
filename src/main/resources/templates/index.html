@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org"></html>
+  <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
+    <meta charset="UTF-8">
+    <title>自作PC構築支援</title>
+    <meta name="description" content="自作PC用のパーツの検索して、値段を調べるツール。価格.comの最安価格を参照しています。">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta property="og:site_name" content="このファン｜持ち物検査室">
+    <meta property="og:title" content="自作PC構築支援">
+    <meta property="og:description" content="自作PC用のパーツの検索し、値段を調べるツール。各パーツの値段と構成時の合計価格を算出します。">
+    <meta property="og:type" content="website">
+    <!--
+    <meta property="og:url" content="https://moria-tea.github.io/KonofanLabo/">
+    <meta property="og:image" content="https://moria-tea.github.io/KonofanLabo/img/sns/thumbnail.png">
+    -->
+
+    <!-- twitter -->
+    <!--
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@drei_seven">
+    <meta name="twitter:title" content="">
+    <meta property="twitter:description" content="">
+    <meta name="twitter:image" content="https://moria-tea.github.io/KonofanLabo/img/sns/thumbnail.png">
+    <link rel="icon" href="img/favicon/favicon.ico">
+    -->
+    <link rel="stylesheet" href="../static/styles.css"> <!-- for debug -->
+    <link rel="stylesheet" th:href="@{/styles.css}" >
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-194288517-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-194288517-1');
+    </script>
+    -->
+
+  </head>
+  <body>
+    <div id="viewport">
+      <h1><a href="">自作PC構築支援</a></h1>
+
+      <header>
+        <div class="menu">
+          <ul>
+            <li><a href="">全体構成</a></li>
+            <li><a href="">PCケース</a></li>
+            <li><a href="">マザーボード</a></li>
+            <li><a href="">電源</a></li>
+            <li><a href="">CPU</a></li>
+            <li><a href="">CPUクーラー</a></li>
+            <li><a href="">メモリ</a></li>
+            <li><a href="">ストレージ</a></li>
+            <li><a href="">グラフィックボード</a></li>
+            <li><a href="">OS</a></li>
+            <li><a href="">ディスプレイ</a></li>
+            <li><a href="">キーボード</a></li>
+            <li><a href="">マウス</a></li>
+            <li><a href="">メディアドライブ</a></li>
+            <li><a href="">サウンドカード</a></li>
+            <li><a href="">スピーカー</a></li>
+            <li><a href="">ファンコントローラー</a></li>
+            <li><a href="">ファン</a></li>
+          </ul>
+        </div>
+      </header>
+
+      <div class="items">
+        <table>
+          <thead>
+            <tr><th class="hidden">ID</th><th>商品名</th><th>商品画像</th>
+            <th width="100px">ソケットタイプ</th><th width="100px">価格</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="cpu :${cpuList}">
+              <td class="hidden" th:text="${cpu.id}"></td>
+              <td th:text="${cpu.name}"></td>
+              <td><img class="item-img" th:src="${cpu.imgUrl}"></td>
+              <td th:text="${cpu.type}"></td>
+              <td th:text="${cpu.value}"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

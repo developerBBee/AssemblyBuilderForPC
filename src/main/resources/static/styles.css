@@ -1,0 +1,101 @@
+html, body {
+  height: 98%;
+  margin: 0;
+  font-family:'Lucida Grande', 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', Meiryo, メイリオ, sans-serif;
+  font-size:10pt;
+}
+
+a {
+  text-decoration: none;
+}
+
+h1 a {
+  color: black;
+  
+}
+
+#viewport {
+  min-height: 100%;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+#viewport > header {
+  background: #1e3de9;
+  border-bottom: 1px solid #6174dd;
+  line-height: 35px;
+  font-size: 10pt;
+  width: 100%;
+  -webkit-box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+  -moz-box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+  -ms-box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+  -o-box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
+
+.menu ul {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.menu ul li {
+  list-style: none;
+  margin:0;
+  padding:0;
+  font-size:12px;
+  width: auto;
+  height: 35px;
+  line-height: 35px;
+  text-align:center;
+  font-weight:bold;
+}
+
+.menu ul li a {
+  color: #FFFFFF;
+  display: block;
+  padding: 0 10px 0 10px;
+  text-decoration: none;
+}
+
+.menu ul li:hover, .menu ul li a:hover {
+  background:#4e0189;/*ホバー時の親メニューの背景色*/
+  color:#fff;/*ホバー時の親メニューの文字色*/
+}
+
+.menu * {
+  -webkit-transition: 0.3s;
+  -moz-transition: 0.3s;
+  -ms-transition: 0.3s;
+  -o-transition: 0.3s;
+  transition: 0.3s;
+}
+
+.items {
+  margin: 5px;
+}
+
+.items .hidden {
+  display: none;
+}
+
+.items table {
+  border-spacing: 0px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
+.items th, .items td {
+  text-align: center;
+  border: 2px solid;
+  border-right: 0px;
+  border-bottom: 0px;
+}
+
+.items img.item-img {
+  width: auto;
+  height: 100px;
+}
