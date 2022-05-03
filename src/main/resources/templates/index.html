@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" xmlns:th="http://www.thymeleaf.org"></html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
   <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
     <meta charset="UTF-8">
     <title>自作PC構築支援</title>
@@ -47,24 +47,24 @@
       <header>
         <div class="menu">
           <ul>
-            <li><a href="">全体構成</a></li>
-            <li><a href="">PCケース</a></li>
-            <li><a href="">マザーボード</a></li>
-            <li><a href="">電源</a></li>
-            <li><a href="">CPU</a></li>
-            <li><a href="">CPUクーラー</a></li>
-            <li><a href="">メモリ</a></li>
-            <li><a href="">ストレージ</a></li>
-            <li><a href="">グラフィックボード</a></li>
-            <li><a href="">OS</a></li>
-            <li><a href="">ディスプレイ</a></li>
-            <li><a href="">キーボード</a></li>
-            <li><a href="">マウス</a></li>
-            <li><a href="">メディアドライブ</a></li>
-            <li><a href="">サウンドカード</a></li>
-            <li><a href="">スピーカー</a></li>
-            <li><a href="">ファンコントローラー</a></li>
-            <li><a href="">ファン</a></li>
+            <li><a href="/">全体構成</a></li>
+            <li><a href="/pccase">PCケース</a></li>
+            <li><a href="/motherboard">マザーボード</a></li>
+            <li><a href="/powersupply">電源</a></li>
+            <li><a href="/cpu">CPU</a></li>
+            <li><a href="/cpucooler">CPUクーラー</a></li>
+            <li><a href="/pcmemory">メモリ</a></li>
+            <li><a href="/storage">ストレージ</a></li>
+            <li><a href="/videocard">グラフィックボード</a></li>
+            <li><a href="/ossoft">OS</a></li>
+            <li><a href="/lcdmonitor">ディスプレイ</a></li>
+            <li><a href="/keyboard">キーボード</a></li>
+            <li><a href="/mouse">マウス</a></li>
+            <li><a href="/mediadrive">メディアドライブ</a></li>
+            <li><a href="/soundcard">サウンドカード</a></li>
+            <li><a href="/pcspeaker">スピーカー</a></li>
+            <li><a href="/fancontroller">ファンコントローラー</a></li>
+            <li><a href="/casefan">ファン</a></li>
           </ul>
         </div>
       </header>
@@ -73,15 +73,15 @@
         <table>
           <thead>
             <tr><th class="hidden">ID</th><th>商品名</th><th>商品画像</th>
-            <th width="100px">ソケットタイプ</th><th width="100px">価格</th></tr>
+            <th th:class="block" width="100px">ソケットタイプ</th><th width="100px">価格</th></tr>
           </thead>
           <tbody>
-            <tr th:each="cpu :${cpuList}">
-              <td class="hidden" th:text="${cpu.id}"></td>
-              <td th:text="${cpu.name}"></td>
-              <td><img class="item-img" th:src="${cpu.imgUrl}"></td>
-              <td th:text="${cpu.type}"></td>
-              <td th:text="${cpu.value}"></td>
+            <tr th:each="deviceInfo :${deviceInfoList}">
+              <td class="hidden" th:text="${deviceInfo.id}"></td>
+              <td th:text="${deviceInfo.name}"></td>
+              <td><img class="item-img" th:src="${deviceInfo.imgurl}"></td>
+              <td th:class="block" th:text="${deviceInfo.type}"></td>
+              <td id="priceYen" th:text="${deviceInfo.price}"></td>
             </tr>
           </tbody>
         </table>
