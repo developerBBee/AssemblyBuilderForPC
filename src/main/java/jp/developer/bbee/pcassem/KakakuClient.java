@@ -11,9 +11,11 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class KakakuClient {
+    public static final boolean DEBUG = false;
     public static final String DOMAIN = "kakaku.com";
     private final DeviceInfoDao dao;
 
+    public boolean unAcquired;
     private List<String> urlList;
     private List<String> devices;
     private Map<String, String> deviceUrl;
@@ -64,9 +66,10 @@ public class KakakuClient {
                 pw.println("GET " + deviceUrl.get(device) + " HTTP/1.1");
                 pw.println("Host: " + DOMAIN);
                 pw.println();
-                pw.flush(); // flush
+                pw.flush();
                 try {
                     List<String> linkColumns = bur.lines()
+                            .limit(DEBUG ? 500 : 10000)
                             .filter(s -> s.contains("rkgBoxLink"))
                             .map(s -> s.replaceAll("<a href=\"", ""))
                             .map(s -> s.replaceAll("\" class=.*", ""))
@@ -102,12 +105,14 @@ public class KakakuClient {
     Integer newPrice;
     Integer newRank;
     public void updateKakaku(boolean fastUpdate) throws IOException {
+        unAcquired = false; // Acquired link url
+
         for (String device : devices) {
             List<DeviceInfo> deviceInfoList = dao.findAll(device);
 
             SocketFactory factory = SSLSocketFactory.getDefault();
             for (DeviceInfo deviceInfo : deviceInfoList) {
-                if (fastUpdate &&
+                if ((fastUpdate || DEBUG) &&
                         !( "".equals(deviceInfo.name())
                         || "".equals(deviceInfo.imgurl())
                         || 0  == deviceInfo.price()
@@ -122,7 +127,7 @@ public class KakakuClient {
                     pw.println("GET " + deviceInfo.url() + " HTTP/1.1");
                     pw.println("Host: " + DOMAIN);
                     pw.println();
-                    pw.flush(); // flush
+                    pw.flush();
 
                     newName = "";
                     newImgUrl = "";
@@ -152,7 +157,8 @@ public class KakakuClient {
                             } else if (s.contains("ソケット形状：") && ("cpu".equals(device) || "motherboard".equals(device))) {
                                 newType = s.substring(s.indexOf("ソケット形状：") + "ソケット形状：".length(),
                                         s.contains("二次キャッシュ") ? s.indexOf("二次キャッシュ") - 1
-                                                        : s.indexOf("ソケット形状：") + "ソケット形状：".length() + 10);
+                                                : s.indexOf("ソケット形状：") + "ソケット形状：".length() + 10);
+                                newType = newType.replace("<sp", "").replace("Socket ", "");
                             }
                         });
                         dao.update(new DeviceInfo(
