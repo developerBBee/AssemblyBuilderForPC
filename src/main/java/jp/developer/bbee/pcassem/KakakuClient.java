@@ -8,7 +8,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.*;
+
+import static jp.developer.bbee.pcassem.HomeController.formatter;
 
 public class KakakuClient {
     public static final boolean DEBUG = false;
@@ -80,13 +83,14 @@ public class KakakuClient {
                         if (di == null) {
                             dao.add(new DeviceInfo(
                                     UUID.randomUUID().toString().replace("-", ""),
+                                    device,
                                     linkUrl,
                                     "",
                                     "",
                                     "",
                                     0,
                                     99
-                            ), device);
+                            ));
                         }
                     }
 
@@ -94,6 +98,7 @@ public class KakakuClient {
                     System.out.println("URLを取得できませんでした reason=" + e.getMessage());
                 }
             }
+            System.out.println("getKakaku() device=" + device + " time=" + LocalDateTime.now().format(formatter));
         }
 
         updateKakaku(false); // full update with argument false
@@ -101,7 +106,7 @@ public class KakakuClient {
 
     String newName;
     String newImgUrl;
-    String newType;
+    String newDetail;
     Integer newPrice;
     Integer newRank;
     public void updateKakaku(boolean fastUpdate) throws IOException {
@@ -131,7 +136,7 @@ public class KakakuClient {
 
                     newName = "";
                     newImgUrl = "";
-                    newType = "";
+                    newDetail = "";
                     newPrice = 0;
                     newRank = 99;
                     try {
@@ -155,15 +160,14 @@ public class KakakuClient {
                                 newImgUrl = s.substring(s.indexOf(" src=\"https:") + 6,
                                         s.indexOf("\" width=\"160\" height=\"120\" border=\"0\""));
                             } else if (s.contains("ソケット形状：") && ("cpu".equals(device) || "motherboard".equals(device))) {
-                                newType = s.substring(s.indexOf("ソケット形状：") + "ソケット形状：".length(),
+                                newDetail = s.substring(s.indexOf("ソケット形状：") + "ソケット形状：".length(),
                                         s.contains("二次キャッシュ") ? s.indexOf("二次キャッシュ") - 1
                                                 : s.indexOf("ソケット形状：") + "ソケット形状：".length() + 10);
-                                newType = newType.replace("<sp", "").replace("Socket ", "");
+                                newDetail = newDetail.replace("<sp", "").replace("Socket ", "");
                             }
                         });
                         dao.update(new DeviceInfo(
-                                deviceInfo.id(), deviceInfo.url(), newName, newImgUrl, newType, newPrice, newRank),
-                                device);
+                                deviceInfo.id(), deviceInfo.device(), deviceInfo.url(), newName, newImgUrl, newDetail, newPrice, newRank));
 
                     } catch (ArrayIndexOutOfBoundsException e) {
                         System.out.println("価格情報を取得できませんでした reason=" + e.getMessage());
@@ -175,6 +179,7 @@ public class KakakuClient {
                     throw new RuntimeException(e);
                 }
             }
+            System.out.println("updateKakaku() device=" + device + " time=" + LocalDateTime.now().format(formatter));
         }
     }
 }

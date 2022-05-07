@@ -3,8 +3,8 @@ package jp.developer.bbee.pcassem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -17,7 +17,8 @@ import java.util.*;
 
 @Controller
 public class HomeController {
-    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm");
+    public static final boolean DEBUG = false;
+    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
     private final KakakuClient kakakuClient;
@@ -61,39 +62,41 @@ public class HomeController {
                 LocalDateTime nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4,0,0));
                 long delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis();
                 timer.schedule(this, delay); // Run task on schedule
+                System.out.println("Update scheduling, delay=" + delay + "ms");
             }
         };
+        if (DEBUG) return;
         new Thread(() -> {
             task.run(); // Run task at startup
         }).start();
 
     }
 
-    record Item (String id, String name, String imgurl, String type, String price, String rank) {}
-    record DeviceInfo (String id, String url, String name, String imgurl, String type, Integer price, Integer rank) {}
+    record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank) {}
+    record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank) {}
+    record UserAssem (String id, String deviceid, String device, String guestid) {}
 
-    @RequestMapping("/")
-    String top(Model model) {
+    @GetMapping("/")
+    String top(Model model, @RequestParam(value = "guestId", required = false) String guestId) {
+        model.addAttribute("deviceListDisplay", "hidden");
 
-//        String id = "00001";
-//        String name = "Ryzen 7 5800X3D BOX";
-//        String imgUrl = "https://img1.kakaku.k-img.com/images/productimage/l/K0001437357.jpg";
-//        String type = "AM4";
-//        String price = "¥72,545";
-//        String rank = "1";
-//
-//        String id2 = "00002";
-//        String name2 = "Core i7 12700 BOX";
-//        String imgUrl2 = "https://www.kojima.net/ito/img_public/prod/073585/073585850/0735858503129/IMG_PATH_M/pc/0735858503129_A01.jpg";
-//        String type2 = "LGA1700";
-//        String price2 = "¥44,480";
-//        String rank2 = "12";
-//
-//        List<Item> itemList = List.of(
-//                new Item(id, name, imgUrl, type, price, rank),
-//                new Item(id2, name2, imgUrl2, type2, price2, rank2)
-//        );
-//        model.addAttribute("deviceInfoList", itemList);
+        if (guestId != null && guestId.length() >= 32) {
+            List<UserAssem> userAssems = dao.findAllUserAssemByGuestId(guestId);
+            List<DeviceInfo> assembliesList = new ArrayList<>();
+            for (UserAssem userAssem : userAssems) {
+                assembliesList.add(dao.findRecordById(userAssem.deviceid(), userAssem.device()));
+            }
+            model.addAttribute("assembliesList", assembliesList);
+            return "index";//"redirect:/home";
+        } else {
+            model.addAttribute("assembliesDisplay", "hidden");
+        }
+        return "index";
+       // return "redirect:/home";
+    }
+
+    @GetMapping("/home")
+    String home(Model model) {
         return "index";
     }
 
@@ -135,7 +138,7 @@ public class HomeController {
 
     @GetMapping("/storage")
     String storage(Model model) {
-        makeAttr(model, "ssd", "hdd35inch");
+        makeAttr(model, "storage", "ssd", "hdd35inch");
         return "index";
     }
 
@@ -171,7 +174,7 @@ public class HomeController {
 
     @GetMapping("/mediadrive")
     String mediadrive(Model model) {
-        makeAttr(model,  "bluraydrive", "dvddrive");
+        makeAttr(model,  "mediadrive", "bluraydrive", "dvddrive");
         return "index";
     }
 
@@ -199,34 +202,59 @@ public class HomeController {
         return "index";
     }
 
+
     private void makeAttr(Model model, String deviceName) {
-        makeAttr(model, deviceName, null);
+        makeAttr(model, deviceName, deviceName, null);
     }
 
-    private void makeAttr(Model model, String deviceName1, String deviceName2) {
+    private void makeAttr(Model model, String deviceTypeName, String deviceName1, String deviceName2) {
         List<DeviceInfo> deviceInfoList = dao.findAll(deviceName1);
-        List<Item> itemList = makeItemList(deviceInfoList);
+        List<DeviceInfoFormatted> formattedList = makeFormattedList(deviceInfoList, deviceName1);
 
         if (deviceName2 != null) {
             deviceInfoList = dao.findAll(deviceName2);
-            List<Item> itemList2 = makeItemList(deviceInfoList);
-            itemList.addAll(itemList2);
+            List<DeviceInfoFormatted> formattedList2 = makeFormattedList(deviceInfoList, deviceName2);
+            formattedList.addAll(formattedList2);
         }
 
-        //model.addAttribute("socketColumn", "hidden");
-        model.addAttribute("deviceInfoList", itemList);
+        model.addAttribute("assembliesDisplay", "hidden");
+        model.addAttribute("deviceInfoList", formattedList);
+        model.addAttribute("deviceTypeName", deviceTypeName);
         model.addAttribute("updateTime", lastUpdateDate.format(formatter));
+
     }
 
-    private List<Item> makeItemList(List<DeviceInfo> deviceInfoList) {
-        List<Item> itemList = new ArrayList<>();
+    //record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank) {}
+    private List<DeviceInfoFormatted> makeFormattedList(List<DeviceInfo> deviceInfoList, String device) {
+        List<DeviceInfoFormatted> formattedList = new ArrayList<>();
         for (DeviceInfo di : deviceInfoList) {
-            itemList.add(new Item(
-                    di.id(), di.name(), di.imgurl(), di.type(),
+            formattedList.add(new DeviceInfoFormatted(
+                    di.id(), di.device(), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
                     di.rank().toString()
             ));
         }
-        return itemList;
+        return formattedList;
+    }
+    @GetMapping("/add") // Add device to assemblies
+    String addUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
+                   @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
+
+        if (guestId.length() != 32) { // Issue guestId
+            return String.format("redirect:/%s", deviceTypeName);
+        }
+
+        if (dao.findUserAssem(id, guestId) == null) {
+            UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), id, device, guestId);
+            dao.addUserAssem(assem);
+        } else {
+            System.out.println("This is already registered. deviceid=" + id + " guestid=" + guestId);
+        }
+
+
+        redirectAttributes.addFlashAttribute("guestId", guestId);
+        redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
+        //return devType;
+        return String.format("redirect:/%s", deviceTypeName);
     }
 }

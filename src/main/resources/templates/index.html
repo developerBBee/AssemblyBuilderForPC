@@ -6,25 +6,25 @@
     <meta name="description" content="自作PC用のパーツの検索して、値段を調べるツール。価格.comの最安価格を参照しています。">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <meta property="og:site_name" content="このファン｜持ち物検査室">
+    <meta property="og:site_name" content="自作PC構築支援">
     <meta property="og:title" content="自作PC構築支援">
     <meta property="og:description" content="自作PC用のパーツの検索し、値段を調べるツール。各パーツの値段と構成時の合計価格を算出します。">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="http://pcbuilding.link">
     <!--
-    <meta property="og:url" content="https://moria-tea.github.io/KonofanLabo/">
-    <meta property="og:image" content="https://moria-tea.github.io/KonofanLabo/img/sns/thumbnail.png">
+    <meta property="og:image" content="http://.....img/sns/thumbnail.png">
     -->
 
     <!-- twitter -->
     <!--
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@drei_seven">
+    <meta name="twitter:site" content="@@boooo00n">
     <meta name="twitter:title" content="">
     <meta property="twitter:description" content="">
-    <meta name="twitter:image" content="https://moria-tea.github.io/KonofanLabo/img/sns/thumbnail.png">
+    <meta name="twitter:image" content="http://.....img/sns/thumbnail.png">
     <link rel="icon" href="img/favicon/favicon.ico">
     -->
-    <link rel="stylesheet" href="../static/styles.css"> <!-- for debug -->
+<!--    <link rel="stylesheet" href="../static/styles.css"> --> <!-- for debug -->
     <link rel="stylesheet" th:href="@{/styles.css}" >
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -40,7 +40,78 @@
     -->
 
   </head>
-  <body>
+  <body th:data-scroll="${bodyScrollPx}"
+        th:data-guestId="${guestId}">
+
+    <script type="text/javascript" th:inline="javascript">
+
+      var guestId = localStorage.getItem('guestid');
+      if(guestId === null || guestId.length <= 30) {
+        guestId = generateUuid().replace('-', '');
+        localStorage.setItem('guestid', guestId);
+        console.log('Save guestId ' + guestId);
+      }
+
+      // var link = window.location.href;
+      // var url = new URL(link);
+      // if (!url.searchParams.get('guestId')) {
+      //   url.searchParams.append('guestId', guestId);
+      //   location.href = url;
+      //   console.log('guestId ' + guestId);
+      // }
+
+      // 登録（submit）した際に、ページが上に移動するのを防ぐために、何pxスクロールしたかを求めるjavascriptです。
+      window.onscroll = function() {
+        var body = window.document.body;
+        var html = window.document.documentElement;
+        var scrollTop = body.scrollTop || html.scrollTop;
+        const elms = document.querySelectorAll('.get_body_scroll_px');
+        elms.forEach(e => {
+          e.value = scrollTop; // id="get_body_scroll_px"のvalueに自動的にスクロールが何pxか表示されるよう指定しています
+        });
+      }
+
+      window.onload = function() {
+        const body = window.document.body;
+        scrollTo(0, body.getAttribute('data-scroll'));
+        
+        const gids = document.querySelectorAll('.gid');
+        gids.forEach(gid => {
+          gid.value = guestId;
+        })
+
+        const structure = document.getElementById('structure');
+        structure.href += '?guestId=' + guestId;
+
+        var link = window.location.href
+        console.log(link);
+        if (link == 'http://localhost/' || link == 'http://pcbuilding.link/') {
+          var url = new URL(link);
+          url.searchParams.append('guestId', guestId);
+          location.href = url; // redirect
+        }
+      }
+
+
+      function generateUuid() {
+        // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js
+        // const FORMAT: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+        let chars = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".split("");
+        for (let i = 0, len = chars.length; i < len; i++) {
+            switch (chars[i]) {
+                case "x":
+                    chars[i] = Math.floor(Math.random() * 16).toString(16);
+                    break;
+                case "y":
+                    chars[i] = (Math.floor(Math.random() * 4) + 8).toString(16);
+                    break;
+            }
+        }
+        return chars.join("");
+      }
+
+    </script>
+
     <div id="viewport">
       <h1><a href="">自作PC構築支援</a></h1>
       <div class="update-time">
@@ -50,7 +121,7 @@
       <header>
         <div class="menu">
           <ul>
-            <li><a href="/">全体構成</a></li>
+            <li><a id="structure" href="/">全体構成</a></li>
             <li><a href="/pccase">PCケース</a></li>
             <li><a href="/motherboard">マザーボード</a></li>
             <li><a href="/powersupply">電源</a></li>
@@ -72,19 +143,56 @@
         </div>
       </header>
 
-      <div class="items">
+      <div class="assem" th:classappend="${assembliesDisplay}">
+        <table>
+          <thead>
+            <tr><th class="hidden">ID</th><th>部品名</th><th>商品名</th><th>商品画像</th>
+              <th th:class="block" width="100px">詳細</th><th width="100px">価格</th><th>削除</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="assembly :${assembliesList}">
+              <td th:class="block" th:text="${assembly.device}"></td>
+              <td th:text="${assembly.name}"></td>
+              <td><img class="item-img" th:src="${assembly.imgurl}"></td>
+              <td th:class="block" th:text="${assembly.detail}"></td>
+              <td th:text="${assembly.price}"></td>
+              <td>
+                <form action="/add" name="submit_scroll"> <!-- action="/add" -->
+                  <input name="guestId" type="hidden" th:value="${guestId}"/>
+                  <input name="id" type="hidden" th:value="${assembly.id}"/>
+                  <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
+                  <input name="dev" type="hidden" th:value="${assembly.device}"/>
+                  <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
+                  <input type="submit" value="削除"/>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="items" th:classappend="${deviceListDisplay}">
         <table>
           <thead>
             <tr><th class="hidden">ID</th><th>商品名</th><th>商品画像</th>
-            <th th:class="block" width="100px">ソケットタイプ</th><th width="100px">価格</th></tr>
+              <th th:class="block" width="100px">詳細</th><th width="100px">価格</th><th>登録</th></tr>
           </thead>
           <tbody>
             <tr th:each="deviceInfo :${deviceInfoList}">
-              <td class="hidden" th:text="${deviceInfo.id}"></td>
               <td th:text="${deviceInfo.name}"></td>
               <td><img class="item-img" th:src="${deviceInfo.imgurl}"></td>
-              <td th:class="block" th:text="${deviceInfo.type}"></td>
-              <td id="priceYen" th:text="${deviceInfo.price}"></td>
+              <td th:class="block" th:text="${deviceInfo.detail}"></td>
+              <td th:text="${deviceInfo.price}"></td>
+              <td>
+                <form action="/add" name="submit_scroll"> <!-- action="/add" -->
+                  <input name="guestId" class="gid" type="hidden"/>
+                  <input name="id" type="hidden" th:value="${deviceInfo.id}"/>
+                  <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
+                  <input name="dev" type="hidden" th:value="${deviceInfo.device}"/>
+                  <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
+                  <input type="submit" value="登録"/>
+                </form>
+              </td>
             </tr>
           </tbody>
         </table>

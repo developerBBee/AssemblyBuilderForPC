@@ -74,12 +74,32 @@ h1 a {
   color:#fff;/*ホバー時の親メニューの文字色*/
 }
 
-.items {
+/* assem css*/
+.assem {
   margin: 5px;
 }
 
-.items .hidden {
-  display: none;
+.assem table {
+  border-spacing: 0px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
+.assem th, .assem td {
+  text-align: center;
+  border: 2px solid;
+  border-right: 0px;
+  border-bottom: 0px;
+}
+
+.assem img.item-img {
+  width: auto;
+  height: 100px;
+}
+
+/* items css */
+.items {
+  margin: 5px;
 }
 
 .items table {
@@ -98,4 +118,10 @@ h1 a {
 .items img.item-img {
   width: auto;
   height: 100px;
+}
+
+
+/* hidden is high priority */
+.hidden {
+  display: none;
 }
