@@ -4,17 +4,16 @@ import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static jp.developer.bbee.pcassem.HomeController.formatter;
 
 public class KakakuClient {
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
     public static final String DOMAIN = "kakaku.com";
     private final DeviceInfoDao dao;
 
@@ -97,6 +96,8 @@ public class KakakuClient {
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println("URLを取得できませんでした reason=" + e.getMessage());
                 }
+            } catch (SocketException e) {
+                System.out.println("getKakaku() SocketException reason=" + e.getMessage());
             }
             System.out.println("getKakaku() device=" + device + " time=" + LocalDateTime.now().format(formatter));
         }
@@ -126,7 +127,7 @@ public class KakakuClient {
 
                 try (var soc = factory.createSocket(DOMAIN, 443);
                      var pw = new PrintWriter(soc.getOutputStream());
-                     var isr = new InputStreamReader(soc.getInputStream());
+                     var isr = new InputStreamReader(soc.getInputStream(), "SJIS"); // kakaku SHIFT_JIS
                      var bur = new BufferedReader(isr)
                 ) {
                     pw.println("GET " + deviceInfo.url() + " HTTP/1.1");
@@ -140,9 +141,17 @@ public class KakakuClient {
                     newPrice = 0;
                     newRank = 99;
                     try {
-                        bur.lines().limit(1000).forEach(s -> {
+                        bur.lines().limit(1000).forEach(str -> {
+
+                            String s = "";
+                            try {
+                                s = StringEncoder.sjisToUtf8(str);
+                            } catch (UnsupportedEncodingException e) {
+                                System.out.println("charset failed, reason=" + e.getMessage());
+                            }
                             if (s.contains("  prdname: ")) {
                                 newName = s.substring(12, s.length()-2);
+                                newName = newName.replace("\\", ""); // delete yen mark
                             } else if (s.contains("  prdlprc: ")) {
                                 try {
                                     newPrice = Integer.valueOf(s.substring(11, s.length()-1));
@@ -172,6 +181,8 @@ public class KakakuClient {
                     } catch (ArrayIndexOutOfBoundsException e) {
                         System.out.println("価格情報を取得できませんでした reason=" + e.getMessage());
                     }
+                } catch (SocketException e) {
+                    System.out.println("updateKakaku() SocketException reason=" + e.getMessage());
                 }
                 try {
                     Thread.sleep(2000);
