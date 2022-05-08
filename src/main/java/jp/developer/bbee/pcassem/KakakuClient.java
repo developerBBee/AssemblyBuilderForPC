@@ -6,7 +6,6 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -134,6 +133,11 @@ public class KakakuClient {
                     pw.println("Host: " + DOMAIN);
                     pw.println();
                     pw.flush();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     newName = "";
                     newImgUrl = "";

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -17,7 +18,7 @@ import java.util.*;
 
 @Controller
 public class HomeController {
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
@@ -86,8 +87,12 @@ public class HomeController {
             for (UserAssem userAssem : userAssems) {
                 assembliesList.add(dao.findRecordById(userAssem.deviceid(), userAssem.device()));
             }
-            model.addAttribute("assembliesList", assembliesList);
-            return "index";//"redirect:/home";
+            if (assembliesList.size() == 0) {
+                model.addAttribute("assembliesDisplay", "hidden");
+            } else {
+                model.addAttribute("assembliesList", assembliesList);
+                return "index";//"redirect:/home";
+            }
         } else {
             model.addAttribute("assembliesDisplay", "hidden");
         }
@@ -256,5 +261,18 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         //return devType;
         return String.format("redirect:/%s", deviceTypeName);
+    }
+
+    @GetMapping("/del") // Add device to assemblies
+    String delUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
+                        @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
+        if (guestId.length() != 32) { // Issue guestId
+            return "redirect:/";
+        }
+
+        dao.deleteUserAssem(id, guestId);
+        redirectAttributes.addFlashAttribute("guestId", guestId);
+        redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
+        return "redirect:/";
     }
 }

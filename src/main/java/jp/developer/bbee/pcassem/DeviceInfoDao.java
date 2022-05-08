@@ -119,4 +119,18 @@ public class DeviceInfoDao {
                 )).toList();
         return assembliesList;
     }
+
+    public int deleteUserAssem(String deviceid, String guestid) {
+        String query = "SELECT * FROM assemblies WHERE deviceid = ? AND guestid = ?";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, deviceid, guestid);
+        if (result.size() > 1) {
+            System.out.println("duplicate record in UserAssem : deviceid=" + deviceid + " guestid=" +guestid);
+        } else if (result.size() == 0){
+            System.out.println("no record in UserAssem : deviceid=" + deviceid + " guestid=" +guestid);
+            return -1;
+        }
+        String id = result.get(0).get("id").toString();
+        int number = jdbcTemplate.update("DELETE FROM assemblies WHERE id = ?", id);
+        return number;
+    }
 }

@@ -157,8 +157,8 @@
               <td th:class="block" th:text="${assembly.detail}"></td>
               <td th:text="${assembly.price}"></td>
               <td>
-                <form action="/add" name="submit_scroll"> <!-- action="/add" -->
-                  <input name="guestId" type="hidden" th:value="${guestId}"/>
+                <form action="/del" name="submit_scroll"> <!-- action="/del" -->
+                  <input name="guestId" class="gid" type="hidden"/>
                   <input name="id" type="hidden" th:value="${assembly.id}"/>
                   <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
                   <input name="dev" type="hidden" th:value="${assembly.device}"/>
