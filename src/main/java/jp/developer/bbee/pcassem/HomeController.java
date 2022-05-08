@@ -18,7 +18,7 @@ import java.util.*;
 
 @Controller
 public class HomeController {
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
@@ -36,41 +36,52 @@ public class HomeController {
 
     private void updateKakaku() {
 
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                boolean incomplete = true;
-                boolean fullUpdate = (Duration.between(fullUpdateDate, LocalDateTime.now()).toHours() > 165); // 24*7=168
-                kakakuClient.unAcquired = fullUpdate;
-
-                int loopCount = 0;
-                while (incomplete && loopCount <= MAX_RETRY) {
-                    try {
-                        if (kakakuClient.unAcquired && fullUpdate) {
-                            kakakuClient.getKakaku();
-                        } else {
-                            kakakuClient.updateKakaku(false);
-                        }
-                        incomplete = false;
-                        lastUpdateDate = LocalDateTime.now();
-                        if (fullUpdate) fullUpdateDate = lastUpdateDate;
-                    } catch (IOException e) {
-                        System.out.println("update kakaku failed. reason=" + e.getMessage());
-                    }
-                }
-
-                Timer timer = new Timer();
-                LocalDateTime nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4,0,0));
-                long delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis();
-                timer.schedule(this, delay); // Run task on schedule
-                System.out.println("Update scheduling, delay=" + delay + "ms");
-            }
-        };
         if (DEBUG) return;
         new Thread(() -> {
-            task.run(); // Run task at startup
+            runTask(); // Run task at startup
         }).start();
 
+    }
+
+    public void runTask() {
+        boolean incomplete = true;
+        boolean fullUpdate = (Duration.between(fullUpdateDate, LocalDateTime.now()).toHours() > 165); // 24*7=168
+        kakakuClient.unAcquired = fullUpdate;
+
+        int loopCount = 0;
+        while (incomplete && loopCount <= MAX_RETRY) {
+            try {
+                if (kakakuClient.unAcquired && fullUpdate) {
+                    kakakuClient.getKakaku();
+                } else {
+                    kakakuClient.updateKakaku(false);
+                }
+                incomplete = false;
+                lastUpdateDate = LocalDateTime.now();
+                if (fullUpdate) fullUpdateDate = lastUpdateDate;
+            } catch (IOException e) {
+                System.out.println("update kakaku failed. reason=" + e.getMessage());
+            }
+        }
+
+        Timer timer = new Timer();
+        TimerTask task = new MyTimerTask(HomeController.this);
+        LocalDateTime nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4,0,0));
+        long delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis();
+        delay = 30000; // debug
+        timer.schedule(task, delay); // Run task on schedule
+        System.out.println("Update scheduling, delay=" + delay + "ms");
+    }
+
+    static class MyTimerTask extends TimerTask {
+        private HomeController controller;
+        MyTimerTask(HomeController hc) {
+            this.controller = hc;
+        }
+        @Override
+        public void run() {
+            controller.runTask();
+        }
     }
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank) {}
