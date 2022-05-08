@@ -47,7 +47,7 @@
 
       var guestId = localStorage.getItem('guestid');
       if(guestId === null || guestId.length <= 30) {
-        guestId = generateUuid().replace('-', '');
+        guestId = generateUuid().replaceAll('-', '');
         localStorage.setItem('guestid', guestId);
         console.log('Save guestId ' + guestId);
       }

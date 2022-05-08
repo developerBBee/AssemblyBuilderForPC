@@ -60,10 +60,10 @@ public class DeviceInfoDao {
         }
     }
 
-    public DeviceInfo findRecordById(String id, String device) {
-        String query = "SELECT * FROM devices WHERE device = ? AND id = ?";
+    public DeviceInfo findRecordById(String id) {
+        String query = "SELECT * FROM devices WHERE id = ?";
         try {
-            Map<String, Object> result = jdbcTemplate.queryForList(query, device, id).get(0);
+            Map<String, Object> result = jdbcTemplate.queryForList(query, id).get(0);
             return new DeviceInfo(result.get("id").toString(), result.get("device").toString(), result.get("url").toString(),
                     result.get("name").toString(), result.get("imgurl").toString(), result.get("detail").toString(),
                     (Integer) result.get("price"), (Integer) result.get("rank"));

@@ -27,11 +27,36 @@ public class HomeController {
     private LocalDateTime fullUpdateDate = LocalDateTime.of(2000, 1, 1, 0, 0);
     private LocalDateTime lastUpdateDate = LocalDateTime.of(2020, 1, 1, 0, 0);
 
+    public Map<String, String> deviceTypeJp = new HashMap<>();
+
     @Autowired // <- DAO auto setting
     HomeController(DeviceInfoDao dao){
         this.dao = dao;
         kakakuClient = new KakakuClient(dao);
         updateKakaku();
+        makeDeviceTypeJp();
+    }
+
+    private void makeDeviceTypeJp() {
+        deviceTypeJp.put("pccase", "PCケース"); // PC case
+        deviceTypeJp.put("motherboard", "マザーボード"); // Motherboard
+        deviceTypeJp.put("powersupply", "電源"); // Power supply unit
+        deviceTypeJp.put("cpu", "CPU"); // CPU
+        deviceTypeJp.put("cpucooler", "CPUクーラー"); // CPU cooler
+        deviceTypeJp.put("pcmemory", "メモリ"); // Memory
+        deviceTypeJp.put("hdd35inch", "HDD"); // Storage HDD
+        deviceTypeJp.put("ssd", "SSD"); // Storage SSD
+        deviceTypeJp.put("videocard", "グラフィックボード"); // Graphic board
+        deviceTypeJp.put("ossoft", "OS"); // OS soft
+        deviceTypeJp.put("lcdmonitor", "ディスプレイ"); // Display
+        deviceTypeJp.put("keyboard", "キーボード"); // Keyboard
+        deviceTypeJp.put("mouse", "マウス"); // Mouse
+        deviceTypeJp.put("dvddrive", "DVDドライブ"); // DVD media drive
+        deviceTypeJp.put("bluraydrive", "BDドライブ"); // Blue-rya media drive
+        deviceTypeJp.put("soundcard", "サウンドカード"); // Sound card
+        deviceTypeJp.put("pcspeaker", "スピーカー"); // Speaker
+        deviceTypeJp.put("fancontroller", "ファンコントローラー"); // Fan controller
+        deviceTypeJp.put("casefan", "ファン"); // Case fan
     }
 
     private void updateKakaku() {
@@ -68,7 +93,7 @@ public class HomeController {
         TimerTask task = new MyTimerTask(HomeController.this);
         LocalDateTime nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4,0,0));
         long delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis();
-        delay = 30000; // debug
+        //delay = 30000; // debug
         timer.schedule(task, delay); // Run task on schedule
         System.out.println("Update scheduling, delay=" + delay + "ms");
     }
@@ -96,12 +121,13 @@ public class HomeController {
             List<UserAssem> userAssems = dao.findAllUserAssemByGuestId(guestId);
             List<DeviceInfo> assembliesList = new ArrayList<>();
             for (UserAssem userAssem : userAssems) {
-                assembliesList.add(dao.findRecordById(userAssem.deviceid(), userAssem.device()));
+                assembliesList.add(dao.findRecordById(userAssem.deviceid()));
             }
+            List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList);
             if (assembliesList.size() == 0) {
                 model.addAttribute("assembliesDisplay", "hidden");
             } else {
-                model.addAttribute("assembliesList", assembliesList);
+                model.addAttribute("assembliesList", formattedAssembliesList);
                 return "index";//"redirect:/home";
             }
         } else {
@@ -225,11 +251,11 @@ public class HomeController {
 
     private void makeAttr(Model model, String deviceTypeName, String deviceName1, String deviceName2) {
         List<DeviceInfo> deviceInfoList = dao.findAll(deviceName1);
-        List<DeviceInfoFormatted> formattedList = makeFormattedList(deviceInfoList, deviceName1);
+        List<DeviceInfoFormatted> formattedList = makeFormattedList(deviceInfoList);
 
         if (deviceName2 != null) {
             deviceInfoList = dao.findAll(deviceName2);
-            List<DeviceInfoFormatted> formattedList2 = makeFormattedList(deviceInfoList, deviceName2);
+            List<DeviceInfoFormatted> formattedList2 = makeFormattedList(deviceInfoList);
             formattedList.addAll(formattedList2);
         }
 
@@ -241,11 +267,11 @@ public class HomeController {
     }
 
     //record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank) {}
-    private List<DeviceInfoFormatted> makeFormattedList(List<DeviceInfo> deviceInfoList, String device) {
+    private List<DeviceInfoFormatted> makeFormattedList(List<DeviceInfo> deviceInfoList) {
         List<DeviceInfoFormatted> formattedList = new ArrayList<>();
         for (DeviceInfo di : deviceInfoList) {
             formattedList.add(new DeviceInfoFormatted(
-                    di.id(), di.device(), di.url(), di.name(), di.imgurl(), di.detail(),
+                    di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
                     di.rank().toString()
             ));
@@ -261,7 +287,8 @@ public class HomeController {
         }
 
         if (dao.findUserAssem(id, guestId) == null) {
-            UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), id, device, guestId);
+            DeviceInfo di = dao.findRecordById(id);
+            UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), guestId);
             dao.addUserAssem(assem);
         } else {
             System.out.println("This is already registered. deviceid=" + id + " guestid=" + guestId);
