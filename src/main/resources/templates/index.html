@@ -24,7 +24,10 @@
     <meta name="twitter:image" content="http://.....img/sns/thumbnail.png">
     <link rel="icon" href="img/favicon/favicon.ico">
     -->
-<!--    <link rel="stylesheet" href="../static/styles.css"> --> <!-- for debug -->
+
+<!-- for debug -->
+    <link rel="stylesheet" href="../static/styles.css">
+
     <link rel="stylesheet" th:href="@{/styles.css}" >
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -144,6 +147,15 @@
       </header>
 
       <div class="assem" th:classappend="${assembliesDisplay}">
+        <div class="assem-result-container">
+          <div class="assem-result-totalprice-area">
+            <div class="assem-result-totalprice-header">
+              合計
+            </div>
+            <div class="assem-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+          </div>
+        </div>
+
         <table>
           <thead>
             <tr><th class="hidden">ID</th><th>部品名</th><th>商品名</th><th>商品画像</th>

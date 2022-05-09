@@ -128,6 +128,11 @@ public class HomeController {
                 model.addAttribute("assembliesDisplay", "hidden");
             } else {
                 model.addAttribute("assembliesList", formattedAssembliesList);
+                int totalPrice = 0;
+                for (DeviceInfo assembly : assembliesList) {
+                    totalPrice += assembly.price();
+                }
+                model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
                 return "index";//"redirect:/home";
             }
         } else {
