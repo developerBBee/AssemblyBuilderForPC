@@ -120,6 +120,11 @@ h1 a {
   font-weight: bold;
 }
 
+.assem .detail {
+  font-size:12px;
+  text-align: left;
+}
+
 /* items css */
 .items {
   margin: 5px;
@@ -143,6 +148,10 @@ h1 a {
   height: 100px;
 }
 
+.items .detail {
+  font-size:12px;
+  text-align: left;
+}
 
 /* hidden is high priority */
 .hidden {

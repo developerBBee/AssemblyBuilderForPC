@@ -13,6 +13,7 @@ import static jp.developer.bbee.pcassem.HomeController.formatter;
 
 public class KakakuClient {
     public static final boolean DEBUG = true;
+    public static final boolean DEBUG_FAST = false;
     public static final String DOMAIN = "kakaku.com";
     private final DeviceInfoDao dao;
 
@@ -117,19 +118,20 @@ public class KakakuClient {
 
             SocketFactory factory = SSLSocketFactory.getDefault();
             for (DeviceInfo deviceInfo : deviceInfoList) {
-                if ((fastUpdate || DEBUG) &&
+                if ((fastUpdate || DEBUG_FAST) &&
                         !( "".equals(deviceInfo.name())
                         || "".equals(deviceInfo.imgurl())
+                        || "".equals(deviceInfo.detail())
                         || 0  == deviceInfo.price()
-                        || 99 == deviceInfo.rank()
-                )) continue; // Not get data if id is not empty in fastUpdate.
+                        || 99 == deviceInfo.rank() )
+                ) continue; // Not get data if id is not empty in fastUpdate.
 
                 try (var soc = factory.createSocket(DOMAIN, 443);
                      var pw = new PrintWriter(soc.getOutputStream());
                      var isr = new InputStreamReader(soc.getInputStream(), "SJIS"); // kakaku SHIFT_JIS
                      var bur = new BufferedReader(isr)
                 ) {
-                    pw.println("GET " + deviceInfo.url() + " HTTP/1.1");
+                    pw.println("GET " + deviceInfo.url() + "spec/ HTTP/1.1");
                     pw.println("Host: " + DOMAIN);
                     pw.println();
                     pw.flush();
@@ -172,11 +174,22 @@ public class KakakuClient {
                             } else if (s.contains("width=\"160\" height=\"120\" border=\"0\"")) {
                                 newImgUrl = s.substring(s.indexOf(" src=\"https:") + 6,
                                         s.indexOf("\" width=\"160\" height=\"120\" border=\"0\""));
-                            } else if (s.contains("ソケット形状：") && ("cpu".equals(device) || "motherboard".equals(device))) {
-                                newDetail = s.substring(s.indexOf("ソケット形状：") + "ソケット形状：".length(),
-                                        s.contains("二次キャッシュ") ? s.indexOf("二次キャッシュ") - 1
-                                                : s.indexOf("ソケット形状：") + "ソケット形状：".length() + 10);
-                                newDetail = newDetail.replace("<sp", "").replace("Socket ", "");
+                            } else if (s.contains("  mkrname: ")) {
+                                String mkrName = s.substring(12, s.length()-2);
+                                if ("".equals(newDetail)) {
+                                    newDetail = mkrName;
+                                } else {
+                                    newDetail += "\n" + mkrName;
+                                }
+                            } else if (s.contains("itemviewColor03b textL") ) {
+                                String detailStr = getDetailComment(s, device);
+                                if (detailStr != null) {
+                                    if ("".equals(newDetail)) {
+                                        newDetail = detailStr;
+                                    } else {
+                                        newDetail += "\n" + detailStr;
+                                    }
+                                }
                             }
                         });
                         dao.update(new DeviceInfo(
@@ -196,5 +209,71 @@ public class KakakuClient {
             }
             System.out.println("updateKakaku() device=" + device + " time=" + LocalDateTime.now().format(formatter));
         }
+    }
+
+    private String getDetailComment(String s, String device) {
+        String retStr = null;
+        String buf = s.replace("</td>", "");
+        buf = buf.replace("</a>", "");
+        buf = buf.replace("<br>", "/");
+
+        try {
+            String detail = buf.substring(buf.lastIndexOf(">") + 1);
+            if ("".equals(detail.replace(" ", "").replace("　", ""))) return null;
+
+            switch (device) {
+                case "pccase":
+                    if (buf.contains("電源規格")) {
+                        if (buf.contains("内蔵")) {
+                            retStr = detail;
+                        } else {
+                            retStr = "電源規格：" + detail;
+                        }
+                    } else if (buf.contains("対応マザーボード")) {
+                        retStr = detail;
+                    } else if (buf.contains("幅x高さx奥行")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "motherboard":
+                    if (buf.contains("CPUソケット")) {
+                        retStr = detail;
+                    } else if (buf.contains("フォームファクタ")) {
+                        retStr = detail;
+                    } else if (buf.contains("詳細メモリタイプ")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "powersupply":
+                    if (buf.contains("対応規格")) {
+                        retStr = detail;
+                    } else if (buf.contains("電源容量")) {
+                        retStr = detail;
+                    } else if (buf.contains("80PLUS認証")) {
+                        retStr = "80PLUS " + detail;
+                    }
+                    break;
+                case "cpu":
+                    if (buf.contains("ソケット形状")) {
+                        retStr = detail;
+                    } else if (buf.contains("フォームファクタ")) {
+                        retStr = detail;
+                    } else if (buf.contains("コア数")) {
+                        retStr = detail;
+                    } else if (buf.contains(">クロック周波数<")) {
+                        retStr = "ベースクロック " + detail;
+                    } else if (buf.contains("最大動作クロック周波数")) {
+                        retStr = "最大クロック " + detail;
+                    } else if (buf.contains("スレッド数")) {
+                        retStr = detail + " スレッド";
+                    }
+                    break;
+
+            }
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println(s + " exception reason=" + e.getMessage());
+            return null;
+        }
+        return retStr;
     }
 }

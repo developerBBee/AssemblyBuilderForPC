@@ -159,14 +159,21 @@
         <table>
           <thead>
             <tr><th class="hidden">ID</th><th>部品名</th><th>商品名</th><th>商品画像</th>
-              <th th:class="block" width="100px">詳細</th><th width="100px">価格</th><th>削除</th></tr>
+              <th>詳細</th><th width="106px">価格</th><th>削除</th></tr>
           </thead>
           <tbody>
             <tr th:each="assembly :${assembliesList}">
-              <td th:class="block" th:text="${assembly.device}"></td>
+              <td th:text="${assembly.device}"></td>
               <td th:text="${assembly.name}"></td>
               <td><img class="item-img" th:src="${assembly.imgurl}"></td>
-              <td th:class="block" th:text="${assembly.detail}"></td>
+              <td class="detail">
+                <th:block th:if="${assembly.detail}">
+                  <th:block th:each="str, stat : ${assembly.detail.split('\r\n|\r|\n', -1)}">
+                    <th:block th:text="${str}"/>
+                    <br th:if="${!stat.last}"/>
+                  </th:block>
+                </th:block>
+              </td>
               <td th:text="${assembly.price}"></td>
               <td>
                 <form action="/del" name="submit_scroll"> <!-- action="/del" -->
@@ -187,13 +194,20 @@
         <table>
           <thead>
             <tr><th class="hidden">ID</th><th>商品名</th><th>商品画像</th>
-              <th th:class="block" width="100px">詳細</th><th width="100px">価格</th><th>登録</th></tr>
+              <th>詳細</th><th width="106px">価格</th><th>登録</th></tr>
           </thead>
           <tbody>
             <tr th:each="deviceInfo :${deviceInfoList}">
               <td th:text="${deviceInfo.name}"></td>
               <td><img class="item-img" th:src="${deviceInfo.imgurl}"></td>
-              <td th:class="block" th:text="${deviceInfo.detail}"></td>
+              <td class="detail">
+                <th:block th:if="${deviceInfo.detail}">
+                  <th:block th:each="str, stat : ${deviceInfo.detail.split('\r\n|\r|\n', -1)}">
+                    <th:block th:text="${str}"/>
+                    <br th:if="${!stat.last}"/>
+                  </th:block>
+                </th:block>
+              </td>
               <td th:text="${deviceInfo.price}"></td>
               <td>
                 <form action="/add" name="submit_scroll"> <!-- action="/add" -->
