@@ -30,7 +30,21 @@ public class DeviceInfoDao {
     }
 
     public List<DeviceInfo> findAll(String device) {
+        return findAll(device, 0);
+    }
+
+    public List<DeviceInfo> findAll(String device, int sortFlag) {
         String query = "SELECT * FROM devices WHERE device = ?";
+        switch (sortFlag) {
+            case 0:
+                break;
+            case 1:
+                query += " ORDER BY price";
+                break;
+            case 2:
+                query += " ORDER BY price DESC";
+                break;
+        }
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, device);
 
         List<DeviceInfo> deviceInfoList = result.stream().map(

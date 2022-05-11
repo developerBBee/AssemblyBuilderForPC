@@ -190,6 +190,17 @@
         </table>
       </div>
 
+      <form method="get" action="/sort" name="submit_sort">
+        <input name="guestId" class="gid" type="hidden"/>
+        <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
+        <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
+        <select class="items-sort" th:classappend="${deviceListDisplay}" name="sort" onchange="submit(this.form)">
+          <option th:selected="${sortFlag == 0}" value="popular">人気順</option>
+          <option th:selected="${sortFlag == 1}" value="lower">値段が安い順</option>
+          <option th:selected="${sortFlag == 2}" value="higher">値段が高い順</option>
+        </select>
+      </form>
+
       <div class="items" th:classappend="${deviceListDisplay}">
         <table>
           <thead>

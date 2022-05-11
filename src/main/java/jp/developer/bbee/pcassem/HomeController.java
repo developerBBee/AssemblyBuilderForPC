@@ -255,11 +255,21 @@ public class HomeController {
     }
 
     private void makeAttr(Model model, String deviceTypeName, String deviceName1, String deviceName2) {
-        List<DeviceInfo> deviceInfoList = dao.findAll(deviceName1);
+        makeAttr(model, deviceTypeName, deviceName1, deviceName2, 0);
+    }
+
+    private void makeAttr(Model model, String deviceName, int sortFlag) {
+        makeAttr(model, deviceName, deviceName, null,  sortFlag);
+    }
+
+    private void makeAttr(Model model, String deviceTypeName, String deviceName1, String deviceName2, int sortFlag) {
+        Integer sortFlagModel = (Integer) model.getAttribute("sortFlag");
+        int s = sortFlagModel == null ? sortFlag : sortFlagModel;
+        List<DeviceInfo> deviceInfoList = dao.findAll(deviceName1, s);
         List<DeviceInfoFormatted> formattedList = makeFormattedList(deviceInfoList);
 
         if (deviceName2 != null) {
-            deviceInfoList = dao.findAll(deviceName2);
+            deviceInfoList = dao.findAll(deviceName2, s);
             List<DeviceInfoFormatted> formattedList2 = makeFormattedList(deviceInfoList);
             formattedList.addAll(formattedList2);
         }
@@ -317,5 +327,21 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         return "redirect:/";
+    }
+
+    private Map<String, Integer> sortMap = Map.of(
+            "popular", 0,
+            "lower", 1,
+            "higher", 2
+    );
+    @GetMapping("/sort") // Sort devices
+    String sortDevices(RedirectAttributes redirectAttributes, @RequestParam("sort") String sort, @RequestParam("devType") String deviceTypeName,
+                       @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
+
+        redirectAttributes.addFlashAttribute("guestId", guestId);
+        redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
+        redirectAttributes.addFlashAttribute("sortFlag", sortMap.get(sort));
+        //return devType;
+        return String.format("redirect:/%s", deviceTypeName);
     }
 }

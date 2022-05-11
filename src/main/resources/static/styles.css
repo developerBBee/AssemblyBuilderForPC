@@ -153,6 +153,10 @@ h1 a {
   text-align: left;
 }
 
+.items-sort {
+  margin: 5px;
+}
+
 /* hidden is high priority */
 .hidden {
   display: none;
