@@ -3,6 +3,7 @@ package jp.developer.bbee.pcassem;
 import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
 import jp.developer.bbee.pcassem.HomeController.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -92,10 +93,17 @@ public class DeviceInfoDao {
     }
 
     public int update(DeviceInfo deviceInfo) {
-        int number = jdbcTemplate.update(
-                "UPDATE devices SET device = ?, url = ?, name = ?, imgurl = ? , detail = ? , price = ? , rank = ? WHERE id = ?",
-                deviceInfo.device(), deviceInfo.url(), deviceInfo.name(), deviceInfo.imgurl(), deviceInfo.detail(),
-                deviceInfo.price(), deviceInfo.rank(), deviceInfo.id());
+        int number = 0;
+        try {
+            number = jdbcTemplate.update(
+                    "UPDATE devices SET device = ?, url = ?, name = ?, imgurl = ? , detail = ? , price = ? , rank = ? WHERE id = ?",
+                    deviceInfo.device(), deviceInfo.url(), deviceInfo.name(), deviceInfo.imgurl(), deviceInfo.detail(),
+                    deviceInfo.price(), deviceInfo.rank(), deviceInfo.id());
+            return number;
+        } catch (DataIntegrityViolationException e) {
+            System.out.println("name=" + deviceInfo.name() + " detail=" + deviceInfo.detail() +
+                    " price=" + deviceInfo.price() + " rank=" + deviceInfo.rank());
+        }
         return number;
     }
 

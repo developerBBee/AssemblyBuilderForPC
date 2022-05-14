@@ -18,6 +18,8 @@ import java.util.*;
 
 @Controller
 public class HomeController {
+//    public static final String DOMAIN_NAME = "https://www.pcbuilding.link/"; // server env.
+    public static final String DOMAIN_NAME = "https://localhost/"; // local env.
     public static final boolean DEBUG = false;
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
@@ -116,6 +118,7 @@ public class HomeController {
     @GetMapping("/")
     String top(Model model, @RequestParam(value = "guestId", required = false) String guestId) {
         model.addAttribute("deviceListDisplay", "hidden");
+        model.addAttribute("updateTime", lastUpdateDate.format(formatter));
 
         if (guestId != null && guestId.length() >= 32) {
             List<UserAssem> userAssems = dao.findAllUserAssemByGuestId(guestId);
@@ -314,7 +317,7 @@ public class HomeController {
                    @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
 
         if (guestId.length() != 32) { // Issue guestId
-            return String.format("redirect:/%s", deviceTypeName);
+            return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
         }
 
         if (dao.findUserAssem(id, guestId) == null) {
@@ -329,20 +332,20 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         //return devType;
-        return String.format("redirect:/%s", deviceTypeName);
+        return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
     }
 
     @GetMapping("/del") // Add device to assemblies
     String delUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
                         @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
         if (guestId.length() != 32) { // Issue guestId
-            return "redirect:/";
+            return String.format("redirect:%s", DOMAIN_NAME);
         }
 
         dao.deleteUserAssem(id, guestId);
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
-        return "redirect:/";
+        return String.format("redirect:%s", DOMAIN_NAME);
     }
 
     private Map<String, Integer> sortMap = Map.of(
@@ -358,6 +361,6 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         redirectAttributes.addFlashAttribute("sortFlag", sortMap.get(sort));
         //return devType;
-        return String.format("redirect:/%s", deviceTypeName);
+        return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
     }
 }

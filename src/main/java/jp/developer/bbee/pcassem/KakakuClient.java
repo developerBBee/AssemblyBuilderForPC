@@ -12,9 +12,9 @@ import java.util.*;
 import static jp.developer.bbee.pcassem.HomeController.formatter;
 
 public class KakakuClient {
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
     public static final boolean DEBUG_FAST = false;
-    public static final String DOMAIN = "kakaku.com";
+    public static final String KAKAKU_DOMAIN = "kakaku.com";
     private final DeviceInfoDao dao;
 
     public boolean unAcquired;
@@ -60,18 +60,22 @@ public class KakakuClient {
     public void getKakaku() throws IOException {
         SocketFactory factory = SSLSocketFactory.getDefault();
         for (String device : devices) {
-            try (var soc = factory.createSocket(DOMAIN, 443);
+            try (var soc = factory.createSocket(KAKAKU_DOMAIN, 443);
                  var pw = new PrintWriter(soc.getOutputStream());
                  var isr = new InputStreamReader(soc.getInputStream());
                  var bur = new BufferedReader(isr)
             ) {
                 pw.println("GET " + deviceUrl.get(device) + " HTTP/1.1");
-                pw.println("Host: " + DOMAIN);
+                pw.println("Host: " + KAKAKU_DOMAIN);
                 pw.println();
                 pw.flush();
                 try {
+                    int debugRows = 500;
+                    if ("mouse".equals(device)) { // debug device
+                        debugRows = 4000;
+                    }
                     List<String> linkColumns = bur.lines()
-                            .limit(DEBUG ? 500 : 10000)
+                            .limit(DEBUG ? debugRows : 4000)
                             .filter(s -> s.contains("rkgBoxLink"))
                             .map(s -> s.replaceAll("<a href=\"", ""))
                             .map(s -> s.replaceAll("\" class=.*", ""))
@@ -112,11 +116,11 @@ public class KakakuClient {
     Integer newRank;
     public void updateKakaku(boolean fastUpdate) throws IOException {
         unAcquired = false; // Acquired link url
+        SocketFactory factory = SSLSocketFactory.getDefault();
 
         for (String device : devices) {
             List<DeviceInfo> deviceInfoList = dao.findAll(device);
 
-            SocketFactory factory = SSLSocketFactory.getDefault();
             for (DeviceInfo deviceInfo : deviceInfoList) {
                 if ((fastUpdate || DEBUG_FAST) &&
                         !( "".equals(deviceInfo.name())
@@ -126,20 +130,20 @@ public class KakakuClient {
                         || 99 == deviceInfo.rank() )
                 ) continue; // Not get data if id is not empty in fastUpdate.
 
-                try (var soc = factory.createSocket(DOMAIN, 443);
+                try (var soc = factory.createSocket(KAKAKU_DOMAIN, 443);
                      var pw = new PrintWriter(soc.getOutputStream());
                      var isr = new InputStreamReader(soc.getInputStream(), "SJIS"); // kakaku SHIFT_JIS
                      var bur = new BufferedReader(isr)
                 ) {
                     pw.println("GET " + deviceInfo.url() + "spec/ HTTP/1.1");
-                    pw.println("Host: " + DOMAIN);
+                    pw.println("Host: " + KAKAKU_DOMAIN);
                     pw.println();
                     pw.flush();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+//                    try {
+//                        Thread.sleep(1000);
+//                    } catch (InterruptedException e) {
+//                        throw new RuntimeException(e);
+//                    }
 
                     newName = "";
                     newImgUrl = "";
@@ -147,11 +151,16 @@ public class KakakuClient {
                     newPrice = 0;
                     newRank = 99;
                     try {
-                        bur.lines().limit(1000).forEach(str -> {
+                        bur.lines().limit(900).forEach(str -> {
 
                             String s = "";
                             try {
                                 s = StringEncoder.sjisToUtf8(str);
+                                if (s.contains("nbsp;<img src=\"https://img1.kakaku.k-img.com/images/balloonhelp/explain_icn.gif\" alt=\"\" width=\"30\" height=\"15\" onClick=\"showHelp(this, 'Balloon-Spec202')\" class=\"helpBT explainIcn\"")) {
+                                    System.out.println(str);
+                                    System.out.println(s);
+                                    System.out.println("");
+                                }
                             } catch (UnsupportedEncodingException e) {
                                 System.out.println("charset failed, reason=" + e.getMessage());
                             }
@@ -201,17 +210,18 @@ public class KakakuClient {
                 } catch (SocketException e) {
                     System.out.println("updateKakaku() SocketException reason=" + e.getMessage());
                 }
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+//                try {
+//                    Thread.sleep(2000);
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
             }
             System.out.println("updateKakaku() device=" + device + " time=" + LocalDateTime.now().format(formatter));
         }
     }
 
     private String getDetailComment(String s, String device) {
+        if (!s.contains("</td>")) return null;
         String retStr = null;
         String buf = s.replace("</td>", "");
         buf = buf.replace("</a>", "");
@@ -355,7 +365,7 @@ public class KakakuClient {
                 case "mouse":
                     if (buf.contains("タイプ")) {
                         retStr = detail;
-                    } else if (buf.contains("ケーブル")) {
+                    } else if (buf.contains(">ケーブル<")) {
                         retStr = detail;
                     } else if (buf.contains("ボタン数")) {
                         retStr = detail;

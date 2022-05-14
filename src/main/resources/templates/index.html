@@ -10,7 +10,7 @@
     <meta property="og:title" content="自作PC構成・総額シミュレーション">
     <meta property="og:description" content="自作PC用のパーツ一覧から選択して構成するツール。各パーツの値段と構成時の合計価格をシミュレートします。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="http://pcbuilding.link">
+    <meta property="og:url" content="https://www.pcbuilding.link">
     <!--
     <meta property="og:image" content="http://.....img/sns/thumbnail.png">
     -->
@@ -86,7 +86,8 @@
 
         var link = window.location.href
         console.log(link);
-        if (link == 'http://localhost/' || link == 'http://pcbuilding.link/') {
+        if (link == 'http://localhost/' || link == 'http://pcbuilding.link/'
+                || link == 'https://localhost/' || link == 'https://www.pcbuilding.link/') {
           var url = new URL(link);
           url.searchParams.append('guestId', guestId);
           location.href = url; // redirect
@@ -114,7 +115,7 @@
     </script>
 
     <div id="viewport">
-      <h1><a href="">自作PC構築支援</a></h1>
+      <h1><a href="/">自作PC構築支援</a></h1>
       <div class="update-time">
         update: <span th:text="${updateTime}">2022/01/01 12:59</span>
       </div>
