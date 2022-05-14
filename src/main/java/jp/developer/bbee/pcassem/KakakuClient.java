@@ -216,6 +216,7 @@ public class KakakuClient {
         String buf = s.replace("</td>", "");
         buf = buf.replace("</a>", "");
         buf = buf.replace("<br>", "/");
+        buf = buf.replace("&#215;", " x");
 
         try {
             String detail = buf.substring(buf.lastIndexOf(">") + 1);
@@ -268,7 +269,156 @@ public class KakakuClient {
                         retStr = detail + " スレッド";
                     }
                     break;
-
+                case "cpucooler":
+                    if (buf.contains("Intel対応ソケット")) {
+                        retStr = detail;
+                    } else if (buf.contains("AMD対応ソケット")) {
+                        retStr = detail;
+                    } else if (buf.contains("タイプ")) {
+                        retStr = detail;
+                    } else if (buf.contains("幅x高さx奥行")) {
+                        retStr = detail;
+                    } else if (buf.contains("ラジエーターサイズ")) {
+                        retStr = "ラジエーター；" + detail;
+                    }
+                    break;
+                case "pcmemory":
+                    if (buf.contains("メモリ容量")) {
+                        retStr = detail;
+                    } else if (buf.contains("枚数")) {
+                        retStr = detail;
+                    } else if (buf.contains("メモリインターフェイス")) {
+                        retStr = detail;
+                    } else if (buf.contains("メモリ規格")) {
+                        retStr = detail;
+                    } else if (buf.contains("データ転送速度")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "ssd":
+                case "hdd35inch":
+                    if (buf.contains("容量")) {
+                        retStr = detail;
+                    } else if (buf.contains("規格サイズ")) {
+                        retStr = detail;
+                    } else if (buf.contains("インターフェイス")) {
+                        retStr = detail;
+                    } else if (buf.contains(">読込速度<")) {
+                        retStr = "読込: " + detail;
+                    } else if (buf.contains(">書込速度<")) {
+                        retStr = "書込: " + detail;
+                    }
+                    break;
+                case "videocard":
+                    if (buf.contains("搭載チップ")) {
+                        retStr = detail;
+                    } else if (buf.contains(">メモリ<")) {
+                        retStr = detail;
+                    } else if (buf.contains("バスインターフェイス")) {
+                        retStr = detail;
+                    } else if (buf.contains("モニタ端子")) {
+                        retStr = detail;
+                    } else if (buf.contains("消費電力")) {
+                        retStr = "消費電力:" + detail;
+                    } else if (buf.contains("補助電源")) {
+                        retStr = "補助電源: " + detail;
+                    }
+                    break;
+                case "lcdmonitor":
+                    if (buf.contains("モニタサイズ")) {
+                        retStr = detail;
+                    } else if (buf.contains("アスペクト比")) {
+                        retStr = detail;
+                    } else if (buf.contains("表面処理")) {
+                        retStr = detail;
+                    } else if (buf.contains("パネル種類")) {
+                        retStr = "パネル: " + detail;
+                    } else if (buf.contains("解像度")) {
+                        retStr = "解像度: " + detail;
+                    } else if (buf.contains("応答速度")) {
+                        retStr = "応答速度: " + detail;
+                    } else if (buf.contains("リフレッシュレート")) {
+                        retStr = "リフレッシュレート: " + detail;
+                    } else if (buf.contains("入力端子")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "keyboard":
+                    if (buf.contains("ケーブル")) {
+                        retStr = detail;
+                    } else if (buf.contains("キーレイアウト")) {
+                        retStr = detail;
+                    } else if (buf.contains("キースイッチ")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "mouse":
+                    if (buf.contains("タイプ")) {
+                        retStr = detail;
+                    } else if (buf.contains("ケーブル")) {
+                        retStr = detail;
+                    } else if (buf.contains("ボタン数")) {
+                        retStr = detail;
+                    } else if (buf.contains("解像度")) {
+                        retStr = detail;
+                    } else if (buf.contains("重さ")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "dvddrive":
+                    if (buf.contains("設置方式")) {
+                        retStr = detail;
+                    } else if (buf.contains("接続インターフェース")) {
+                        retStr = detail;
+                    } else if (buf.contains("対応メディア")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "bluraydrive":
+                    if (buf.contains("設置方式")) {
+                        retStr = detail;
+                    } else if (buf.contains("接続インターフェース")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "soundcard":
+                    if (buf.contains("タイプ")) {
+                        retStr = detail;
+                    } else if (buf.contains("インターフェース")) {
+                        retStr = detail;
+                    } else if (buf.contains("サラウンド機能")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "pcspeaker":
+                    if (buf.contains("タイプ")) {
+                        retStr = detail;
+                    } else if (buf.contains("電源")) {
+                        retStr = detail;
+                    }
+                    break;
+                case "fancontroller":
+                    if (buf.contains("ファンコントローラ数")) {
+                        retStr = "コントローラー数: " + detail;
+                    }
+                    break;
+                case "casefan":
+                    if (buf.contains("ファンサイズ")) {
+                        retStr = detail;
+                    } else if (buf.contains("最大風量")) {
+                        retStr = detail;
+                    } else if (buf.contains("最大ノイズレベル")) {
+                        retStr = detail;
+                    } else if (buf.contains("最大回転数")) {
+                        retStr = detail;
+                    } else if (buf.contains("コネクタ")) {
+                        retStr = detail;
+                    } else if (buf.contains("LEDライティング対応")) {
+                        retStr = "LEDライティング対応";
+                    } else if (buf.contains("個数")) {
+                        retStr = detail;
+                    }
+                    break;
             }
         } catch (IndexOutOfBoundsException e) {
             System.out.println(s + " exception reason=" + e.getMessage());

@@ -132,6 +132,7 @@ public class HomeController {
                 for (DeviceInfo assembly : assembliesList) {
                     totalPrice += assembly.price();
                 }
+                /* TODO show warning if including price=0 item */
                 model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
                 return "index";//"redirect:/home";
             }
@@ -266,12 +267,13 @@ public class HomeController {
         Integer sortFlagModel = (Integer) model.getAttribute("sortFlag");
         int s = sortFlagModel == null ? sortFlag : sortFlagModel;
         List<DeviceInfo> deviceInfoList = dao.findAll(deviceName1, s);
+        deviceInfoList = noPriceAfter(deviceInfoList);
         List<DeviceInfoFormatted> formattedList = makeFormattedList(deviceInfoList);
 
         if (deviceName2 != null) {
             deviceInfoList = dao.findAll(deviceName2, s);
-            List<DeviceInfoFormatted> formattedList2 = makeFormattedList(deviceInfoList);
-            formattedList.addAll(formattedList2);
+            deviceInfoList = noPriceAfter(deviceInfoList);
+            formattedList.addAll(makeFormattedList(deviceInfoList));
         }
 
         model.addAttribute("assembliesDisplay", "hidden");
@@ -293,6 +295,20 @@ public class HomeController {
         }
         return formattedList;
     }
+
+    private List<DeviceInfo> noPriceAfter(List<DeviceInfo> list) {
+        List<DeviceInfo> retList = new ArrayList<>(list);
+        for (DeviceInfo l : list) {
+            if (l.price() == 0) {
+                retList.remove(0);
+                retList.add(l);
+            } else {
+                break;
+            }
+        }
+        return retList;
+    }
+
     @GetMapping("/add") // Add device to assemblies
     String addUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
                    @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {

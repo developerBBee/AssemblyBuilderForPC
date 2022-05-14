@@ -2,13 +2,13 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
   <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
     <meta charset="UTF-8">
-    <title>自作PC構築支援</title>
-    <meta name="description" content="自作PC用のパーツの検索して、値段を調べるツール。価格.comの最安価格を参照しています。">
+    <title>自作PC構成・総額シミュレーション</title>
+    <meta name="description" content="自作PC用のパーツ構成、総額シミュレーションツール。PCケース、マザーボード、CPU、メモリ、グラボ、ストレージ、その他パーツ、周辺機器の一覧から選択するだけでシミュレートします。価格.comの最安値を参照しています。">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <meta property="og:site_name" content="自作PC構築支援">
-    <meta property="og:title" content="自作PC構築支援">
-    <meta property="og:description" content="自作PC用のパーツの検索し、値段を調べるツール。各パーツの値段と構成時の合計価格を算出します。">
+    <meta property="og:site_name" content="自作PC構成・総額シミュレーション">
+    <meta property="og:title" content="自作PC構成・総額シミュレーション">
+    <meta property="og:description" content="自作PC用のパーツ一覧から選択して構成するツール。各パーツの値段と構成時の合計価格をシミュレートします。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="http://pcbuilding.link">
     <!--
@@ -18,7 +18,7 @@
     <!-- twitter -->
     <!--
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@@boooo00n">
+    <meta name="twitter:site" content="@boooo00n">
     <meta name="twitter:title" content="">
     <meta property="twitter:description" content="">
     <meta name="twitter:image" content="http://.....img/sns/thumbnail.png">
@@ -31,18 +31,16 @@
     <link rel="stylesheet" th:href="@{/styles.css}" >
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <!--
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-194288517-1"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HFLGCCXTJG"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'UA-194288517-1');
+      gtag('config', 'G-HFLGCCXTJG');
     </script>
-    -->
-
   </head>
+
   <body th:data-scroll="${bodyScrollPx}"
         th:data-guestId="${guestId}">
 
