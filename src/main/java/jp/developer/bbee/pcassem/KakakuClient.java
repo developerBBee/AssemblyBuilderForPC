@@ -102,6 +102,8 @@ public class KakakuClient {
                 }
             } catch (SocketException e) {
                 System.out.println("getKakaku() SocketException reason=" + e.getMessage());
+            } catch (UncheckedIOException e) {
+                System.out.println("getKakaku() failed device=" + device + " reason=" + e.getMessage());
             }
             System.out.println("getKakaku() device=" + device + " time=" + LocalDateTime.now().format(formatter));
         }
@@ -205,6 +207,8 @@ public class KakakuClient {
                     }
                 } catch (SocketException e) {
                     System.out.println("updateKakaku() SocketException reason=" + e.getMessage());
+                } catch (UncheckedIOException e) {
+                    System.out.println("updateKakaku() failed name=" + deviceInfo.name() + " reason=" + e.getMessage());
                 }
 //                try {
 //                    Thread.sleep(2000);
@@ -231,7 +235,7 @@ public class KakakuClient {
             switch (device) {
                 case "pccase":
                     if (buf.contains("電源規格")) {
-                        if (buf.contains("内蔵")) {
+                        if (buf.contains("内蔵") || buf.contains("搭載")) {
                             retStr = detail;
                         } else {
                             retStr = "電源規格：" + detail;

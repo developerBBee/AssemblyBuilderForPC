@@ -97,6 +97,20 @@ h1 a {
   height: 100px;
 }
 
+.assem-result {
+  display: flex;
+  flex-direction: row;
+}
+
+.warning-messages {
+  color: red;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 10px;
+  display: flex;
+  align-items: center;
+}
+
 .assem-result-container {
   width: 180px;
   margin-bottom: 5px;

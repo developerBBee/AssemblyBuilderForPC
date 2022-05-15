@@ -109,7 +109,7 @@ public class DeviceInfoDao {
     }
 
     public void rankReset(String device) {
-        jdbcTemplate.update("UPDATE devices SET price = 99 WHERE device = ?", device);
+        jdbcTemplate.update("UPDATE devices SET rank = 99 WHERE device = ?", device);
     }
 
     // UserAssem DAO

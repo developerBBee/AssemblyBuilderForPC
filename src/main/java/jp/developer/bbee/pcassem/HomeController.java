@@ -72,6 +72,7 @@ public class HomeController {
     public void runTask() {
         boolean incomplete = true;
         boolean fullUpdate = (Duration.between(fullUpdateDate, LocalDateTime.now()).toHours() > 165); // 24*7=168
+//        fullUpdate = true; // debug
         kakakuClient.unAcquired = fullUpdate;
 
         int loopCount = 0;
@@ -94,7 +95,7 @@ public class HomeController {
         TimerTask task = new MyTimerTask(HomeController.this);
         LocalDateTime nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4,0,0));
         long delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis();
-        //delay = 30000; // debug
+//        delay = 300000; // debug
         timer.schedule(task, delay); // Run task on schedule
         System.out.println("Update scheduling, delay=" + delay + "ms");
     }
@@ -131,11 +132,13 @@ public class HomeController {
             } else {
                 model.addAttribute("assembliesList", formattedAssembliesList);
                 int totalPrice = 0;
+                boolean isZeroPrice = false;
                 for (DeviceInfo assembly : assembliesList) {
                     totalPrice += assembly.price();
+                    if (assembly.price() == 0) isZeroPrice = true;
                 }
-                /* TODO show warning if including price=0 item */
                 model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
+                if (!isZeroPrice) model.addAttribute("warnMsg1Visiblity", "hidden");
                 return "index";//"redirect:/home";
             }
         } else {
@@ -281,6 +284,7 @@ public class HomeController {
         model.addAttribute("assembliesDisplay", "hidden");
         model.addAttribute("deviceInfoList", formattedList);
         model.addAttribute("deviceTypeName", deviceTypeName);
+        model.addAttribute("sortFlag", s);
         model.addAttribute("updateTime", lastUpdateDate.format(formatter));
 
     }
@@ -313,7 +317,8 @@ public class HomeController {
 
     @GetMapping("/add") // Add device to assemblies
     String addUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
-                   @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
+                        @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx,
+                        @RequestParam("sortFlag") String sortFlag) {
 
         if (guestId.length() != 32) { // Issue guestId
             return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
@@ -330,6 +335,7 @@ public class HomeController {
 
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
+        redirectAttributes.addFlashAttribute("sortFlag", Integer.valueOf(sortFlag));
         //return devType;
         return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
     }

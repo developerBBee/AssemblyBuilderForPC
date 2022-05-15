@@ -146,12 +146,17 @@
       </header>
 
       <div class="assem" th:classappend="${assembliesDisplay}">
-        <div class="assem-result-container">
-          <div class="assem-result-totalprice-area">
-            <div class="assem-result-totalprice-header">
-              合計
+        <div class="assem-result">
+          <div class="assem-result-container">
+            <div class="assem-result-totalprice-area">
+              <div class="assem-result-totalprice-header">
+                合計
+              </div>
+              <div class="assem-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
             </div>
-            <div class="assem-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+          </div>
+          <div class="warning-messages">
+            <div  th:classappend="${warnMsg1Visiblity}">※価格情報の無い商品が含まれています</div>
           </div>
         </div>
 
@@ -163,7 +168,7 @@
           <tbody>
             <tr th:each="assembly :${assembliesList}">
               <td th:text="${assembly.device}"></td>
-              <td th:text="${assembly.name}"></td>
+              <td><a th:href="${assembly.url}" th:text="${assembly.name}" target="_blank" rel="noopener noreferrer"></a></td>
               <td><img class="item-img" th:src="${assembly.imgurl}"></td>
               <td class="detail">
                 <th:block th:if="${assembly.detail}">
@@ -208,7 +213,7 @@
           </thead>
           <tbody>
             <tr th:each="deviceInfo :${deviceInfoList}">
-              <td th:text="${deviceInfo.name}"></td>
+              <td><a th:href="${deviceInfo.url}" th:text="${deviceInfo.name}" target="_blank" rel="noopener noreferrer"></a></td>
               <td><img class="item-img" th:src="${deviceInfo.imgurl}"></td>
               <td class="detail">
                 <th:block th:if="${deviceInfo.detail}">
@@ -225,6 +230,7 @@
                   <input name="id" type="hidden" th:value="${deviceInfo.id}"/>
                   <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
                   <input name="dev" type="hidden" th:value="${deviceInfo.device}"/>
+                  <input name="sortFlag" type="hidden" th:value="${sortFlag}"/>
                   <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
                   <input type="submit" value="登録"/>
                 </form>
