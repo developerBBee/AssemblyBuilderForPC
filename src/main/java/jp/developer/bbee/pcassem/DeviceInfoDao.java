@@ -38,6 +38,7 @@ public class DeviceInfoDao {
         String query = "SELECT * FROM devices WHERE device = ?";
         switch (sortFlag) {
             case 0:
+                query += " ORDER BY rank";
                 break;
             case 1:
                 query += " ORDER BY price";
@@ -107,6 +108,9 @@ public class DeviceInfoDao {
         return number;
     }
 
+    public void rankReset(String device) {
+        jdbcTemplate.update("UPDATE devices SET price = 99 WHERE device = ?", device);
+    }
 
     // UserAssem DAO
     public void addUserAssem(UserAssem assem) {

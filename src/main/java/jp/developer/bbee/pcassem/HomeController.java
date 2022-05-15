@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDate;

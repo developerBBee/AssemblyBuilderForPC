@@ -119,6 +119,7 @@ public class KakakuClient {
         SocketFactory factory = SSLSocketFactory.getDefault();
 
         for (String device : devices) {
+            if (!(fastUpdate || DEBUG_FAST)) dao.rankReset(device);
             List<DeviceInfo> deviceInfoList = dao.findAll(device);
 
             for (DeviceInfo deviceInfo : deviceInfoList) {
@@ -151,16 +152,11 @@ public class KakakuClient {
                     newPrice = 0;
                     newRank = 99;
                     try {
-                        bur.lines().limit(900).forEach(str -> {
+                        bur.lines().limit(1000).forEach(str -> {
 
                             String s = "";
                             try {
                                 s = StringEncoder.sjisToUtf8(str);
-                                if (s.contains("nbsp;<img src=\"https://img1.kakaku.k-img.com/images/balloonhelp/explain_icn.gif\" alt=\"\" width=\"30\" height=\"15\" onClick=\"showHelp(this, 'Balloon-Spec202')\" class=\"helpBT explainIcn\"")) {
-                                    System.out.println(str);
-                                    System.out.println(s);
-                                    System.out.println("");
-                                }
                             } catch (UnsupportedEncodingException e) {
                                 System.out.println("charset failed, reason=" + e.getMessage());
                             }
