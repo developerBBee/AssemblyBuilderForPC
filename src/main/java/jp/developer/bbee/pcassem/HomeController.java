@@ -111,7 +111,7 @@ public class HomeController {
         }
     }
 
-    record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank) {}
+    record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered) {}
     record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank) {}
     record UserAssem (String id, String deviceid, String device, String guestid) {}
 
@@ -120,12 +120,8 @@ public class HomeController {
         model.addAttribute("deviceListDisplay", "hidden");
         model.addAttribute("updateTime", lastUpdateDate.format(formatter));
 
-        if (guestId != null && guestId.length() >= 32) {
-            List<UserAssem> userAssems = dao.findAllUserAssemByGuestId(guestId);
-            List<DeviceInfo> assembliesList = new ArrayList<>();
-            for (UserAssem userAssem : userAssems) {
-                assembliesList.add(dao.findRecordById(userAssem.deviceid()));
-            }
+        if (guestId != null && guestId.length() == 32) {
+            List<DeviceInfo> assembliesList = getAssembliesList(guestId);
             List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList);
             if (assembliesList.size() == 0) {
                 model.addAttribute("assembliesDisplay", "hidden");
@@ -146,6 +142,15 @@ public class HomeController {
         }
         return "index";
        // return "redirect:/home";
+    }
+
+    private List<DeviceInfo> getAssembliesList(String guestId) {
+        List<UserAssem> userAssems = dao.findAllUserAssemByGuestId(guestId);
+        List<DeviceInfo> assembliesList = new ArrayList<>();
+        for (UserAssem userAssem : userAssems) {
+            assembliesList.add(dao.findRecordById(userAssem.deviceid()));
+        }
+        return assembliesList;
     }
 
     @GetMapping("/home")
@@ -281,6 +286,22 @@ public class HomeController {
             formattedList.addAll(makeFormattedList(deviceInfoList));
         }
 
+        String gid = (String) model.getAttribute("guestId");
+        if (gid != null) {
+            List<DeviceInfo> assembliesList = getAssembliesList(gid);
+            for (DeviceInfo asm : assembliesList) {
+                for (int i=0; i<formattedList.size(); i++) {
+                    if (formattedList.get(i).id().equals(asm.id())) {
+                        DeviceInfoFormatted dif = formattedList.get(i);
+                        formattedList.set(i, new DeviceInfoFormatted(
+                                dif.id(), dif.device(), dif.url(), dif.name(), dif.imgurl(), dif.detail(), dif.price(),
+                                dif.rank(), true
+                        ));
+                    }
+                }
+            }
+        }
+
         model.addAttribute("assembliesDisplay", "hidden");
         model.addAttribute("deviceInfoList", formattedList);
         model.addAttribute("deviceTypeName", deviceTypeName);
@@ -289,14 +310,14 @@ public class HomeController {
 
     }
 
-    //record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank) {}
+    //record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered) {}
     private List<DeviceInfoFormatted> makeFormattedList(List<DeviceInfo> deviceInfoList) {
         List<DeviceInfoFormatted> formattedList = new ArrayList<>();
         for (DeviceInfo di : deviceInfoList) {
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
-                    di.rank().toString()
+                    di.rank().toString(), false
             ));
         }
         return formattedList;

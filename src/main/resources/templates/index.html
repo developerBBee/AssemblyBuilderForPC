@@ -47,7 +47,7 @@
     <script type="text/javascript" th:inline="javascript">
 
       var guestId = localStorage.getItem('guestid');
-      if(guestId === null || guestId.length <= 30) {
+      if(guestId === null || guestId.length != 32) {
         guestId = generateUuid().replaceAll('-', '');
         localStorage.setItem('guestid', guestId);
         console.log('Save guestId ' + guestId);
@@ -232,7 +232,8 @@
                   <input name="dev" type="hidden" th:value="${deviceInfo.device}"/>
                   <input name="sortFlag" type="hidden" th:value="${sortFlag}"/>
                   <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
-                  <input type="submit" value="登録"/>
+                  <input th:if="${!deviceInfo.registered}" type="submit" value="登録"/>
+                  <input th:if="${deviceInfo.registered}" disabled type="submit" value="済"/>
                 </form>
               </td>
             </tr>
