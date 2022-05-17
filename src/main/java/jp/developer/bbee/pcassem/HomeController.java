@@ -30,6 +30,11 @@ public class HomeController {
 
     public Map<String, String> deviceTypeJp = new HashMap<>();
 
+    public List<String> deviceTypeList = List.of(
+            "pccase", "motherboard", "powersupply", "cpu", "cpucooler", "pcmemory", "hdd35inch", "ssd", "videocard",
+            "ossoft", "lcdmonitor", "keyboard", "mouse", "dvddrive", "bluraydrive", "soundcard", "pcspeaker", "fancontroller", "casefan"
+            );
+
     @Autowired // <- DAO auto setting
     HomeController(DeviceInfoDao dao){
         this.dao = dao;
@@ -122,6 +127,7 @@ public class HomeController {
 
         if (guestId != null && guestId.length() == 32) {
             List<DeviceInfo> assembliesList = getAssembliesList(guestId);
+            assembliesList = sortList(assembliesList);
             List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList);
             if (assembliesList.size() == 0) {
                 model.addAttribute("assembliesDisplay", "hidden");
@@ -321,6 +327,18 @@ public class HomeController {
             ));
         }
         return formattedList;
+    }
+
+    private List<DeviceInfo> sortList(List<DeviceInfo> deviceInfoList) {
+        List<DeviceInfo> sortedList = new ArrayList<>();
+        for (String dev : deviceTypeList) {
+            for (DeviceInfo di : deviceInfoList) {
+                if (dev.equals(di.device())) {
+                    sortedList.add(di);
+                }
+            }
+        }
+        return sortedList;
     }
 
     private List<DeviceInfo> noPriceAfter(List<DeviceInfo> list) {
