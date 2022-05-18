@@ -162,11 +162,12 @@
 
         <table>
           <thead>
-            <tr><th class="hidden">ID</th><th>部品名</th><th>商品名</th><th>商品画像</th>
+            <tr><th class="hidden">ID</th><th>選択</th><th>部品名</th><th>商品名</th><th>商品画像</th>
               <th>詳細</th><th width="106px">価格</th><th>削除</th></tr>
           </thead>
           <tbody>
             <tr th:each="assembly :${assembliesList}">
+              <td><input type="radio" th:name="${assembly.device}"></td>
               <td th:text="${assembly.device}"></td>
               <td><a th:href="${assembly.url}" th:text="${assembly.name}" target="_blank" rel="noopener noreferrer"></a></td>
               <td><img class="item-img" th:src="${assembly.imgurl}"></td>
