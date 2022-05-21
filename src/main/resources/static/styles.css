@@ -5,24 +5,6 @@ html, body {
   font-size:10pt;
 }
 
-a {
-  text-decoration: none;
-}
-
-h1 a {
-  color: black;
-  
-}
-
-.update-time {
-  position: absolute;
-  top: 5px;
-  right: 2px;
-  text-decoration-line: underline;
-  text-decoration-color: silver;
-  text-underline-offset: 2px;
-}
-
 #viewport {
   min-height: 100%;
   width: 100%;
@@ -30,9 +12,40 @@ h1 a {
   position: relative;
 }
 
-#viewport > header {
+header {
+  height: fit-content;
+  position: fixed;
+}
+
+.top-info-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+}
+
+h1 {
+  font-size: 16px;
+  color: black;
+  margin: 2px;
+}
+
+.top-title a {
+  text-decoration: none;
+  color: black;
+}
+
+.update-time {
+  margin-right: 5px;
+  text-decoration-line: underline;
+  text-decoration-color: silver;
+  text-underline-offset: 2px;
+}
+
+.menu {
   background: #1e3de9;
-  border-bottom: 1px solid #6174dd;
+  border-bottom: 3px solid #6174dd;
   line-height: 35px;
   font-size: 10pt;
   width: 100%;
@@ -83,6 +96,7 @@ h1 a {
   border-spacing: 0px;
   border-right: 2px solid;
   border-bottom: 2px solid;
+  border-collapse: collapse;
 }
 
 .assem th, .assem td {
@@ -137,6 +151,19 @@ h1 a {
 .assem .detail {
   font-size:12px;
   text-align: left;
+}
+
+/*
+.assem .top {
+  border-left: none;
+  border-bottom: none;
+}
+*/
+.assem .middle {
+  display: none;
+}
+.assem .bottom {
+  display: none;
 }
 
 /* items css */

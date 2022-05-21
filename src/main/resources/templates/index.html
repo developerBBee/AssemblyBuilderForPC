@@ -115,12 +115,14 @@
     </script>
 
     <div id="viewport">
-      <h1><a href="/">自作PC構築支援</a></h1>
-      <div class="update-time">
-        update: <span th:text="${updateTime}">2022/01/01 12:59</span>
-      </div>
+      <header id="header">
+        <div class="top-info-container">
+          <h1 class="top-title"><a href="/">自作PC構築支援</a></h1>
+          <div class="update-time">
+            update: <span th:text="${updateTime}">2022/01/01 12:59</span>
+          </div>
+        </div>
 
-      <header>
         <div class="menu">
           <ul>
             <a id="structure" href="/"><li>全体構成</li></a>
@@ -145,101 +147,122 @@
         </div>
       </header>
 
-      <div class="assem" th:classappend="${assembliesDisplay}">
-        <div class="assem-result">
-          <div class="assem-result-container">
-            <div class="assem-result-totalprice-area">
-              <div class="assem-result-totalprice-header">
-                合計
+      <div id="contents">
+        <script>
+          function changeHeightHeader() {
+            const contents = document.getElementById('contents');
+            const header = document.getElementById('header');
+            contents.style.paddingTop = header.clientHeight + 5 + 'px';
+            console.log(header.clientHeight);
+          }
+          changeHeightHeader();
+          window.addEventListener('resize', changeHeightHeader);
+        </script>
+        <div class="assem" th:classappend="${assembliesDisplay}">
+          <div class="assem-result">
+            <div class="assem-result-container">
+              <div class="assem-result-totalprice-area">
+                <div class="assem-result-totalprice-header">
+                  合計
+                </div>
+                <div class="assem-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
               </div>
-              <div class="assem-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+            </div>
+            <div class="warning-messages">
+              <div  th:classappend="${warnMsg1Visiblity}">※価格情報の無い商品が含まれています</div>
             </div>
           </div>
-          <div class="warning-messages">
-            <div  th:classappend="${warnMsg1Visiblity}">※価格情報の無い商品が含まれています</div>
-          </div>
+
+          <table>
+            <thead>
+              <tr><th class="hidden">ID</th><th>部品名</th><th>選択</th><th>商品名</th><th>商品画像</th>
+                <th>詳細</th><th width="106px">価格</th><th>削除</th></tr>
+            </thead>
+            <tbody>
+              <tr th:id="${assembly.id}" th:each="assembly :${assembliesList}">
+                <td th:rowspan="${assembly.rowspan}" class="dev-type" th:classappend="${assembly.tablestyle}" th:text="${assembly.device}"></td>
+                <td class="dev-select" th:name="${assembly.device}" th:onclick="|radioChecked('__${assembly.id}__');|">
+                  <input type="radio" th:name="${assembly.device}" th:checked="${assembly.checked}"></td>
+                <script >
+                  function radioChecked(assemId) {
+                    const checkedItem = document.getElementById(assemId);
+                    const checkedItemData = checkedItem.children;
+                    const radio = checkedItemData.item(1).children.item(0); // input-tag type radio
+                    radio.checked = true;
+                  }
+                </script>
+                <td><a th:href="${assembly.url}" th:text="${assembly.name}" target="_blank" rel="noopener noreferrer"></a></td>
+                <td><img class="item-img" th:src="${assembly.imgurl}"></td>
+                <td class="detail">
+                  <th:block th:if="${assembly.detail}">
+                    <th:block th:each="str, stat : ${assembly.detail.split('\r\n|\r|\n', -1)}">
+                      <th:block th:text="${str}"/>
+                      <br th:if="${!stat.last}"/>
+                    </th:block>
+                  </th:block>
+                </td>
+                <td th:text="${assembly.price}"></td>
+                <td>
+                  <form action="/del" name="submit_scroll"> <!-- action="/del" -->
+                    <input name="guestId" class="gid" type="hidden"/>
+                    <input name="id" type="hidden" th:value="${assembly.id}"/>
+                    <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
+                    <input name="dev" type="hidden" th:value="${assembly.device}"/>
+                    <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
+                    <input type="submit" value="削除"/>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <table>
-          <thead>
-            <tr><th class="hidden">ID</th><th>選択</th><th>部品名</th><th>商品名</th><th>商品画像</th>
-              <th>詳細</th><th width="106px">価格</th><th>削除</th></tr>
-          </thead>
-          <tbody>
-            <tr th:each="assembly :${assembliesList}">
-              <td><input type="radio" th:name="${assembly.device}"></td>
-              <td th:text="${assembly.device}"></td>
-              <td><a th:href="${assembly.url}" th:text="${assembly.name}" target="_blank" rel="noopener noreferrer"></a></td>
-              <td><img class="item-img" th:src="${assembly.imgurl}"></td>
-              <td class="detail">
-                <th:block th:if="${assembly.detail}">
-                  <th:block th:each="str, stat : ${assembly.detail.split('\r\n|\r|\n', -1)}">
-                    <th:block th:text="${str}"/>
-                    <br th:if="${!stat.last}"/>
-                  </th:block>
-                </th:block>
-              </td>
-              <td th:text="${assembly.price}"></td>
-              <td>
-                <form action="/del" name="submit_scroll"> <!-- action="/del" -->
-                  <input name="guestId" class="gid" type="hidden"/>
-                  <input name="id" type="hidden" th:value="${assembly.id}"/>
-                  <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
-                  <input name="dev" type="hidden" th:value="${assembly.device}"/>
-                  <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
-                  <input type="submit" value="削除"/>
-                </form>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <form method="get" action="/sort" name="submit_sort">
+          <input name="guestId" class="gid" type="hidden"/>
+          <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
+          <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
+          <select class="items-sort" th:classappend="${deviceListDisplay}" name="sort" onchange="submit(this.form)">
+            <option th:selected="${sortFlag == 0}" value="popular">人気順</option>
+            <option th:selected="${sortFlag == 1}" value="lower">値段が安い順</option>
+            <option th:selected="${sortFlag == 2}" value="higher">値段が高い順</option>
+          </select>
+        </form>
 
-      <form method="get" action="/sort" name="submit_sort">
-        <input name="guestId" class="gid" type="hidden"/>
-        <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
-        <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
-        <select class="items-sort" th:classappend="${deviceListDisplay}" name="sort" onchange="submit(this.form)">
-          <option th:selected="${sortFlag == 0}" value="popular">人気順</option>
-          <option th:selected="${sortFlag == 1}" value="lower">値段が安い順</option>
-          <option th:selected="${sortFlag == 2}" value="higher">値段が高い順</option>
-        </select>
-      </form>
-
-      <div class="items" th:classappend="${deviceListDisplay}">
-        <table>
-          <thead>
-            <tr><th class="hidden">ID</th><th>商品名</th><th>商品画像</th>
-              <th>詳細</th><th width="106px">価格</th><th>登録</th></tr>
-          </thead>
-          <tbody>
-            <tr th:each="deviceInfo :${deviceInfoList}">
-              <td><a th:href="${deviceInfo.url}" th:text="${deviceInfo.name}" target="_blank" rel="noopener noreferrer"></a></td>
-              <td><img class="item-img" th:src="${deviceInfo.imgurl}"></td>
-              <td class="detail">
-                <th:block th:if="${deviceInfo.detail}">
-                  <th:block th:each="str, stat : ${deviceInfo.detail.split('\r\n|\r|\n', -1)}">
-                    <th:block th:text="${str}"/>
-                    <br th:if="${!stat.last}"/>
+        <div class="items" th:classappend="${deviceListDisplay}">
+          <table>
+            <thead>
+              <tr><th class="hidden">ID</th><th>商品名</th><th>商品画像</th>
+                <th>詳細</th><th width="106px">価格</th><th>登録</th></tr>
+            </thead>
+            <tbody>
+              <tr th:each="deviceInfo :${deviceInfoList}">
+                <td><a th:href="${deviceInfo.url}" th:text="${deviceInfo.name}" target="_blank" rel="noopener noreferrer"></a></td>
+                <td><img class="item-img" th:src="${deviceInfo.imgurl}"></td>
+                <td class="detail">
+                  <th:block th:if="${deviceInfo.detail}">
+                    <th:block th:each="str, stat : ${deviceInfo.detail.split('\r\n|\r|\n', -1)}">
+                      <th:block th:text="${str}"/>
+                      <br th:if="${!stat.last}"/>
+                    </th:block>
                   </th:block>
-                </th:block>
-              </td>
-              <td th:text="${deviceInfo.price}"></td>
-              <td>
-                <form action="/add" name="submit_scroll"> <!-- action="/add" -->
-                  <input name="guestId" class="gid" type="hidden"/>
-                  <input name="id" type="hidden" th:value="${deviceInfo.id}"/>
-                  <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
-                  <input name="dev" type="hidden" th:value="${deviceInfo.device}"/>
-                  <input name="sortFlag" type="hidden" th:value="${sortFlag}"/>
-                  <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
-                  <input th:if="${!deviceInfo.registered}" type="submit" value="登録"/>
-                  <input th:if="${deviceInfo.registered}" disabled type="submit" value="済"/>
-                </form>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+                <td th:text="${deviceInfo.price}"></td>
+                <td>
+                  <form action="/add" name="submit_scroll"> <!-- action="/add" -->
+                    <input name="guestId" class="gid" type="hidden"/>
+                    <input name="id" type="hidden" th:value="${deviceInfo.id}"/>
+                    <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
+                    <input name="dev" type="hidden" th:value="${deviceInfo.device}"/>
+                    <input name="sortFlag" type="hidden" th:value="${sortFlag}"/>
+                    <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
+                    <input th:if="${!deviceInfo.registered}" type="submit" value="登録"/>
+                    <input th:if="${deviceInfo.registered}" disabled type="submit" value="済"/>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </body>

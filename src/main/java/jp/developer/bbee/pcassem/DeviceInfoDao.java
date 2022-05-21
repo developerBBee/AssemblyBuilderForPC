@@ -10,9 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class DeviceInfoDao {
@@ -158,5 +156,18 @@ public class DeviceInfoDao {
         String id = result.get(0).get("id").toString();
         int number = jdbcTemplate.update("DELETE FROM assemblies WHERE id = ?", id);
         return number;
+    }
+
+    public Map<String, Integer> getAssemCountList(List<String> deviceList, String guestid) {
+        Map<String, Integer> countList = new HashMap<>();
+        String query1 = "SELECT COUNT(*) FROM assemblies WHERE device = '";
+        String query2 = "' AND guestid = '";
+        for (String dev : deviceList) {
+            String query = query1 + dev + query2 + guestid + "'";
+            //System.out.println(query); // debug
+            countList.put(dev, jdbcTemplate.queryForObject(query, Integer.class));
+        }
+
+        return countList;
     }
 }

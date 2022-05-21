@@ -116,7 +116,8 @@ public class HomeController {
         }
     }
 
-    record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered) {}
+    record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
+                                String tablestyle, int rowspan, boolean checked) {}
     record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank) {}
     record UserAssem (String id, String deviceid, String device, String guestid) {}
 
@@ -126,9 +127,10 @@ public class HomeController {
         model.addAttribute("updateTime", lastUpdateDate.format(formatter));
 
         if (guestId != null && guestId.length() == 32) {
+            Map<String, Integer> assemCountMap = dao.getAssemCountList(deviceTypeList, guestId);
             List<DeviceInfo> assembliesList = getAssembliesList(guestId);
             assembliesList = sortList(assembliesList);
-            List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList);
+            List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList, assemCountMap);
             if (assembliesList.size() == 0) {
                 model.addAttribute("assembliesDisplay", "hidden");
             } else {
@@ -301,7 +303,7 @@ public class HomeController {
                         DeviceInfoFormatted dif = formattedList.get(i);
                         formattedList.set(i, new DeviceInfoFormatted(
                                 dif.id(), dif.device(), dif.url(), dif.name(), dif.imgurl(), dif.detail(), dif.price(),
-                                dif.rank(), true
+                                dif.rank(), true, "middle", 1, false
                         ));
                     }
                 }
@@ -323,8 +325,46 @@ public class HomeController {
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
-                    di.rank().toString(), false
+                    di.rank().toString(), false, "middle", 1, false
             ));
+        }
+        return formattedList;
+    }
+
+    private List<DeviceInfoFormatted> makeFormattedList(List<DeviceInfo> deviceInfoList, Map<String, Integer> countMap) {
+        List<DeviceInfoFormatted> formattedList = new ArrayList<>();
+        int rowSpan = 1;
+        int deviceCount = 0;
+        String tableStyle;
+        boolean checked;
+        for (DeviceInfo di : deviceInfoList) {
+            if (deviceCount == 0) {
+                tableStyle = "top";
+                rowSpan = countMap.get(di.device());
+                checked = true;
+                if (deviceCount == countMap.get(di.device())-1) {
+                    tableStyle = ""; // table style none
+                }
+            } else if (deviceCount == countMap.get(di.device())-1) {
+                tableStyle = "bottom";
+                rowSpan = 1;
+                checked = false;
+            } else {
+                tableStyle = "middle";
+                rowSpan = 1;
+                checked = false;
+            }
+
+            formattedList.add(new DeviceInfoFormatted(
+                    di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
+                    di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
+                    di.rank().toString(), false, tableStyle, rowSpan, checked
+            ));
+            if (deviceCount == countMap.get(di.device())-1) {
+                deviceCount = 0;
+            } else {
+                deviceCount++;
+            }
         }
         return formattedList;
     }
