@@ -202,3 +202,26 @@ h1 {
 .hidden {
   display: none;
 }
+
+.zero {
+  display: none;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 48
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable > span {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	    -ms-user-select: none;
+	        user-select: none;
+}
