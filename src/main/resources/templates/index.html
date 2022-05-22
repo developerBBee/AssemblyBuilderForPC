@@ -28,7 +28,7 @@
 <!-- for debug -->
     <link rel="stylesheet" href="../static/styles.css">
 
-    <link rel="stylesheet" th:href="@{/styles.css?20220515}" >
+    <link rel="stylesheet" th:href="@{/styles.css?20220522}" >
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -93,6 +93,7 @@
           url.searchParams.append('guestId', guestId);
           location.href = url; // redirect
         }
+        checkedTotal();
       }
 
 
@@ -166,7 +167,7 @@
                 <div class="assem-result-totalprice-header">
                   合計
                 </div>
-                <div class="assem-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+                <div id="totalprice" class="assem-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
               </div>
             </div>
             <div class="warning-messages">
@@ -179,7 +180,7 @@
               <tr><th class="hidden">ID</th><th>部品名</th><th>選択</th><th>商品名</th><th>商品画像</th>
                 <th>詳細</th><th width="106px">価格</th><th>削除</th></tr>
             </thead>
-            <tbody>
+            <tbody id="assemtablebody">
               <tr th:each="assembly :${assembliesList}" th:class="${assembly.device}">
                 <td class="clickable" th:rowspan="${assembly.rowspan}" th:classappend="${assembly.tablestyle}" th:onclick="|expandChange('__${assembly.device}__');|">
                   <div th:text="${assembly.device}"></div>
@@ -221,6 +222,7 @@
             const deviceRows = document.getElementsByClassName(device);
             hiddenRowAll(deviceRows);
             //appearRow(checkedItem.parentNode);
+            checkedTotal(); 
           }
           
           function expandChange(device) {
@@ -278,6 +280,25 @@
             const expandSpan = rows[0].children.item(0).children.item(1);
             console.log(expandSpan);
             expandSpan.textContent = 'expand_less';
+          }
+
+          function checkedTotal() {
+            const tableBody = document.getElementById('assemtablebody');
+            console.log(tableBody);
+            var totalPrice = 0;
+            for(let i=0; i<tableBody.children.length; i++) {
+              const devRows = tableBody.children.item(i);
+              const checkButtonElement = devRows.children.item(1).children.item(0);
+              if (checkButtonElement.checked) {
+                const valueElement = devRows.children.item(5);
+                var value = valueElement.textContent;
+                var val = parseInt(value.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
+                console.log(val);
+                totalPrice += val;
+              }
+            }
+            const totalPriceTxt = document.getElementById('totalprice');
+            totalPriceTxt.textContent = '¥ ' + totalPrice.toLocaleString();
           }
         </script>
 
