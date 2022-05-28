@@ -56,7 +56,9 @@ public class DeviceInfoDao {
                         row.get("imgurl") != null ? row.get("imgurl").toString() : "",
                         row.get("detail") != null ? row.get("detail").toString() : "",
                         row.get("price") != null ? (Integer) row.get("price") : 0,
-                        row.get("rank") != null ? (Integer) row.get("rank") : 99
+                        row.get("rank") != null ? (Integer) row.get("rank") : 99,
+                        row.get("flag1") != null ? (int) row.get("flag1") : 0,
+                        row.get("flag2") != null ? (int) row.get("flag2") : 0
                 )).toList();
 
         return deviceInfoList;
@@ -68,7 +70,9 @@ public class DeviceInfoDao {
             Map<String, Object> result = jdbcTemplate.queryForList(query, device, url).get(0);
             return new DeviceInfo(result.get("id").toString(), result.get("device").toString(), result.get("url").toString(),
                     result.get("name").toString(), result.get("imgurl").toString(), result.get("detail").toString(),
-                    (Integer) result.get("price"), (Integer) result.get("rank"));
+                    (Integer) result.get("price"), (Integer) result.get("rank"),
+                    result.getOrDefault("flag1", 0) == null ? 0 : (int) result.getOrDefault("flag1", 0),
+                    result.getOrDefault("flag2", 0) == null ? 0 : (int) result.getOrDefault("flag2", 0));
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
@@ -80,7 +84,9 @@ public class DeviceInfoDao {
             Map<String, Object> result = jdbcTemplate.queryForList(query, id).get(0);
             return new DeviceInfo(result.get("id").toString(), result.get("device").toString(), result.get("url").toString(),
                     result.get("name").toString(), result.get("imgurl").toString(), result.get("detail").toString(),
-                    (Integer) result.get("price"), (Integer) result.get("rank"));
+                    (Integer) result.get("price"), (Integer) result.get("rank"),
+                    result.getOrDefault("flag1", 0) == null ? 0 : (int) result.getOrDefault("flag1", 0),
+                    result.getOrDefault("flag2", 0) == null ? 0 : (int) result.getOrDefault("flag2", 0));
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
@@ -95,9 +101,9 @@ public class DeviceInfoDao {
         int number = 0;
         try {
             number = jdbcTemplate.update(
-                    "UPDATE devices SET device = ?, url = ?, name = ?, imgurl = ? , detail = ? , price = ? , rank = ? WHERE id = ?",
+                    "UPDATE devices SET device = ?, url = ?, name = ?, imgurl = ? , detail = ? , price = ? , rank = ? , flag1 = ? , flag2 = ? WHERE id = ?",
                     deviceInfo.device(), deviceInfo.url(), deviceInfo.name(), deviceInfo.imgurl(), deviceInfo.detail(),
-                    deviceInfo.price(), deviceInfo.rank(), deviceInfo.id());
+                    deviceInfo.price(), deviceInfo.rank(), deviceInfo.flag1(), deviceInfo.flag2(), deviceInfo.id());
             return number;
         } catch (DataIntegrityViolationException e) {
             System.out.println("name=" + deviceInfo.name() + " detail=" + deviceInfo.detail() +

@@ -17,6 +17,49 @@ public class KakakuClient {
     public static final String KAKAKU_DOMAIN = "kakaku.com";
     private final DeviceInfoDao dao;
 
+    // Flag 1 definition
+    public static final int FLAG1_PSU_FLEXATX = 1 << 0;
+    public static final int FLAG1_PSU_TFX = 1 << 1;
+    public static final int FLAG1_PSU_SFX = 1 << 2;
+    public static final int FLAG1_PSU_SFXL = 1 << 3;
+    public static final int FLAG1_PSU_ATX = 1 << 4;
+    public static final int FLAG1_PSU_EPS = 1 << 5;
+    public static final int FLAG1_PSU_BUILTIN = 1 << 7;
+
+    public static final int FLAG1_MOTHER_ITX = 1 << 8;
+    public static final int FLAG1_MOTHER_FLEXATX = 1 << 9;
+    public static final int FLAG1_MOTHER_MICROATX = 1 << 10;
+    public static final int FLAG1_MOTHER_ATX = 1 << 11;
+    public static final int FLAG1_MOTHER_EATX = 1 << 12;
+    public static final int FLAG1_MOTHER_XLATX = 1 << 13;
+
+    public static final int FLAG1_VOLTAGE_UNIT = 10; // /10
+    public static final int FLAG1_VOLTAGE_SHIFT = 16; // *2^16
+
+    public static final int FLAG1_SIZE_UNIT = 10; // /10
+    public static final int FLAG1_SIZE_SHIFT = 24; // *2^24
+    public static final int FLAG1_SIZE_RADIATOR = 1 << 31;
+
+    // Flag 2 definition
+    public static final int FLAG2_SOCKET_LGA1155 = 1 << 0;
+    public static final int FLAG2_SOCKET_LGA1150 = 1 << 1;
+    public static final int FLAG2_SOCKET_LGA1151 = 1 << 2;
+    public static final int FLAG2_SOCKET_LGA1200 = 1 << 3;
+    public static final int FLAG2_SOCKET_LGA1700 = 1 << 4;
+    public static final int FLAG2_SOCKET_LGA2011 = 1 << 5;
+    public static final int FLAG2_SOCKET_LGA20113 = 1 << 6;
+    public static final int FLAG2_SOCKET_LGA2066 = 1 << 7;
+
+    public static final int FLAG2_SOCKET_AM4 = 1 << 8;
+    public static final int FLAG2_SOCKET_AM5 = 1 << 9;
+    public static final int FLAG2_SOCKET_TR4 = 1 << 10;
+    public static final int FLAG2_SOCKET_STRX4 = 1 << 11;
+
+    public static final int FLAG2_DIMM_DDR3 = 1 << 16;
+    public static final int FLAG2_DIMM_DDR4 = 1 << 17;
+    public static final int FLAG2_DIMM_DDR5 = 1 << 18;
+    public static final int FLAG2_SODIMM = 1 << 23; // For determining DIMM(0) or SODIMM(1)
+
     public boolean unAcquired;
     private List<String> urlList;
     private List<String> devices;
@@ -92,7 +135,9 @@ public class KakakuClient {
                                     "",
                                     "",
                                     0,
-                                    99
+                                    99,
+                                    0,
+                                    0
                             ));
                         }
                     }
@@ -116,6 +161,8 @@ public class KakakuClient {
     String newDetail;
     Integer newPrice;
     Integer newRank;
+    int newFlag1;
+    int newFlag2;
     public void updateKakaku(boolean fastUpdate) throws IOException {
         unAcquired = false; // Acquired link url
         SocketFactory factory = SSLSocketFactory.getDefault();
@@ -153,6 +200,8 @@ public class KakakuClient {
                     newDetail = "";
                     newPrice = 0;
                     newRank = 99;
+                    newFlag1 = 0;
+                    newFlag2 = 0;
                     try {
                         bur.lines().limit(1000).forEach(str -> {
 
@@ -164,7 +213,8 @@ public class KakakuClient {
                             }
                             if (s.contains("  prdname: ")) {
                                 newName = s.substring(12, s.length()-2);
-                                newName = newName.replace("\\", ""); // delete yen mark
+                                newName = newName.replace("\\", ""); // delete BS mark
+                                if ("cpu".equals(device)) setCpuPowerConsumption(newName);
                             } else if (s.contains("  prdlprc: ")) {
                                 try {
                                     newPrice = Integer.valueOf(s.substring(11, s.length()-1));
@@ -200,7 +250,8 @@ public class KakakuClient {
                             }
                         });
                         dao.update(new DeviceInfo(
-                                deviceInfo.id(), deviceInfo.device(), deviceInfo.url(), newName, newImgUrl, newDetail, newPrice, newRank));
+                                deviceInfo.id(), deviceInfo.device(), deviceInfo.url(), newName, newImgUrl, newDetail, newPrice, newRank,
+                                newFlag1, newFlag2));
 
                     } catch (ArrayIndexOutOfBoundsException e) {
                         System.out.println("価格情報を取得できませんでした reason=" + e.getMessage());
@@ -237,29 +288,129 @@ public class KakakuClient {
                     if (buf.contains("電源規格")) {
                         if (buf.contains("内蔵") || buf.contains("搭載")) {
                             retStr = detail;
+                            newFlag1 |= FLAG1_PSU_BUILTIN;
                         } else {
                             retStr = "電源規格：" + detail;
+                            if (detail.contains("EPS")) {
+                                newFlag1 |= FLAG1_PSU_EPS;
+                            }
+                            if (detail.contains("ATX") && !detail.contains("lexATX")) {
+                                newFlag1 |= FLAG1_PSU_ATX;
+                            }
+                            if (detail.contains("SFX-L")) {
+                                newFlag1 |= FLAG1_PSU_SFXL;
+                            }
+                            if (detail.contains("SFX")) { // Intentional to include SFX-L standard
+                                newFlag1 |= FLAG1_PSU_SFX;
+                            }
+                            if (detail.contains("TFX")) {
+                                newFlag1 |= FLAG1_PSU_TFX;
+                            }
                         }
                     } else if (buf.contains("対応マザーボード")) {
                         retStr = detail;
+                        if (detail.contains("ITX")) {
+                            newFlag1 |= FLAG1_MOTHER_ITX;
+                        } else if (detail.contains("Flex") || detail.contains("flex")) {
+                            newFlag1 |= FLAG1_MOTHER_FLEXATX;
+                        } else if (detail.contains("Micro") || detail.contains("micro")) {
+                            newFlag1 |= FLAG1_MOTHER_MICROATX;
+                        } else if (detail.contains("Extended") || detail.contains("E-ATX") || detail.contains("EATX")) {
+                            newFlag1 |= FLAG1_MOTHER_EATX;
+                        } else if (detail.contains("XL-ATX") || detail.contains("XLATX")) {
+                            newFlag1 |= FLAG1_MOTHER_XLATX;
+                        } else if (detail.contains("ATX")) {
+                            newFlag1 |= FLAG1_MOTHER_ATX;
+                        }
                     } else if (buf.contains("幅x高さx奥行")) {
                         retStr = detail;
+                        try {
+                            double width = Double.parseDouble(detail.substring(0, detail.indexOf("x")).replace(" ", ""));
+                            newFlag1 |= (int) Math.ceil(width / FLAG1_SIZE_UNIT) << FLAG1_SIZE_SHIFT;
+                        } catch (NumberFormatException e) {
+                            System.out.println("PC case \"width\" could not be obtained numerically, reason=" + e.getMessage());
+                        }
                     }
                     break;
                 case "motherboard":
                     if (buf.contains("CPUソケット")) {
                         retStr = detail;
+                        if (detail.contains("LGA1155")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1155;
+                        } else if (detail.contains("LGA1150")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1150;
+                        } else if (detail.contains("LGA1151")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1151;
+                        } else if (detail.contains("LGA1200")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1200;
+                        } else if (detail.contains("LGA1700")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1700;
+                        } else if (detail.contains("LGA2011-3")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA20113;
+                        } else if (detail.contains("LGA2011")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA2011;
+                        } else if (detail.contains("LGA2066")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA2066;
+                        } else if (detail.contains("AM4")) {
+                            newFlag2 |= FLAG2_SOCKET_AM4;
+                        } else if (detail.contains("AM5")) {
+                            newFlag2 |= FLAG2_SOCKET_AM5;
+                        } else if (detail.contains("TR4")) {
+                            newFlag2 |= FLAG2_SOCKET_TR4;
+                        } else if (detail.contains("sTRX4")) {
+                            newFlag2 |= FLAG2_SOCKET_STRX4;
+                        }
                     } else if (buf.contains("フォームファクタ")) {
                         retStr = detail;
+                        if (detail.contains("ITX")) {
+                            newFlag1 |= FLAG1_MOTHER_ITX;
+                        } else if (detail.contains("Flex") || detail.contains("flex")) {
+                            newFlag1 |= FLAG1_MOTHER_FLEXATX;
+                        } else if (detail.contains("Micro") || detail.contains("micro")) {
+                            newFlag1 |= FLAG1_MOTHER_MICROATX;
+                        } else if (detail.contains("Extended") || detail.contains("E-ATX") || detail.contains("EATX")) {
+                            newFlag1 |= FLAG1_MOTHER_EATX;
+                        } else if (detail.contains("XL-ATX") || detail.contains("XLATX")) {
+                            newFlag1 |= FLAG1_MOTHER_XLATX;
+                        } else if (detail.contains("ATX")) {
+                            newFlag1 |= FLAG1_MOTHER_ATX;
+                        }
                     } else if (buf.contains("詳細メモリタイプ")) {
                         retStr = detail;
+                        if (detail.contains("S.O.DIMM")) {
+                            newFlag2 |= FLAG2_SODIMM;
+                        }
+                        if (detail.contains("DDR3")) {
+                            newFlag2 |= FLAG2_DIMM_DDR3;
+                        } else if (detail.contains("DDR4")) {
+                            newFlag2 |= FLAG2_DIMM_DDR4;
+                        } else if (detail.contains("DDR5")) {
+                            newFlag2 |= FLAG2_DIMM_DDR5;
+                        }
                     }
                     break;
                 case "powersupply":
                     if (buf.contains("対応規格")) {
                         retStr = detail;
+                        if (detail.contains("EPS")) {
+                            newFlag1 |= FLAG1_PSU_EPS;
+                        }
+                        if (detail.contains("ATX") && !detail.contains("lexATX")) {
+                            newFlag1 |= FLAG1_PSU_ATX;
+                        }
+                        if (detail.contains("SFX-L")) {
+                            newFlag1 |= FLAG1_PSU_SFXL;
+                        }
+                        if (detail.contains("SFX")) { // Intentional to include SFX-L standard
+                            newFlag1 |= FLAG1_PSU_SFX;
+                        }
+                        if (detail.contains("TFX")) {
+                            newFlag1 |= FLAG1_PSU_TFX;
+                        }
                     } else if (buf.contains("電源容量")) {
                         retStr = detail;
+                        newFlag1 |= Integer.parseInt(detail.substring(0, detail.indexOf("W")).replace(" ", ""))
+                                / FLAG1_VOLTAGE_UNIT << FLAG1_VOLTAGE_SHIFT;
                     } else if (buf.contains("80PLUS認証")) {
                         retStr = "80PLUS " + detail;
                     }
@@ -288,8 +439,29 @@ public class KakakuClient {
                         retStr = detail;
                     } else if (buf.contains("幅x高さx奥行")) {
                         retStr = detail;
+                        try {
+                            double height = Double.parseDouble(detail.split("x")[1].replace(" ", ""));
+                            newFlag1 |= (int) Math.ceil(height / FLAG1_SIZE_UNIT) << FLAG1_SIZE_SHIFT;
+                        } catch (IndexOutOfBoundsException e) {
+                            System.out.println("CPU cooler \"height\" could not found, reason=" + e.getMessage());
+                        } catch (NumberFormatException e) {
+                            System.out.println("CPU cooler \"height\" could not be obtained numerically, reason=" + e.getMessage());
+                        }
                     } else if (buf.contains("ラジエーターサイズ")) {
-                        retStr = "ラジエーター；" + detail;
+                        retStr = "ラジエーター：" + detail;
+                        try {
+                            int sizeBit = 0B11111111 << FLAG1_SIZE_SHIFT;
+                            if ((newFlag1 & sizeBit) != 0) {
+                                System.out.println("Size is already set");
+                            }
+                            double height = Double.parseDouble(detail.split("x")[0].replace(" ", ""));
+                            newFlag1 |= (int) Math.ceil(height / FLAG1_SIZE_UNIT) << FLAG1_SIZE_SHIFT;
+                            newFlag1 |= FLAG1_SIZE_RADIATOR;
+                        } catch (IndexOutOfBoundsException e) {
+                            System.out.println("CPU cooler \"height\" could not found, reason=" + e.getMessage());
+                        } catch (NumberFormatException e) {
+                            System.out.println("CPU cooler \"height\" could not be obtained numerically, reason=" + e.getMessage());
+                        }
                     }
                     break;
                 case "pcmemory":
@@ -299,8 +471,18 @@ public class KakakuClient {
                         retStr = detail;
                     } else if (buf.contains("メモリインターフェイス")) {
                         retStr = detail;
+                        if (detail.contains("S.O.DIMM")) {
+                            newFlag2 |= FLAG2_SODIMM;
+                        }
                     } else if (buf.contains("メモリ規格")) {
                         retStr = detail;
+                        if (detail.contains("DDR3")) {
+                            newFlag2 |= FLAG2_DIMM_DDR3;
+                        } else if (detail.contains("DDR4")) {
+                            newFlag2 |= FLAG2_DIMM_DDR4;
+                        } else if (detail.contains("DDR5")) {
+                            newFlag2 |= FLAG2_DIMM_DDR5;
+                        }
                     } else if (buf.contains("データ転送速度")) {
                         retStr = detail;
                     }
@@ -435,5 +617,83 @@ public class KakakuClient {
             return null;
         }
         return retStr;
+    }
+
+    private final List<Integer> core12th_i9 = List.of(200, 240, 300, 110); // normal / K / X / T
+    private final List<Integer> core12th_i7 = List.of(180, 190, 280, 100); // normal / K / X / T
+    private final List<Integer> core12th_i5 = List.of(120, 150, 120,  80); // normal / K / X / T
+    private final List<Integer> core12th_i3 = List.of( 90,  90,  90,  70); // normal / K / X / T
+    private final List<Integer> coreUnder11 = List.of( 70, 130, 170,  70); // normal / K / X / T
+
+    private final List<Integer> ryzen9 = List.of( 70, 110,  70,  50,  40,  30,  20); // normal / X / G / H / E / U / C
+    private final List<Integer> ryzen7 = List.of( 70, 110,  70,  50,  40,  30,  20); // normal / X / G / H / E / U / C
+    private final List<Integer> ryzen5 = List.of( 70, 100,  70,  50,  40,  30,  20); // normal / X / G / H / E / U / C
+    private final List<Integer> ryzen3 = List.of( 70,  70,  70,  50,  40,  20,  20); // normal / X / G / H / E / U / C
+    private void setCpuPowerConsumption(String cpuName) {
+        String str = cpuName.replace("BOX", "");
+        int watt = 0;
+        List<Integer> cpuPowerList = new ArrayList<>();
+        int index = 0;
+        if (str.contains("Core") || str.contains("Pentium") || str.contains("Celeron") || str.contains("Atom")) {
+            if (str.contains(" 12")) { // 12th
+                if (str.contains(" i9")) {
+                    cpuPowerList = core12th_i9;
+                } else if (str.contains(" i7")) {
+                    cpuPowerList = core12th_i7;
+                } else if (str.contains(" i5")) {
+                    cpuPowerList = core12th_i5;
+                } else if (str.contains(" i3")) {
+                    cpuPowerList = core12th_i3;
+                } else {
+                    // pentium, celeron, atom ???
+                    watt = 50;
+                }
+            } else { // 11th or under
+                cpuPowerList = coreUnder11;
+            }
+            if (str.contains("K")) {
+                index = 1;
+            } else if (str.contains("X")) {
+                index = 2;
+            } else if (str.contains("T")) {
+                index = 3;
+            }
+        } else if (str.contains("Ryzen") || str.contains("ryzen")) {
+            if (str.contains("Ryzen 9")) {
+                cpuPowerList = ryzen9;
+            } else if (str.contains("Ryzen 7")) {
+                cpuPowerList = ryzen7;
+            } else if (str.contains("Ryzen 5")) {
+                cpuPowerList = ryzen5;
+            } else if (str.contains("Ryzen 3")) {
+                cpuPowerList = ryzen3;
+            } else {
+                // other AMD CPUs ???
+                watt = 50;
+            }
+            if (str.contains("X ")) {
+                index = 1;
+            } else if (str.contains("G ")) {
+                index = 2;
+            } else if (str.contains("H ") || str.contains("HS ")) {
+                index = 3;
+            } else if (str.contains("E ") || str.contains("GE ")) {
+                index = 4;
+            } else if (str.contains("U ")) {
+                index = 5;
+            } else if (str.contains("C ")) {
+                index = 6;
+            }
+        }
+
+        if (watt == 0) {
+            try {
+                watt = cpuPowerList.get(index);
+            } catch (IndexOutOfBoundsException e) {
+                System.out.println("cpuName=" + cpuName + " IndexOutOfBoundsException, reason=" + e.getMessage());
+            }
+        }
+        watt = (int) Math.ceil((double) watt / FLAG1_VOLTAGE_UNIT);
+        newFlag1 |= watt << FLAG1_VOLTAGE_SHIFT;
     }
 }

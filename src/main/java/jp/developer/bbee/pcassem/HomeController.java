@@ -118,7 +118,7 @@ public class HomeController {
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
                                 String tablestyle, int rowspan, boolean checked) {}
-    record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank) {}
+    record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2) {}
     record UserAssem (String id, String deviceid, String device, String guestid) {}
 
     @GetMapping("/")

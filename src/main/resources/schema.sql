@@ -1,3 +1,6 @@
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS flag1 INT DEFAULT 0;
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS flag2 INT DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS devices (
   id VARCHAR(32) PRIMARY KEY,
   device VARCHAR(20),
@@ -6,7 +9,9 @@ CREATE TABLE IF NOT EXISTS devices (
   imgurl VARCHAR(255),
   detail VARCHAR(4095),
   price INT,
-  rank INT
+  rank INT,
+  flag1 INT,
+  flag2 INT
 );
 
 -- User Management Database (guest only)
