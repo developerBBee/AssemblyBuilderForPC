@@ -117,7 +117,7 @@ public class HomeController {
     }
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
-                                String tablestyle, int rowspan, boolean checked) {}
+                                String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
     record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2) {}
     record UserAssem (String id, String deviceid, String device, String guestid) {}
 
@@ -303,7 +303,7 @@ public class HomeController {
                         DeviceInfoFormatted dif = formattedList.get(i);
                         formattedList.set(i, new DeviceInfoFormatted(
                                 dif.id(), dif.device(), dif.url(), dif.name(), dif.imgurl(), dif.detail(), dif.price(),
-                                dif.rank(), true, "middle", 1, false
+                                dif.rank(), true, "middle", 1, false, dif.flag1(), dif.flag2()
                         ));
                     }
                 }
@@ -325,7 +325,7 @@ public class HomeController {
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
-                    di.rank().toString(), false, "middle", 1, false
+                    di.rank().toString(), false, "middle", 1, false, di.flag1(), di.flag2()
             ));
         }
         return formattedList;
@@ -358,7 +358,7 @@ public class HomeController {
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
-                    di.rank().toString(), false, tableStyle, rowSpan, checked
+                    di.rank().toString(), false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
             ));
             if (deviceCount == countMap.get(di.device())-1) {
                 deviceCount = 0;

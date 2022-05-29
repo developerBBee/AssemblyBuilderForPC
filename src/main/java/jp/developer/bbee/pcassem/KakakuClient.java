@@ -311,15 +311,20 @@ public class KakakuClient {
                         retStr = detail;
                         if (detail.contains("ITX")) {
                             newFlag1 |= FLAG1_MOTHER_ITX;
-                        } else if (detail.contains("Flex") || detail.contains("flex")) {
+                        }
+                        if (detail.contains("Flex") || detail.contains("flex")) {
                             newFlag1 |= FLAG1_MOTHER_FLEXATX;
-                        } else if (detail.contains("Micro") || detail.contains("micro")) {
+                        }
+                        if (detail.contains("Micro") || detail.contains("micro")) {
                             newFlag1 |= FLAG1_MOTHER_MICROATX;
-                        } else if (detail.contains("Extended") || detail.contains("E-ATX") || detail.contains("EATX")) {
+                        }
+                        if (detail.contains("Extended") || detail.contains("E-ATX") || detail.contains("EATX")) {
                             newFlag1 |= FLAG1_MOTHER_EATX;
-                        } else if (detail.contains("XL-ATX") || detail.contains("XLATX")) {
+                        }
+                        if (detail.contains("XL-ATX") || detail.contains("XLATX")) {
                             newFlag1 |= FLAG1_MOTHER_XLATX;
-                        } else if (detail.contains("ATX")) {
+                        }
+                        if (detail.substring(0, 3).contains("ATX")) {
                             newFlag1 |= FLAG1_MOTHER_ATX;
                         }
                     } else if (buf.contains("幅x高さx奥行")) {
@@ -418,6 +423,31 @@ public class KakakuClient {
                 case "cpu":
                     if (buf.contains("ソケット形状")) {
                         retStr = detail;
+                        if (detail.contains("LGA1155")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1155;
+                        } else if (detail.contains("LGA1150")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1150;
+                        } else if (detail.contains("LGA1151")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1151;
+                        } else if (detail.contains("LGA1200")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1200;
+                        } else if (detail.contains("LGA1700")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA1700;
+                        } else if (detail.contains("LGA2011-3")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA20113;
+                        } else if (detail.contains("LGA2011")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA2011;
+                        } else if (detail.contains("LGA2066")) {
+                            newFlag2 |= FLAG2_SOCKET_LGA2066;
+                        } else if (detail.contains("AM4")) {
+                            newFlag2 |= FLAG2_SOCKET_AM4;
+                        } else if (detail.contains("AM5")) {
+                            newFlag2 |= FLAG2_SOCKET_AM5;
+                        } else if (detail.contains("TR4")) {
+                            newFlag2 |= FLAG2_SOCKET_TR4;
+                        } else if (detail.contains("sTRX4")) {
+                            newFlag2 |= FLAG2_SOCKET_STRX4;
+                        }
                     } else if (buf.contains("フォームファクタ")) {
                         retStr = detail;
                     } else if (buf.contains("コア数")) {
@@ -454,7 +484,8 @@ public class KakakuClient {
                             if ((newFlag1 & sizeBit) != 0) {
                                 System.out.println("Size is already set");
                             }
-                            double height = Double.parseDouble(detail.split("x")[0].replace(" ", ""));
+                            double height = Double.parseDouble(detail.split("x")[1].replace(" ", ""));
+                            /* TODO Change to width (index = 0) and compare with case depth */
                             newFlag1 |= (int) Math.ceil(height / FLAG1_SIZE_UNIT) << FLAG1_SIZE_SHIFT;
                             newFlag1 |= FLAG1_SIZE_RADIATOR;
                         } catch (IndexOutOfBoundsException e) {
