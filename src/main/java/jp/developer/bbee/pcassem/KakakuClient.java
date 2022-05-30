@@ -203,55 +203,59 @@ public class KakakuClient {
                     newFlag1 = 0;
                     newFlag2 = 0;
                     try {
-                        bur.lines().limit(1000).forEach(str -> {
+                        boolean isGetHtml = false;
+                        if (bur.readLine().contains("200 OK")) isGetHtml = true;
+                        if (isGetHtml) {
+                            bur.lines().limit(1000).forEach(str -> {
 
-                            String s = "";
-                            try {
-                                s = StringEncoder.sjisToUtf8(str);
-                            } catch (UnsupportedEncodingException e) {
-                                System.out.println("charset failed, reason=" + e.getMessage());
-                            }
-                            if (s.contains("  prdname: ")) {
-                                newName = s.substring(12, s.length()-2);
-                                newName = newName.replace("\\", ""); // delete BS mark
-                                if ("cpu".equals(device)) setCpuPowerConsumption(newName);
-                            } else if (s.contains("  prdlprc: ")) {
+                                String s = "";
                                 try {
-                                    newPrice = Integer.valueOf(s.substring(11, s.length()-1));
-                                } catch (NumberFormatException e) {
-                                    System.out.println("価格が数値外：" + e.getMessage());
+                                    s = StringEncoder.sjisToUtf8(str);
+                                } catch (UnsupportedEncodingException e) {
+                                    System.out.println("charset failed, reason=" + e.getMessage());
                                 }
-                            } else if (s.contains("売れ筋ランキング：")) {
-                                try {
-                                    newRank = Integer.valueOf(s.substring(
-                                            s.indexOf("売れ筋ランキング：") + "売れ筋ランキング：".length(), s.indexOf("位")));
-                                } catch (NumberFormatException e) {
-                                    System.out.println("ランキングが数値外：" + e.getMessage());
-                                }
-                            } else if (s.contains("width=\"160\" height=\"120\" border=\"0\"")) {
-                                newImgUrl = s.substring(s.indexOf(" src=\"https:") + 6,
-                                        s.indexOf("\" width=\"160\" height=\"120\" border=\"0\""));
-                            } else if (s.contains("  mkrname: ")) {
-                                String mkrName = s.substring(12, s.length()-2);
-                                if ("".equals(newDetail)) {
-                                    newDetail = mkrName;
-                                } else {
-                                    newDetail += "\n" + mkrName;
-                                }
-                            } else if (s.contains("itemviewColor03b textL") ) {
-                                String detailStr = getDetailComment(s, device);
-                                if (detailStr != null) {
+                                if (s.contains("  prdname: ")) {
+                                    newName = s.substring(12, s.length() - 2);
+                                    newName = newName.replace("\\", ""); // delete BS mark
+                                    if ("cpu".equals(device)) setCpuPowerConsumption(newName);
+                                } else if (s.contains("  prdlprc: ")) {
+                                    try {
+                                        newPrice = Integer.valueOf(s.substring(11, s.length() - 1));
+                                    } catch (NumberFormatException e) {
+                                        System.out.println("価格が数値外：" + e.getMessage());
+                                    }
+                                } else if (s.contains("売れ筋ランキング：")) {
+                                    try {
+                                        newRank = Integer.valueOf(s.substring(
+                                                s.indexOf("売れ筋ランキング：") + "売れ筋ランキング：".length(), s.indexOf("位")));
+                                    } catch (NumberFormatException e) {
+                                        System.out.println("ランキングが数値外：" + e.getMessage());
+                                    }
+                                } else if (s.contains("width=\"160\" height=\"120\" border=\"0\"")) {
+                                    newImgUrl = s.substring(s.indexOf(" src=\"https:") + 6,
+                                            s.indexOf("\" width=\"160\" height=\"120\" border=\"0\""));
+                                } else if (s.contains("  mkrname: ")) {
+                                    String mkrName = s.substring(12, s.length() - 2);
                                     if ("".equals(newDetail)) {
-                                        newDetail = detailStr;
+                                        newDetail = mkrName;
                                     } else {
-                                        newDetail += "\n" + detailStr;
+                                        newDetail += "\n" + mkrName;
+                                    }
+                                } else if (s.contains("itemviewColor03b textL")) {
+                                    String detailStr = getDetailComment(s, device);
+                                    if (detailStr != null) {
+                                        if ("".equals(newDetail)) {
+                                            newDetail = detailStr;
+                                        } else {
+                                            newDetail += "\n" + detailStr;
+                                        }
                                     }
                                 }
-                            }
-                        });
-                        dao.update(new DeviceInfo(
-                                deviceInfo.id(), deviceInfo.device(), deviceInfo.url(), newName, newImgUrl, newDetail, newPrice, newRank,
-                                newFlag1, newFlag2));
+                            });
+                            dao.update(new DeviceInfo(
+                                    deviceInfo.id(), deviceInfo.device(), deviceInfo.url(), newName, newImgUrl, newDetail, newPrice, newRank,
+                                    newFlag1, newFlag2));
+                        }
 
                     } catch (ArrayIndexOutOfBoundsException e) {
                         System.out.println("価格情報を取得できませんでした reason=" + e.getMessage());

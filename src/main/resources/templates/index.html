@@ -342,8 +342,7 @@
               const psuPowStandard = (psuFlag1 >>> shift) & bit;
               if ((casePowStandard & topBit) != 0) { // built-in PSU case but psu exist
                 warn.innerText += 'ケースに電源が内蔵されているのに電源が選択されています\n';
-              }
-              if ((casePowStandard & psuPowStandard) == 0) {
+              } else if ((casePowStandard & psuPowStandard) == 0) {
                 warn.innerText += 'ケースと電源の規格が一致していません\n';
               }
             }
