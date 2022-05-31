@@ -330,7 +330,9 @@
             const caseFlag1 = parseInt(flagObj['PCケース']['flag1']);
             const psuFlag1 = parseInt(flagObj['電源']['flag1']);
             const motherFlag1 = parseInt(flagObj['マザーボード']['flag1']);
+            const cpuFlag1 = parseInt(flagObj['CPU']['flag1']);
             const coolerFlag1 = parseInt(flagObj['CPUクーラー']['flag1']);
+            const videoFlag1 = parseInt(flagObj['グラフィックボード']['flag1']);
             const motherFlag2 = parseInt(flagObj['マザーボード']['flag2']);
             const cpuFlag2 = parseInt(flagObj['CPU']['flag2']);
             const memoryFlag2 = parseInt(flagObj['メモリ']['flag2']);
@@ -414,9 +416,21 @@
                 }
               }
               if (isNotMatch) {
-                warn.innerText += 'マザーボードとCPUのソケットが一致していません\n';
+                warn.innerText += 'マザーボードとメモリの型が一致していません\n';
               }
             }
+
+            // Power capacity check
+            if (!isNaN(psuFlag1)) {
+              shift = 16;
+              let capacity = (psuFlag1 >>> shift) & bit;
+              capacity -= (cpuFlag1 >>> shift) & bit;
+              capacity -= (videoFlag1 >>> shift) & bit;
+              if (capacity < 0) {
+                warn.innerText += '電源容量不足の可能性があります\n';
+              }
+            }
+
           }
         </script>
 

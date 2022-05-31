@@ -547,6 +547,8 @@ public class KakakuClient {
                         retStr = detail;
                     } else if (buf.contains("消費電力")) {
                         retStr = "消費電力:" + detail;
+                        newFlag1 |= Integer.parseInt(detail.substring(0, detail.indexOf("W")).replace(" ", ""))
+                                / FLAG1_VOLTAGE_UNIT << FLAG1_VOLTAGE_SHIFT;
                     } else if (buf.contains("補助電源")) {
                         retStr = "補助電源: " + detail;
                     }
