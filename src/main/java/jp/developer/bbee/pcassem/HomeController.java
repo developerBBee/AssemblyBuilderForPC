@@ -115,6 +115,24 @@ public class HomeController {
             controller.runTask();
         }
     }
+    // TODO TimerTask refactoring, avoid using MyTimerTask
+    // MEMO
+    /*
+    public void start() {
+        getTask().run();
+    }
+
+    private TimerTask getTask() {
+        Timer timer = new Timer();
+        return new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println(LocalDateTime.now());
+                timer.schedule(getTask(), 1000);
+            }
+        };
+    }
+     */
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
                                 String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
