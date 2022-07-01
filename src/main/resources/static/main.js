@@ -207,7 +207,9 @@ function determineConfigurableByFlag() {
     if ((casePowStandard & topBit) != 0) { // built-in PSU case but psu exist
       warn.innerText += 'ケースに電源が内蔵されているのに電源が選択されています\n';
     } else if ((casePowStandard & psuPowStandard) == 0) {
-      warn.innerText += 'ケースと電源の規格が一致していません\n';
+      if (casePowStandard != 0) { // ignore the check if power type of case is unknown
+        warn.innerText += 'ケースと電源の規格が一致していません\n';
+      }
     }
   }
 
