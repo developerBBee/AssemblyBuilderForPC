@@ -40,8 +40,8 @@ window.onload = function() {
 
   var link = window.location.href
   console.log(link);
-  if (link == 'http://localhost/' || link == 'http://pcbuilding.link/'
-          || link == 'https://localhost/' || link == 'https://www.pcbuilding.link/') {
+  if (link == 'http://localhost/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
+          || link == 'https://localhost/' || link == 'https://pcbuilding.link/' || link == 'https://www.pcbuilding.link/') {
     var url = new URL(link);
     url.searchParams.append('guestId', guestId);
     location.href = url; // redirect

@@ -17,6 +17,7 @@ import java.util.*;
 
 @Controller
 public class HomeController {
+//    public static final String DOMAIN_NAME = "https://pcbuilding.link/"; // test server env.
 //    public static final String DOMAIN_NAME = "https://www.pcbuilding.link/"; // server env.
     public static final String DOMAIN_NAME = "https://localhost/"; // local env.
     public static final boolean DEBUG = false;
