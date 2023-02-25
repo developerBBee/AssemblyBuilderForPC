@@ -54,6 +54,7 @@ public class KakakuClient {
     public static final int FLAG2_SOCKET_AM5 = 1 << 9;
     public static final int FLAG2_SOCKET_TR4 = 1 << 10;
     public static final int FLAG2_SOCKET_STRX4 = 1 << 11;
+    public static final int FLAG2_SOCKET_SWRX8 = 1 << 12;
 
     public static final int FLAG2_DIMM_DDR3 = 1 << 16;
     public static final int FLAG2_DIMM_DDR4 = 1 << 17;
@@ -368,6 +369,8 @@ public class KakakuClient {
                             newFlag2 |= FLAG2_SOCKET_TR4;
                         } else if (detail.contains("sTRX4")) {
                             newFlag2 |= FLAG2_SOCKET_STRX4;
+                        } else if (detail.contains("sWRX8")) {
+                            newFlag2 |= FLAG2_SOCKET_SWRX8;
                         }
                     } else if (buf.contains("フォームファクタ")) {
                         retStr = detail;
@@ -451,6 +454,8 @@ public class KakakuClient {
                             newFlag2 |= FLAG2_SOCKET_TR4;
                         } else if (detail.contains("sTRX4")) {
                             newFlag2 |= FLAG2_SOCKET_STRX4;
+                        } else if (detail.contains("sWRX8")) {
+                            newFlag2 |= FLAG2_SOCKET_SWRX8;
                         }
                     } else if (buf.contains("フォームファクタ")) {
                         retStr = detail;

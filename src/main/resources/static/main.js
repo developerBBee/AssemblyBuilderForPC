@@ -189,19 +189,19 @@ function determineConfigurableByFlag() {
   warn.innerText = "";
   const bit = 0b11111111;
   const topBit = 0b10000000;
-  const caseFlag1 = parseInt(flagObj['PCケース']['flag1']);
-  const psuFlag1 = parseInt(flagObj['電源']['flag1']);
-  const motherFlag1 = parseInt(flagObj['マザーボード']['flag1']);
-  const cpuFlag1 = parseInt(flagObj['CPU']['flag1']);
-  const coolerFlag1 = parseInt(flagObj['CPUクーラー']['flag1']);
-  const videoFlag1 = parseInt(flagObj['グラフィックボード']['flag1']);
-  const motherFlag2 = parseInt(flagObj['マザーボード']['flag2']);
-  const cpuFlag2 = parseInt(flagObj['CPU']['flag2']);
-  const memoryFlag2 = parseInt(flagObj['メモリ']['flag2']);
+  const caseFlag1 = ('PCケース' in flagObj) ? parseInt(flagObj['PCケース']['flag1']) : null;
+  const psuFlag1 = ('電源' in flagObj) ? parseInt(flagObj['電源']['flag1']) : null;
+  const motherFlag1 = ('マザーボード' in flagObj) ? parseInt(flagObj['マザーボード']['flag1']) : null;
+  const cpuFlag1 = ('CPU' in flagObj) ? parseInt(flagObj['CPU']['flag1']) : null;
+  const coolerFlag1 = ('CPUクーラー' in flagObj) ? parseInt(flagObj['CPUクーラー']['flag1']) : null;
+  const videoFlag1 = ('グラフィックボード' in flagObj) ? parseInt(flagObj['グラフィックボード']['flag1']) : null;
+  const motherFlag2 = ('マザーボード' in flagObj) ? parseInt(flagObj['マザーボード']['flag2']) : null;
+  const cpuFlag2 = ('CPU' in flagObj) ? parseInt(flagObj['CPU']['flag2']) : null;
+  const memoryFlag2 = ('メモリ' in flagObj) ? parseInt(flagObj['メモリ']['flag2']) : null;
 
   // Case vs PSU
   let shift = 0;
-  if (!isNaN(caseFlag1) && !isNaN(psuFlag1)) { // case and psu exist
+  if (!(caseFlag1 == null) && !(psuFlag1 == null)) { // case and psu exist
     const casePowStandard = (caseFlag1 >>> shift) & bit;
     const psuPowStandard = (psuFlag1 >>> shift) & bit;
     if ((casePowStandard & topBit) != 0) { // built-in PSU case but psu exist
@@ -214,7 +214,7 @@ function determineConfigurableByFlag() {
   }
 
   // Case vs Motherboard
-  if (!isNaN(caseFlag1) && !isNaN(motherFlag1)) { // case and motherboard exist
+  if (!(caseFlag1 == null) && !(motherFlag1 == null)) { // case and motherboard exist
     shift = 8;
     const caseFormStandard = (caseFlag1 >>> shift) & bit;
     const motherFormStandard = (motherFlag1 >>> shift) & bit;
@@ -225,7 +225,7 @@ function determineConfigurableByFlag() {
   }
 
   // Case vs CPU Cooler
-  if (!isNaN(caseFlag1) && !isNaN(coolerFlag1)) { // case and cooler exist
+  if (!(caseFlag1 == null) && !(coolerFlag1 == null)) { // case and cooler exist
     shift = 24;
     const caseSize = (caseFlag1 >>> shift) & bit;
     let coolerSize = (coolerFlag1 >>> shift) & bit;
@@ -238,7 +238,7 @@ function determineConfigurableByFlag() {
   }
 
   // Motherboard vs CPU
-  if (!isNaN(motherFlag2) && !isNaN(cpuFlag2)) { // motherboard and cpu exist
+  if (!(motherFlag2 == null) && !(cpuFlag2 == null)) { // motherboard and cpu exist
     // Intel
     shift = 0;
     let motherSocket = (motherFlag2 >>> shift) & bit;
@@ -255,7 +255,7 @@ function determineConfigurableByFlag() {
   }
 
   // Motherboard vs Memory
-  if (!isNaN(motherFlag2) && !isNaN(memoryFlag2)) { // motherboard and memory exist
+  if (!(motherFlag2 == null) && !(memoryFlag2 == null)) { // motherboard and memory exist
     shift = 16;
     let isNotMatch = false;
     let motherType = (motherFlag2 >>> shift) & bit;
@@ -285,7 +285,7 @@ function determineConfigurableByFlag() {
   }
 
   // Power capacity check
-  if (!isNaN(psuFlag1)) {
+  if (!(psuFlag1 == null)) {
     shift = 16;
     let capacity = (psuFlag1 >>> shift) & bit;
     capacity -= (cpuFlag1 >>> shift) & bit;
