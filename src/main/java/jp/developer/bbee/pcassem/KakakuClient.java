@@ -6,6 +6,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.SocketException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -138,7 +139,11 @@ public class KakakuClient {
                                     0,
                                     99,
                                     0,
-                                    0
+                                    0,
+                                    "",
+                                    0,
+                                    LocalDateTime.now(),
+                                    LocalDateTime.now()
                             ));
                         }
                     }
@@ -162,6 +167,7 @@ public class KakakuClient {
     String newDetail;
     Integer newPrice;
     Integer newRank;
+    String newRelease;
     int newFlag1;
     int newFlag2;
     public void updateKakaku(boolean fastUpdate) throws IOException {
@@ -232,6 +238,8 @@ public class KakakuClient {
                                     } catch (NumberFormatException e) {
                                         System.out.println("ランキングが数値外：" + e.getMessage());
                                     }
+                                } else if (s.contains("releaseDate") && s.contains("年")) {
+                                    newRelease = s.substring(s.indexOf(">")).replace("[^0-9]", "");
                                 } else if (s.contains("width=\"160\" height=\"120\" border=\"0\"")) {
                                     newImgUrl = s.substring(s.indexOf(" src=\"https:") + 6,
                                             s.indexOf("\" width=\"160\" height=\"120\" border=\"0\""));
@@ -253,9 +261,22 @@ public class KakakuClient {
                                     }
                                 }
                             });
+                            LocalDateTime updateDateTime = deviceInfo.lastupdate();
+                            LocalDateTime nowDateTime = LocalDateTime.now();
+                            Integer newInvisible = deviceInfo.invisible();
+                            // Hide device if price is 0 for 30 days.
+                            if (newPrice == 0) {
+                                if (deviceInfo.price() == 0 &&
+                                        Duration.between(updateDateTime.withHour(0),
+                                                nowDateTime.withHour(1)).toDays() >= 30) {
+                                    newInvisible = 1;
+                                }
+                            } else {
+                                updateDateTime = nowDateTime;
+                            }
                             dao.update(new DeviceInfo(
                                     deviceInfo.id(), deviceInfo.device(), deviceInfo.url(), newName, newImgUrl, newDetail, newPrice, newRank,
-                                    newFlag1, newFlag2));
+                                    newFlag1, newFlag2, newRelease, newInvisible, deviceInfo.createddate(), updateDateTime));
                         }
 
                     } catch (ArrayIndexOutOfBoundsException e) {

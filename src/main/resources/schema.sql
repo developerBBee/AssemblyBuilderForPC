@@ -8,7 +8,11 @@ CREATE TABLE IF NOT EXISTS devices (
   price INT,
   rank INT,
   flag1 INT,
-  flag2 INT
+  flag2 INT,
+  releasedate VARCHAR(8),
+  invisible INT,
+  createddate TIMESTAMP,
+  lastupdate TIMESTAMP
 );
 
 -- User Management Database (guest only)
@@ -16,5 +20,14 @@ CREATE TABLE IF NOT EXISTS assemblies (
   id VARCHAR(32) PRIMARY KEY,
   deviceid VARCHAR(32),
   device VARCHAR(20),
-  guestid VARCHAR(32)
+  guestid VARCHAR(32),
+  createddate TIMESTAMP,
+  lastupdate TIMESTAMP
 );
+
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS releasedate VARCHAR(8) DEFAULT '20000101';
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS invisible INT DEFAULT 0;
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS createddate TIMESTAMP DEFAULT LOCALTIMESTAMP();
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS lastupdate TIMESTAMP DEFAULT LOCALTIMESTAMP();
+ALTER TABLE assemblies ADD COLUMN IF NOT EXISTS createddate TIMESTAMP DEFAULT LOCALTIMESTAMP();
+ALTER TABLE assemblies ADD COLUMN IF NOT EXISTS lastupdate TIMESTAMP DEFAULT LOCALTIMESTAMP();

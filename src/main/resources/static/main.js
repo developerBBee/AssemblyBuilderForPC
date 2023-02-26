@@ -6,6 +6,21 @@ if(guestId === null || guestId.length != 32) {
   localStorage.setItem('guestid', guestId);
   console.log('Save guestId ' + guestId);
 }
+const gids = document.querySelectorAll('.gid');
+gids.forEach(gid => {
+  gid.value = guestId;
+});
+const structure = document.getElementById('structure');
+structure.href += '?guestId=' + guestId;
+var link = window.location.href
+console.log(link);
+if (link == 'http://localhost/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
+        || link == 'https://localhost/' || link == 'https://pcbuilding.link/' || link == 'https://www.pcbuilding.link/') {
+  var url = new URL(link);
+  url.searchParams.append('guestId', guestId);
+  location.href = url; // redirect
+}
+checkedTotal();
 
 // var link = window.location.href;
 // var url = new URL(link);
@@ -29,24 +44,6 @@ window.onscroll = function() {
 window.onload = function() {
   const body = window.document.body;
   scrollTo(0, body.getAttribute('data-scroll'));
-  
-  const gids = document.querySelectorAll('.gid');
-  gids.forEach(gid => {
-    gid.value = guestId;
-  })
-
-  const structure = document.getElementById('structure');
-  structure.href += '?guestId=' + guestId;
-
-  var link = window.location.href
-  console.log(link);
-  if (link == 'http://localhost/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
-          || link == 'https://localhost/' || link == 'https://pcbuilding.link/' || link == 'https://www.pcbuilding.link/') {
-    var url = new URL(link);
-    url.searchParams.append('guestId', guestId);
-    location.href = url; // redirect
-  }
-  checkedTotal();
 }
 
 
@@ -152,6 +149,9 @@ function checkedTotal() {
   if(assem.className.includes('hidden')) return;
 
   const tableBody = document.getElementById('assemtablebody');
+  const warnNoPrice = document.getElementById('warn-noprice');
+  warnNoPrice.classList.add('hidden');
+
   console.log(tableBody);
   var totalPrice = 0;
   for(let i=0; i<tableBody.children.length; i++) {
@@ -160,6 +160,10 @@ function checkedTotal() {
     if (checkButtonElement.checked) {
       const valueElement = devRows.children.item(5); // td:価格
       var value = valueElement.textContent;
+      if (value == '価格情報なし') {
+        warnNoPrice.classList.remove('hidden');
+        continue;
+      }
       var val = parseInt(value.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
       console.log(val);
       totalPrice += val;

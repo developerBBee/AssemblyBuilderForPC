@@ -94,6 +94,7 @@ public class HomeController {
                 if (fullUpdate) fullUpdateDate = lastUpdateDate;
             } catch (IOException e) {
                 System.out.println("update kakaku failed. reason=" + e.getMessage());
+                loopCount++;
             }
         }
 
@@ -137,8 +138,9 @@ public class HomeController {
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
                                 String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
-    record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2) {}
-    record UserAssem (String id, String deviceid, String device, String guestid) {}
+    record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2,
+                       String releasedate, Integer invisible, LocalDateTime createddate, LocalDateTime lastupdate) {}
+    record UserAssem (String id, String deviceid, String device, String guestid, LocalDateTime createddate, LocalDateTime lastupdate) {}
 
     @GetMapping("/")
     String top(Model model, @RequestParam(value = "guestId", required = false) String guestId) {
@@ -424,7 +426,8 @@ public class HomeController {
 
         if (dao.findUserAssem(id, guestId) == null) {
             DeviceInfo di = dao.findRecordById(id);
-            UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), guestId);
+            UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), guestId,
+                    LocalDateTime.now(), LocalDateTime.now());
             dao.addUserAssem(assem);
         } else {
             System.out.println("This is already registered. deviceid=" + id + " guestid=" + guestId);

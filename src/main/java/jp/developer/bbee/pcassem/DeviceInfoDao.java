@@ -10,11 +10,31 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class DeviceInfoDao {
     private final JdbcTemplate jdbcTemplate;
+    record SqlDeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2,
+                          String releasedate, Integer invisible, Timestamp createddate, Timestamp lastupdate) {
+        static SqlDeviceInfo create(DeviceInfo di) {
+            return new SqlDeviceInfo(
+                    di.id(), di.device(), di.url(), di.name(), di.imgurl(), di.detail(), di.price(), di.rank(),
+                    di.flag1(), di.flag2(), di.releasedate(), di.invisible(),
+                    Timestamp.valueOf(di.createddate()), Timestamp.valueOf(di.lastupdate())
+            );
+        }
+    }
+    record SqlUserAssem (String id, String deviceid, String device, String guestid, Timestamp createddate, Timestamp lastupdate) {
+        static SqlUserAssem create(UserAssem ua) {
+            return new SqlUserAssem(
+                    ua.id(), ua.deviceid(), ua.device(), ua.guestid(),
+                    Timestamp.valueOf(ua.createddate()), Timestamp.valueOf(ua.lastupdate())
+            );
+        }
+    }
 
     @Autowired // <- JdbcTemplate auto setting
     DeviceInfoDao(JdbcTemplate jdbcTemplate) {
@@ -22,7 +42,7 @@ public class DeviceInfoDao {
     }
 
     public void add(DeviceInfo deviceInfo) {
-        SqlParameterSource param = new BeanPropertySqlParameterSource(deviceInfo);
+        SqlParameterSource param = new BeanPropertySqlParameterSource(SqlDeviceInfo.create(deviceInfo));
         SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("devices");
         insert.execute(param);
@@ -35,15 +55,9 @@ public class DeviceInfoDao {
     public List<DeviceInfo> findAll(String device, int sortFlag) {
         String query = "SELECT * FROM devices WHERE device = ?";
         switch (sortFlag) {
-            case 0:
-                query += " ORDER BY rank";
-                break;
-            case 1:
-                query += " ORDER BY price";
-                break;
-            case 2:
-                query += " ORDER BY price DESC";
-                break;
+            case 0 -> query += " ORDER BY rank";
+            case 1 -> query += " ORDER BY price";
+            case 2 -> query += " ORDER BY price DESC";
         }
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, device);
 
@@ -58,7 +72,11 @@ public class DeviceInfoDao {
                         row.get("price") != null ? (Integer) row.get("price") : 0,
                         row.get("rank") != null ? (Integer) row.get("rank") : 99,
                         row.get("flag1") != null ? (int) row.get("flag1") : 0,
-                        row.get("flag2") != null ? (int) row.get("flag2") : 0
+                        row.get("flag2") != null ? (int) row.get("flag2") : 0,
+                        row.get("releasedate") != null ? row.get("releasedate").toString() : "20000101",
+                        row.get("invisible") != null ? (Integer) row.get("invisible") : 0,
+                        row.get("createddate") != null ? ((Timestamp) row.get("createddate")).toLocalDateTime() : LocalDateTime.of(2000,1,1,0,0),
+                        row.get("lastupdate") != null ? ((Timestamp) row.get("lastupdate")).toLocalDateTime() : LocalDateTime.of(2000,1,1,0,0)
                 )).toList();
 
         return deviceInfoList;
@@ -72,8 +90,11 @@ public class DeviceInfoDao {
                     result.get("name").toString(), result.get("imgurl").toString(), result.get("detail").toString(),
                     (Integer) result.get("price"), (Integer) result.get("rank"),
                     result.getOrDefault("flag1", 0) == null ? 0 : (int) result.getOrDefault("flag1", 0),
-                    result.getOrDefault("flag2", 0) == null ? 0 : (int) result.getOrDefault("flag2", 0));
-        } catch (IndexOutOfBoundsException e) {
+                    result.getOrDefault("flag2", 0) == null ? 0 : (int) result.getOrDefault("flag2", 0),
+                    result.get("releasedate").toString(), (Integer) result.get("invisible"),
+                    ((Timestamp) result.get("createddate")).toLocalDateTime(), ((Timestamp) result.get("lastupdate")).toLocalDateTime()
+            );
+        } catch (IndexOutOfBoundsException | ClassCastException e) {
             return null;
         }
     }
@@ -86,8 +107,11 @@ public class DeviceInfoDao {
                     result.get("name").toString(), result.get("imgurl").toString(), result.get("detail").toString(),
                     (Integer) result.get("price"), (Integer) result.get("rank"),
                     result.getOrDefault("flag1", 0) == null ? 0 : (int) result.getOrDefault("flag1", 0),
-                    result.getOrDefault("flag2", 0) == null ? 0 : (int) result.getOrDefault("flag2", 0));
-        } catch (IndexOutOfBoundsException e) {
+                    result.getOrDefault("flag2", 0) == null ? 0 : (int) result.getOrDefault("flag2", 0),
+                    result.get("releasedate").toString(), (Integer) result.get("invisible"),
+                    ((Timestamp) result.get("createddate")).toLocalDateTime(), ((Timestamp) result.get("lastupdate")).toLocalDateTime()
+            );
+        } catch (IndexOutOfBoundsException | ClassCastException e) {
             return null;
         }
     }
@@ -101,9 +125,10 @@ public class DeviceInfoDao {
         int number = 0;
         try {
             number = jdbcTemplate.update(
-                    "UPDATE devices SET device = ?, url = ?, name = ?, imgurl = ? , detail = ? , price = ? , rank = ? , flag1 = ? , flag2 = ? WHERE id = ?",
+                    "UPDATE devices SET device = ?, url = ?, name = ?, imgurl = ?, detail = ?, price = ?, rank = ?, flag1 = ?, flag2 = ?, releasedate = ?, invisible = ?, lastupdate = ? WHERE id = ?",
                     deviceInfo.device(), deviceInfo.url(), deviceInfo.name(), deviceInfo.imgurl(), deviceInfo.detail(),
-                    deviceInfo.price(), deviceInfo.rank(), deviceInfo.flag1(), deviceInfo.flag2(), deviceInfo.id());
+                    deviceInfo.price(), deviceInfo.rank(), deviceInfo.flag1(), deviceInfo.flag2(), deviceInfo.releasedate(),
+                    deviceInfo.invisible(), Timestamp.valueOf(deviceInfo.lastupdate()), deviceInfo.id());
             return number;
         } catch (DataIntegrityViolationException e) {
             System.out.println("name=" + deviceInfo.name() + " detail=" + deviceInfo.detail() +
@@ -118,7 +143,7 @@ public class DeviceInfoDao {
 
     // UserAssem DAO
     public void addUserAssem(UserAssem assem) {
-        SqlParameterSource param = new BeanPropertySqlParameterSource(assem);
+        SqlParameterSource param = new BeanPropertySqlParameterSource(SqlUserAssem.create(assem));
         SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("assemblies");
         insert.execute(param);
@@ -134,7 +159,9 @@ public class DeviceInfoDao {
         }
         Map<String, Object> r = result.get(0);
         return new UserAssem(r.get("id").toString(), r.get("deviceid").toString(),
-                r.get("device").toString(), r.get("guestid").toString());
+                r.get("device").toString(), r.get("guestid").toString(),
+                ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                ((Timestamp) r.get("lastupdate")).toLocalDateTime());
     }
 
     public List<UserAssem> findAllUserAssemByGuestId(String guestid) {
@@ -145,7 +172,9 @@ public class DeviceInfoDao {
                         row.get("id").toString(),
                         row.get("deviceid").toString(),
                         row.get("device").toString(),
-                        row.get("guestid").toString()
+                        row.get("guestid").toString(),
+                        ((Timestamp) row.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) row.get("lastupdate")).toLocalDateTime()
                 )).toList();
         return assembliesList;
     }

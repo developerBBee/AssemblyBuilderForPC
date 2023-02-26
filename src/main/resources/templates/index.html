@@ -90,7 +90,7 @@
               </div>
             </div>
             <div class="warning-messages">
-              <div  th:classappend="${warnMsg1Visiblity}">※価格情報の無い製品が含まれています</div>
+              <div id="warn-noprice" th:classappend="hidden">※価格情報の無い製品が含まれています</div>
               <div id="warn">a<br>b<br>c<br></div>
             </div>
           </div>
@@ -184,6 +184,6 @@
         </div>
       </div>
     </div>
-    <script th:inline="javascript" th:src="@{/main.js?20230226}"></script>
+    <script th:inline="javascript" th:src="@{/main.js?20230227}"></script>
   </body>
 </html>
