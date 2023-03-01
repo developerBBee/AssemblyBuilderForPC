@@ -457,7 +457,8 @@ public class HomeController {
     private Map<String, Integer> sortMap = Map.of(
             "popular", 0,
             "lower", 1,
-            "higher", 2
+            "higher", 2,
+            "newer", 3
     );
     @GetMapping("/sort") // Sort devices
     String sortDevices(RedirectAttributes redirectAttributes, @RequestParam("sort") String sort, @RequestParam("devType") String deviceTypeName,

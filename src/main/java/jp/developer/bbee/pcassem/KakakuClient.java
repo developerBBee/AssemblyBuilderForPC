@@ -6,6 +6,8 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.SocketException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -239,7 +241,20 @@ public class KakakuClient {
                                         System.out.println("ランキングが数値外：" + e.getMessage());
                                     }
                                 } else if (s.contains("releaseDate") && s.contains("年")) {
-                                    newRelease = s.substring(s.indexOf(">")).replace("[^0-9]", "");
+                                    List<String> dateList = Arrays.stream(s.split("[^0-9]")).toList();
+                                    newRelease = dateList.stream().reduce(
+                                            (s1, s2) -> {
+                                                if (s2.length() == 1) s2 = "0" + s2;
+                                                return s1 + s2;
+                                            }).orElse("20000101");
+                                    if (newRelease.length() == 6) {
+                                        newRelease = newRelease + "01";
+                                    }
+                                    try {
+                                        new SimpleDateFormat("yyyyMMdd").parse(newRelease);
+                                    } catch (ParseException e) {
+                                        newRelease = "20000101";
+                                    }
                                 } else if (s.contains("width=\"160\" height=\"120\" border=\"0\"")) {
                                     newImgUrl = s.substring(s.indexOf(" src=\"https:") + 6,
                                             s.indexOf("\" width=\"160\" height=\"120\" border=\"0\""));
@@ -273,6 +288,7 @@ public class KakakuClient {
                                 }
                             } else {
                                 updateDateTime = nowDateTime;
+                                newInvisible = 0;
                             }
                             dao.update(new DeviceInfo(
                                     deviceInfo.id(), deviceInfo.device(), deviceInfo.url(), newName, newImgUrl, newDetail, newPrice, newRank,

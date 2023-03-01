@@ -56,6 +56,7 @@ public class DeviceInfoDao {
         String query = "SELECT * FROM devices WHERE device = ?";
         switch (sortFlag) {
             case 0 -> query += " ORDER BY rank";
+            case 3 -> query += " ORDER BY releasedate DESC";
             case 1 -> query += " ORDER BY price";
             case 2 -> query += " ORDER BY price DESC";
         }
