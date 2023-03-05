@@ -14,7 +14,7 @@ const structure = document.getElementById('structure');
 structure.href += '?guestId=' + guestId;
 var link = window.location.href
 console.log(link);
-if (link == 'http://localhost/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
+if (link == 'http://localhost:8080/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
         || link == 'https://localhost/' || link == 'https://pcbuilding.link/' || link == 'https://www.pcbuilding.link/') {
   var url = new URL(link);
   url.searchParams.append('guestId', guestId);
