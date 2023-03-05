@@ -106,9 +106,16 @@ a {
   border-bottom: 0px;
 }
 
-.assem img.item-img {
-  width: auto;
+.assem td.img-frame {
+  width: 120px;
+  min-width: 60px;
   height: 100px;
+}
+
+.assem img.item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .assem-result {
@@ -153,6 +160,62 @@ a {
   text-align: left;
 }
 
+@media screen and (max-width: 479px) {
+  .assem {
+    margin: 1px;
+  }
+  .assem td.name-frame {
+    width: 60px;
+    max-width: 80px;
+  }
+  .assem td.name-frame {
+    font-size: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    overflow-wrap: break-word;
+  }
+  .assem td.detail-frame {
+    width: 80px;
+    max-width: 100px;
+  }
+  .assem td.detail-frame p {
+    font-size: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    overflow-wrap: break-word;
+  }
+  .assem tbody tr, .assem input, .assem .price {
+    font-size: 10px;
+  }
+
+  .warning-messages {
+    font-size: 10px;
+    margin: 3px;
+  }
+  .assem-result-container {
+    width: 100px;
+    margin-bottom: 3px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-radius: 5px;
+  }
+  .assem-result-totalprice-header {
+    font-size: 10px;
+  }
+  .assem-result-totalprice {
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 399px) {
+  .assem td.detail-frame {
+    width: 80px;
+    max-width: 80px;
+  }
+}
+
 /*
 .assem .top {
   border-left: none;
@@ -184,14 +247,52 @@ a {
   border-bottom: 0px;
 }
 
-.items img.item-img {
-  width: auto;
+.items td.img-frame {
+  width: 120px;
+  min-width: 60px;
   height: 100px;
+}
+
+.items img.item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .items .detail {
   font-size:12px;
   text-align: left;
+}
+
+@media screen and (max-width: 479px) {
+  .items {
+    margin: 1px;
+  }
+  .items td.name-frame {
+    width: 60px;
+    max-width: 80px;
+  }
+  .items td.name-frame a {
+    font-size: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    overflow-wrap: break-word;
+  }
+  .items td.detail-frame {
+    width: 100px;
+    max-width: 120px;
+  }
+  .items td.detail-frame p {
+    font-size: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    overflow-wrap: break-word;
+  }
+  .items input, .items .price {
+    font-size: 10px;
+  }
 }
 
 .items-sort {
