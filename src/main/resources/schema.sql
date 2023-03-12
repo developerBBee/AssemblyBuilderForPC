@@ -25,6 +25,25 @@ CREATE TABLE IF NOT EXISTS assemblies (
   lastupdate TIMESTAMP
 );
 
+-- Save Function
+CREATE TABLE IF NOT EXISTS savehead (
+  saveid VARCHAR(32) PRIMARY KEY, -- save id (PrimaryKey and public URL)
+  guestid VARCHAR(32), -- saved user guestId
+  savename VARCHAR(255),
+  createddate TIMESTAMP,
+  lastupdate TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS savelist (
+  saveid VARCHAR(32), -- save id (ForeignKey_CascadeDelete, Compositekey1)
+  deviceid VARCHAR(32), -- saved deviceid (Compositekey2)
+  price INT, -- saved price
+  createddate TIMESTAMP,
+  lastupdate TIMESTAMP,
+  PRIMARY KEY(saveid, deviceid),
+  FOREIGN KEY(saveid) REFERENCES savehead(saveid),
+  FOREIGN KEY(deviceid) REFERENCES devices(id)
+);
+
 ALTER TABLE devices ADD COLUMN IF NOT EXISTS releasedate VARCHAR(8) DEFAULT '20000101';
 ALTER TABLE devices ADD COLUMN IF NOT EXISTS invisible INT DEFAULT 0;
 ALTER TABLE devices ADD COLUMN IF NOT EXISTS createddate TIMESTAMP DEFAULT LOCALTIMESTAMP();
