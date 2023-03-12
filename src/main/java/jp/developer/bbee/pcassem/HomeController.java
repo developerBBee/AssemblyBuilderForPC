@@ -142,13 +142,36 @@ public class HomeController {
     record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2,
                        String releasedate, Integer invisible, LocalDateTime createddate, LocalDateTime lastupdate) {}
     record UserAssem (String id, String deviceid, String device, String guestid, LocalDateTime createddate, LocalDateTime lastupdate) {}
+    record SaveHead (String saveid, String guestid, String savename, LocalDateTime createddate, LocalDateTime lastupdate) {}
+    record SaveHeader (String url, String text) {
+        static SaveHeader create(SaveHead sh, int index) {
+            return new SaveHeader(DOMAIN_NAME+"rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
+        }
+    }
+    static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
 
     @GetMapping("/")
     String top(Model model, @RequestParam(value = "guestId", required = false) String guestId) {
+        model.addAttribute("restoredListDisplay", "hidden");
         model.addAttribute("deviceListDisplay", "hidden");
         model.addAttribute("updateTime", lastUpdateDate.format(formatter));
 
         if (guestId != null && guestId.length() == 32) {
+            // check user's savehead
+            List<SaveHead> saveHeadList = dao.getSaveHeadRecent5(guestId);
+            if (saveHeadList == null || saveHeadList.size() == 0) {
+                model.addAttribute("saveHeadVisible", "hidden");
+            } else {
+                List<SaveHeader> saveHeaderList = new ArrayList<>();
+                int index = 0;
+                for (SaveHead sh : saveHeadList) {
+                    if (index >= 5) break;
+                    saveHeaderList.add(SaveHeader.create(sh, index));
+                    index++;
+                }
+                model.addAttribute("saveHeaderList", saveHeaderList);
+            }
+
             Map<String, Integer> assemCountMap = dao.getAssemCountList(deviceTypeList, guestId);
             List<DeviceInfo> assembliesList = getAssembliesList(guestId);
             assembliesList = sortList(assembliesList);
@@ -332,7 +355,9 @@ public class HomeController {
             }
         }
 
+        model.addAttribute("saveHeadVisible", "hidden");
         model.addAttribute("assembliesDisplay", "hidden");
+        model.addAttribute("restoredListDisplay", "hidden");
         model.addAttribute("deviceInfoList", formattedList);
         model.addAttribute("deviceTypeName", deviceTypeName);
         model.addAttribute("sortFlag", s);
@@ -470,5 +495,50 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("sortFlag", sortMap.get(sort));
         //return devType;
         return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
+    }
+
+    record SaveRec(List<String> deviceIdList, String guestId) {}
+
+    @PostMapping("/save") // Save assemblies of user's construction.
+    String saveConstruction(SaveRec saveRec) {
+        if (saveRec.deviceIdList() == null || saveRec.deviceIdList().size() == 0
+                || saveRec.guestId().length() != 32) {
+            return "redirect:/";
+        }
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        dao.save(uuid, saveRec.guestId(), saveRec.deviceIdList());
+        return "redirect:/rec/" + uuid;
+    }
+
+    record RestoreDevice (String saveid, String deviceid, String device, String url, String name,
+                          String imgurl, String detail, Integer oldprice, Integer newprice) {}
+    record RestoreDeviceFormatted (String saveid, String deviceid, String device, String url, String name,
+                          String imgurl, String detail, String oldprice, String newprice, String diffprice, String color) {
+        static RestoreDeviceFormatted create(RestoreDevice rd) {
+            int op = rd.oldprice();
+            int np = rd.newprice();
+            return new RestoreDeviceFormatted(rd.saveid(), rd.deviceid(), rd.device(), rd.url(), rd.name(),
+                    rd.imgurl(), rd.detail(),
+                    op == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(op),
+                    np == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(np),
+                    (np == 0 || op == 0) ? "" : new DecimalFormat("(+###,###);(-###,###)").format(np-op)
+                            .replace("(+0)", "(±0)"),
+                    np == op ? "black" : np > op ? "red" : "blue"
+            );
+        }
+    }
+
+    @GetMapping("/rec/{saveId:[0-9a-fA-F]{32}}")
+    String restoreConstruction(Model model, @PathVariable String saveId) {
+        saveId = saveId.toLowerCase();
+        System.out.println(saveId);
+        List<RestoreDevice> rdList = dao.restore(saveId);
+        List<RestoreDeviceFormatted> rdfList = rdList.stream().map(RestoreDeviceFormatted::create).toList();
+        model.addAttribute("saveHeadVisible", "hidden");
+        model.addAttribute("restoredList", rdfList);
+        model.addAttribute("assembliesDisplay", "hidden");
+        model.addAttribute("deviceListDisplay", "hidden");
+        model.addAttribute("updateTime", lastUpdateDate.format(formatter));
+        return "index";
     }
 }

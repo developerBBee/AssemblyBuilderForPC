@@ -146,11 +146,24 @@ function expandChangeLess(rows) {
 
 function checkedTotal() {
   const assem = document.getElementById('assem');
-  if(assem.className.includes('hidden')) return;
+  if(assem.className.includes('hidden')) {
+    const restored = document.getElementById('restored');
+    if(restored.className.includes('hidden')) return
+    checkedTotalRestored();
+    return;
+  }
 
   const tableBody = document.getElementById('assemtablebody');
   const warnNoPrice = document.getElementById('warn-noprice');
   warnNoPrice.classList.add('hidden');
+
+  // save機能
+  const saveButton = document.getElementById('save-button');
+  saveButton.disabled = true;
+  const saveList = document.getElementById('save-list');
+  while (saveList.firstChild) {
+    saveList.removeChild(saveList.firstChild);
+  }
 
   console.log(tableBody);
   var totalPrice = 0;
@@ -158,6 +171,14 @@ function checkedTotal() {
     const devRows = tableBody.children.item(i); // tr
     const checkButtonElement = devRows.children.item(1).children.item(0); // td:選択 -> input:ラジオボタン
     if (checkButtonElement.checked) {
+      // save機能
+      const deviceIdElement = devRows.children.item(9); // td:デバイスID
+      const input_data = document.createElement('input');
+      input_data.type = 'text';
+      input_data.name = 'deviceIdList';
+      input_data.value = deviceIdElement.textContent;
+      saveList.appendChild(input_data);
+
       const valueElement = devRows.children.item(5); // td:価格
       var value = valueElement.textContent;
       if (value == '価格情報なし') {
@@ -169,10 +190,52 @@ function checkedTotal() {
       totalPrice += val;
     }
   }
+  // save機能
+  if (saveList.hasChildNodes && guestId != null) {
+    const input_data = document.createElement('input');
+    input_data.type = 'text';
+    input_data.name = 'guestId'; 
+    input_data.value = guestId;
+    saveList.appendChild(input_data);
+    saveButton.disabled = false;
+  }
   const totalPriceTxt = document.getElementById('totalprice');
   totalPriceTxt.textContent = '¥ ' + totalPrice.toLocaleString();
 
   determineConfigurableByFlag();
+}
+
+function checkedTotalRestored() {
+  const restoredTableBody = document.getElementById('restoredtablebody');
+  let oldTotalPrice = 0;
+  let newTotalPrice = 0;
+  let oldPriceWarn = '';
+  let newPriceWarn = '';
+  for(let i=0; i<restoredTableBody.children.length; i++) {
+    const restoredTableRow = restoredTableBody.children.item(i); // tr
+
+    const oldValueElement = restoredTableRow.children.item(3); // td:登録時価格
+    const newValueElement = restoredTableRow.children.item(4).children.item(0); // block:現在価格
+    const oldValue = oldValueElement.textContent;
+    const newValue = newValueElement.textContent.replace(/\n.*.¥/g, '').replace(/\n.*/g, '');
+    if (oldValue == '価格情報なし') {
+      oldPriceWarn = '\n※価格情報なしを含む';
+      continue;
+    }
+    if (newValue == '価格情報なし') {
+      newPriceWarn = '\n※価格情報なしを含む';
+      continue;
+    }
+    const oldVal = parseInt(oldValue.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
+    oldTotalPrice += oldVal;
+    const newVal = parseInt(newValue.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
+    newTotalPrice += newVal;
+  }
+
+  const oldTotalPriceTxt = document.getElementById('oldtotalprice');
+  oldTotalPriceTxt.textContent = '¥ ' + oldTotalPrice.toLocaleString() + oldPriceWarn;
+  const newTotalPriceTxt = document.getElementById('newtotalprice');
+  newTotalPriceTxt.textContent = '¥ ' + newTotalPrice.toLocaleString() + newPriceWarn;
 }
 
 function determineConfigurableByFlag() {

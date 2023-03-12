@@ -31,7 +31,7 @@ h1 {
   margin: 2px;
 }
 
-a {
+a:not(.savelink){
   text-decoration: none;
   color: black;
 }
@@ -85,6 +85,25 @@ a {
 .menu ul li:hover, .menu ul li a:hover {
   background:#4e0189;/*ホバー時の親メニューの背景色*/
   color:#fff;/*ホバー時の親メニューの文字色*/
+}
+
+/* save header */
+.savelink-container {
+  margin: 2px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.savelink-container .saveheadermsg {
+  margin-left: 1px;
+  margin-right: 1px;
+  text-shadow: 1px 1px 2px silver;
+}
+
+.savelink-container .savelink {
+  font-size: 14px;
+  margin-right: 10px;
 }
 
 /* assem css*/
@@ -160,6 +179,15 @@ a {
   text-align: left;
 }
 
+.assem .saveform-container {
+  margin-bottom: 5px;
+}
+
+.assem .savelink-container {
+  display: flex;
+  flex-direction: column;
+}
+
 @media screen and (max-width: 479px) {
   .assem {
     margin: 1px;
@@ -168,7 +196,7 @@ a {
     width: 60px;
     max-width: 80px;
   }
-  .assem td.name-frame {
+  .assem td.name-frame a {
     font-size: 10px;
     width: 100%;
     height: 100%;
@@ -227,6 +255,132 @@ a {
 }
 .assem .bottom {
   display: none;
+}
+
+/* restored css */
+.restored {
+  margin: 5px;
+}
+
+.restored .tweet-container {
+  margin: 5px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.restored .tweet-container .tweetnavi {
+  margin-left: 2px;
+  text-shadow: 1px 1px 2px silver;
+}
+
+.restored table {
+  border-spacing: 0px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+
+.restored th, .restored td {
+  text-align: center;
+  border: 2px solid;
+  border-right: 0px;
+  border-bottom: 0px;
+}
+
+.restored td.img-frame {
+  width: 120px;
+  min-width: 60px;
+  height: 100px;
+}
+
+.restored img.item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.restored-result {
+  display: flex;
+}
+
+.restored-result-container {
+  width: 380px;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.restored-result-totalprice-area {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  background-color: #c1ebd7;
+  width: 180px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 10px;
+}
+
+.restored-result-totalprice-header {
+  font-size: 16px;
+  color: #444;
+  font-weight: bold;
+}
+
+.restored-result-totalprice {
+  font-size: 24px;
+  text-shadow: #ddd 1px 1px;
+  font-weight: bold;
+}
+
+@media screen and (max-width: 479px) {
+  .restored {
+    margin: 1px;
+  }
+  .restored td.name-frame {
+    width: 60px;
+    max-width: 80px;
+  }
+  .restored td.name-frame a {
+    font-size: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    overflow-wrap: break-word;
+  }
+  .restored td.detail-frame {
+    width: 80px;
+    max-width: 100px;
+  }
+  .restored td.detail-frame p {
+    font-size: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    overflow-wrap: break-word;
+  }
+  .restored tbody tr, .restored input, .restored .price {
+    font-size: 10px;
+  }
+
+  .restored-result-container {
+    width: 320px;
+    margin-bottom: 3px;
+  }
+  .restored-result-totalprice-area {
+    width: 150px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-radius: 5px;
+  }
+  .restored-result-totalprice-header {
+    font-size: 10px;
+  }
+  .restored-result-totalprice {
+    font-size: 16px;
+  }
 }
 
 /* items css */
@@ -325,4 +479,11 @@ a {
 	   -moz-user-select: none;
 	    -ms-user-select: none;
 	        user-select: none;
+}
+
+.red {
+  color: red
+}
+.blue {
+  color: blue
 }

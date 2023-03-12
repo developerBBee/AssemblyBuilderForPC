@@ -26,9 +26,9 @@
     -->
 
 <!-- for debug -->
-    <link rel="stylesheet" href="../static/styles.css">
+    <!-- <link rel="stylesheet" href="../static/styles.css"> -->
 
-    <link rel="stylesheet" th:href="@{/styles.css?20230305}" >
+    <link rel="stylesheet" th:href="@{/styles.css?20230312}" >
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -81,6 +81,13 @@
       </header>
 
       <div id="contents">
+        <div class="savelink-container" th:classappend="${saveHeadVisible}">
+          <span class="saveheadermsg">保存した構成(5つまで)：</span>
+          <a class="savelink" th:each="saveheader :${saveHeaderList}" th:href="${saveheader.url}">
+            <span th:text="${saveheader.text}">①</span>
+          </a>
+        </div>
+
         <div id="assem" class="assem" th:classappend="${assembliesDisplay}">
           <div class="assem-result">
             <div class="assem-result-container">
@@ -95,6 +102,12 @@
               <div id="warn-noprice" th:classappend="hidden">※価格情報の無い製品が含まれています</div>
               <div id="warn">a<br>b<br>c<br></div>
             </div>
+          </div>
+          <div class="saveform-container">
+            <form action="/save" method="post">
+              <div id="save-list" class="hidden"></div>
+              <input disabled id="save-button" type="submit" value="構成の保存">
+            </form>
           </div>
 
           <table>
@@ -135,6 +148,60 @@
                 </td>
                 <td class="hidden flag1" th:text="${assembly.flag1}"></td>
                 <td class="hidden flag2" th:text="${assembly.flag2}"></td>
+                <td class="hidden deviceid" th:text="${assembly.id}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="restored" class="restored" th:classappend="${restoredListDisplay}">
+          <div class="tweet-container">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-dnt="true" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            <span class="tweetnavi">この構成をtweet</span>
+          </div>
+          <div class="restored-result">
+            <div class="restored-result-container">
+              <div class="restored-result-totalprice-area">
+                <div class="restored-result-totalprice-header">
+                  合計(登録時価格)
+                </div>
+                <div id="oldtotalprice" class="restored-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+              </div>
+              <div class="restored-result-totalprice-area">
+                <div class="restored-result-totalprice-header">
+                  合計(現在価格)
+                </div>
+                <div id="newtotalprice" class="restored-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+              </div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>製品名</th><th>製品画像</th><th>詳細</th><th width="106px">登録時価格</th><th width="106px">現在価格</th></tr>
+            </thead>
+
+            <tbody id="restoredtablebody">
+              <tr th:each="restoredItem :${restoredList}">
+                <td class="name-frame"><a th:href="${restoredItem.url}" th:text="${restoredItem.name}" target="_blank" rel="noopener noreferrer"></a></td>
+                <td class="img-frame"><img class="item-img" th:src="${restoredItem.imgurl}"></td>
+                <td class="detail-frame">
+                  <p class="detail">
+                  <th:block th:if="${restoredItem.detail}">
+                    <th:block th:each="str, stat : ${restoredItem.detail.split('\r\n|\r|\n', -1)}">
+                      <th:block th:text="${str}"/>
+                      <br th:if="${!stat.last}"/>
+                    </th:block>
+                  </th:block>
+                  </p>
+                </td>
+                <td class="price" th:text="${restoredItem.oldprice}"></td>
+                <td class="price">
+                  <p>
+                    <th:block th:text="${restoredItem.newprice}"/>
+                    <br>
+                    <th:block th:class="${restoredItem.color}" th:text="${restoredItem.diffprice}"/>
+                  </p>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -191,7 +258,7 @@
         </div>
       </div>
     </div>
-    <script th:inline="javascript" th:src="@{/main.js?20230305}"></script>
+    <script th:inline="javascript" th:src="@{/main.js?20230312}"></script>
     <script>
       lazyload();
     </script>

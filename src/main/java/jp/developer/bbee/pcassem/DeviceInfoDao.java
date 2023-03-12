@@ -1,6 +1,8 @@
 package jp.developer.bbee.pcassem;
 
 import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
+import jp.developer.bbee.pcassem.HomeController.RestoreDevice;
+import jp.developer.bbee.pcassem.HomeController.SaveHead;
 import jp.developer.bbee.pcassem.HomeController.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -9,6 +11,7 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -205,5 +208,70 @@ public class DeviceInfoDao {
         }
 
         return countList;
+    }
+
+    private static final String SAVE_QUERY = "INSERT INTO savelist VALUES(?, ?, ?, ?, ?)";
+    record SqlSaveHead (String saveId, String guestId, String saveName, Timestamp createddate, Timestamp lastupdate) {}
+    record SqlSaveInfo (String saveId, String deviceId, Integer price, Timestamp createddate, Timestamp lastupdate) {}
+
+    @Transactional
+    public void save(String saveId, String guestId, List<String> deviceIdList) {
+        Timestamp tsNow = new Timestamp(System.currentTimeMillis());
+
+        SqlSaveHead sqlSaveHead = new SqlSaveHead(saveId, guestId, "NONAME", tsNow, tsNow);
+        SqlParameterSource param = new BeanPropertySqlParameterSource(sqlSaveHead);
+        SimpleJdbcInsert insertHead = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("savehead");
+        insertHead.execute(param);
+
+        List<SqlSaveInfo> sqlSaveInfoList = deviceIdList.stream().map(
+                di -> new SqlSaveInfo(saveId, di,
+                        findRecordById(di).price(),
+                        tsNow, tsNow)).toList();
+
+        SqlParameterSource[] params =
+                sqlSaveInfoList.stream().map(BeanPropertySqlParameterSource::new)
+                        .toArray(BeanPropertySqlParameterSource[]::new);
+                new BeanPropertySqlParameterSource(sqlSaveInfoList.get(0));
+        SimpleJdbcInsert insertList = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("savelist");
+        insertList.executeBatch(params);
+    }
+
+    private static final String RESTORE_QUERY =
+            "SELECT savelist.saveid, savelist.deviceid, devices.device, devices.url" +
+            ", devices.name, devices.imgurl, devices.detail" +
+            ", savelist.price as oldprice, devices.price as newprice" +
+            "  FROM savelist" +
+            "  INNER JOIN devices ON savelist.deviceid = devices.id" +
+            "  WHERE savelist.saveid = ?";
+    public List<RestoreDevice> restore(String saveId) {
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(RESTORE_QUERY, saveId);
+        return result.stream().map(
+                (Map<String, Object> row) -> new RestoreDevice(
+                        row.get("saveid").toString(),
+                        row.get("deviceid").toString(),
+                        row.get("device").toString(),
+                        row.get("url").toString(),
+                        row.get("name").toString(),
+                        row.get("imgurl").toString(),
+                        row.get("detail").toString(),
+                        ((Integer) row.get("oldprice")),
+                        ((Integer) row.get("newprice"))
+                )).toList();
+    }
+
+    public List<SaveHead> getSaveHeadRecent5(String guestId) {
+        String query = "SELECT * FROM savehead WHERE guestid = ? ORDER BY lastupdate desc";
+
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, guestId);
+        return result.stream().limit(5).map(
+                (Map<String, Object> r) -> new SaveHead(
+                        r.get("saveid").toString(),
+                        r.get("guestid").toString(),
+                        r.get("savename").toString(),
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
+                )).toList();
     }
 }
