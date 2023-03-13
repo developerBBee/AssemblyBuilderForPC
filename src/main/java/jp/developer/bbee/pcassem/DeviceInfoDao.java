@@ -44,6 +44,17 @@ public class DeviceInfoDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public int setTime(LocalDateTime ldt) {
+        return jdbcTemplate.update("UPDATE systemvals SET kakakuupdate = ?",
+                Timestamp.valueOf(ldt));
+    }
+
+    public LocalDateTime getTime() {
+        String query = "SELECT kakakuupdate FROM systemvals";
+        Map<String, Object> result = jdbcTemplate.queryForList(query).get(0);
+        return ((Timestamp) result.get("kakakuupdate")).toLocalDateTime();
+    }
+
     public void add(DeviceInfo deviceInfo) {
         SqlParameterSource param = new BeanPropertySqlParameterSource(SqlDeviceInfo.create(deviceInfo));
         SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate)
