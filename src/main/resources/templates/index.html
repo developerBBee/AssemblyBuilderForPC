@@ -197,9 +197,9 @@
                 <td class="price" th:text="${restoredItem.oldprice}"></td>
                 <td class="price">
                   <p>
-                    <th:block th:text="${restoredItem.newprice}"/>
+                    <span th:text="${restoredItem.newprice}"></span>
                     <br>
-                    <th:block th:class="${restoredItem.color}" th:text="${restoredItem.diffprice}"/>
+                    <span th:class="${restoredItem.color}" th:text="${restoredItem.diffprice}"></span>
                   </p>
                 </td>
               </tr>
