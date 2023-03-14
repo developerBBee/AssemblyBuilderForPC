@@ -209,33 +209,31 @@ function checkedTotalRestored() {
   const restoredTableBody = document.getElementById('restoredtablebody');
   let oldTotalPrice = 0;
   let newTotalPrice = 0;
-  let oldPriceWarn = '';
-  let newPriceWarn = '';
   for(let i=0; i<restoredTableBody.children.length; i++) {
     const restoredTableRow = restoredTableBody.children.item(i); // tr
 
     const oldValueElement = restoredTableRow.children.item(3); // td:登録時価格
     const newValueElement = restoredTableRow.children.item(4).children.item(0); // block:現在価格
     const oldValue = oldValueElement.textContent;
-    const newValue = newValueElement.textContent.replace(/\n.*.¥/g, '').replace(/\n.*/g, '');
+    const newValue = newValueElement.textContent.replace(/\n.*/g, '');
     if (oldValue == '価格情報なし') {
-      oldPriceWarn = '\n※価格情報なしを含む';
-      continue;
+      document.getElementById('old-warn').classList.remove('hidden');
+    } else {
+      const oldVal = parseInt(oldValue.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
+      oldTotalPrice += oldVal;
     }
     if (newValue == '価格情報なし') {
-      newPriceWarn = '\n※価格情報なしを含む';
-      continue;
+      document.getElementById('new-warn').classList.remove('hidden');
+    } else {
+      const newVal = parseInt(newValue.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
+      newTotalPrice += newVal;
     }
-    const oldVal = parseInt(oldValue.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
-    oldTotalPrice += oldVal;
-    const newVal = parseInt(newValue.replaceAll('¥', '').replaceAll(' ', '').replaceAll(',', ''), 10);
-    newTotalPrice += newVal;
   }
 
   const oldTotalPriceTxt = document.getElementById('oldtotalprice');
-  oldTotalPriceTxt.textContent = '¥ ' + oldTotalPrice.toLocaleString() + oldPriceWarn;
+  oldTotalPriceTxt.textContent = '¥ ' + oldTotalPrice.toLocaleString();
   const newTotalPriceTxt = document.getElementById('newtotalprice');
-  newTotalPriceTxt.textContent = '¥ ' + newTotalPrice.toLocaleString() + newPriceWarn;
+  newTotalPriceTxt.textContent = '¥ ' + newTotalPrice.toLocaleString();
 }
 
 function determineConfigurableByFlag() {

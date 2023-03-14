@@ -335,6 +335,10 @@ a:not(.savelink){
   font-weight: bold;
 }
 
+#new-warn, #old-warn {
+  font-size: 10px;
+}
+
 @media screen and (max-width: 479px) {
   .restored {
     margin: 1px;
