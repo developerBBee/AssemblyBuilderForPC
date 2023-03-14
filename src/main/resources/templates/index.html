@@ -166,12 +166,18 @@
                   合計(登録時価格)
                 </div>
                 <div id="oldtotalprice" class="restored-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+                <div id="old-warn" class="hidden">
+                  ※価格情報なしを含む
+                </div>
               </div>
               <div class="restored-result-totalprice-area">
                 <div class="restored-result-totalprice-header">
                   合計(現在価格)
                 </div>
                 <div id="newtotalprice" class="restored-result-totalprice" th:text="${totalPrice}">¥ 12,345</div>
+                <div id="new-warn" class="hidden">
+                  ※価格情報なしを含む
+                </div>
               </div>
             </div>
           </div>
@@ -196,11 +202,9 @@
                 </td>
                 <td class="price" th:text="${restoredItem.oldprice}"></td>
                 <td class="price">
-                  <p>
-                    <th:block th:text="${restoredItem.newprice}"/>
-                    <br>
-                    <th:block th:class="${restoredItem.color}" th:text="${restoredItem.diffprice}"/>
-                  </p>
+                  <span th:text="${restoredItem.newprice}"></span>
+                  <br>
+                  <span th:class="${restoredItem.color}" th:text="${restoredItem.diffprice}"></span>
                 </td>
               </tr>
             </tbody>

@@ -28,7 +28,6 @@ public class HomeController {
     private final KakakuClient kakakuClient;
 
     private LocalDateTime fullUpdateDate = LocalDateTime.of(2000, 1, 1, 0, 0);
-    private LocalDateTime lastUpdateDate = LocalDateTime.of(2020, 1, 1, 0, 0);
 
     public Map<String, String> deviceTypeJp = new HashMap<>();
 
@@ -91,8 +90,9 @@ public class HomeController {
                     kakakuClient.updateKakaku(false);
                 }
                 incomplete = false;
-                lastUpdateDate = LocalDateTime.now();
+                LocalDateTime lastUpdateDate = LocalDateTime.now();
                 if (fullUpdate) fullUpdateDate = lastUpdateDate;
+                dao.setTime(lastUpdateDate);
             } catch (IOException e) {
                 System.out.println("update kakaku failed. reason=" + e.getMessage());
                 loopCount++;
@@ -154,7 +154,7 @@ public class HomeController {
     String top(Model model, @RequestParam(value = "guestId", required = false) String guestId) {
         model.addAttribute("restoredListDisplay", "hidden");
         model.addAttribute("deviceListDisplay", "hidden");
-        model.addAttribute("updateTime", lastUpdateDate.format(formatter));
+        model.addAttribute("updateTime", dao.getTime().format(formatter));
 
         if (guestId != null && guestId.length() == 32) {
             // check user's savehead
@@ -361,7 +361,7 @@ public class HomeController {
         model.addAttribute("deviceInfoList", formattedList);
         model.addAttribute("deviceTypeName", deviceTypeName);
         model.addAttribute("sortFlag", s);
-        model.addAttribute("updateTime", lastUpdateDate.format(formatter));
+        model.addAttribute("updateTime", dao.getTime().format(formatter));
 
     }
 
@@ -538,7 +538,7 @@ public class HomeController {
         model.addAttribute("restoredList", rdfList);
         model.addAttribute("assembliesDisplay", "hidden");
         model.addAttribute("deviceListDisplay", "hidden");
-        model.addAttribute("updateTime", lastUpdateDate.format(formatter));
+        model.addAttribute("updateTime", dao.getTime().format(formatter));
         return "index";
     }
 }

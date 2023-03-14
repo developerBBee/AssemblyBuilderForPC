@@ -1,3 +1,11 @@
+CREATE TABLE IF NOT EXISTS systemvals (
+  kakakuupdate TIMESTAMP
+);
+INSERT INTO systemvals
+  SELECT * FROM (SELECT '2000-01-01 00:00:00')
+    WHERE NOT EXISTS (SELECT * FROM systemvals)
+;
+
 CREATE TABLE IF NOT EXISTS devices (
   id VARCHAR(32) PRIMARY KEY,
   device VARCHAR(20),
