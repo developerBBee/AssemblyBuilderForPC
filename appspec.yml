@@ -3,6 +3,7 @@ os: linux
 files:
   - source: /
     destination: /home/ubuntu/app/
+    overwrite: true
 permissions:
   - object: /home/ubuntu
     pattern: "app"
@@ -17,3 +18,7 @@ permissions:
     mode: 444
     type:
       - file
+hooks:
+  ApplicationStart:
+    - location: update.sh
+      timeout: 300

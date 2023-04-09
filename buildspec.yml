@@ -57,6 +57,7 @@ phases:
       - mkdir artifacts
       - cp target/pcassem-0.0.1-SNAPSHOT.jar artifacts
       - cp appspec.yml artifacts
+      - cp update.sh artifacts
 
       - echo finish post build.
 
@@ -65,5 +66,6 @@ artifacts:
   files:
     - pcassem-0.0.1-SNAPSHOT.jar
     - appspec.yml
+    - update.sh
   # ベースディレクトリ
   base-directory: artifacts
