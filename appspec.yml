@@ -1,0 +1,24 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/app/
+    overwrite: true
+permissions:
+  - object: /home/ubuntu
+    pattern: "app"
+    owner: ubuntu
+    group: ubuntu
+    type:
+      - directory
+  - object: /home/ubuntu/app
+    pattern: "**"
+    owner: ubuntu
+    group: ubuntu
+    mode: 444
+    type:
+      - file
+hooks:
+  ApplicationStart:
+    - location: update.sh
+      timeout: 300
