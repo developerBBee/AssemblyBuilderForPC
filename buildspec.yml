@@ -49,13 +49,13 @@ phases:
 
       # S3にアップロードするファイルを所定のディレクトリにコピー
       - mkdir artifacts
-      - cp target/spring-boot-demo-0.0.1-SNAPSHOT.jar artifacts
+      - cp target/pcassem-0.0.1-SNAPSHOT.jar artifacts
 
       - echo finish post build.
 
 artifacts:
   # S3にアップロードするファイルを指定
   files:
-    - spring-boot-demo-0.0.1-SNAPSHOT.jar
+    - pcassem-0.0.1-SNAPSHOT.jar
   # ベースディレクトリ
   base-directory: artifacts
