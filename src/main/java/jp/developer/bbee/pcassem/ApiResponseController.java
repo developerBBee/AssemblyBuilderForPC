@@ -50,7 +50,9 @@ public class ApiResponseController {
     }
 
     @GetMapping("/devicelist")
-    public List<HomeController.DeviceInfo> getDeviceList(@RequestParam(value="device", defaultValue="pccase") String device) {
-        return dao.findAll(device);
+    public Map<String, List<HomeController.DeviceInfo>> getDeviceList(@RequestParam(value="device", defaultValue="pccase") String device) {
+        Map<String, List<HomeController.DeviceInfo>> results = new HashMap<>();
+        results.put("results", dao.findAll(device));
+        return results;
     }
 }
