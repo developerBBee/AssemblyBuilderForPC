@@ -51,8 +51,13 @@ public class DeviceInfoDao {
 
     public LocalDateTime getTime() {
         String query = "SELECT kakakuupdate FROM systemvals";
-        Map<String, Object> result = jdbcTemplate.queryForList(query).get(0);
-        return ((Timestamp) result.get("kakakuupdate")).toLocalDateTime();
+        try {
+            Map<String, Object> result = jdbcTemplate.queryForList(query).get(0);
+            return ((Timestamp) result.get("kakakuupdate")).toLocalDateTime();
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println(e.getMessage());
+            return LocalDateTime.of(2000,1,1,0,0,0);
+        }
     }
 
     public void add(DeviceInfo deviceInfo) {

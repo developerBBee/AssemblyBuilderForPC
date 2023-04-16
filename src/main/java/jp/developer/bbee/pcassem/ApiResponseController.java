@@ -1,11 +1,13 @@
 package jp.developer.bbee.pcassem;
 
+import hidden.ApiEndPoints;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +25,7 @@ public class ApiResponseController {
         this.dao = dao;
     }
 
+    /*
     private final AtomicLong counter = new AtomicLong();
     private static final String template = "Hello, %s!";
     record JsonTest(long id, String content) {}
@@ -48,11 +51,20 @@ public class ApiResponseController {
 
         return jsonList;
     }
+     */
 
-    @GetMapping("/devicelist")
+    @GetMapping(ApiEndPoints.GET_DEVICE)
     public Map<String, List<HomeController.DeviceInfo>> getDeviceList(@RequestParam(value="device", defaultValue="pccase") String device) {
         Map<String, List<HomeController.DeviceInfo>> results = new HashMap<>();
         results.put("results", dao.findAll(device));
         return results;
+    }
+
+    @GetMapping(ApiEndPoints.GET_UPDATE)
+    public Map<String, Integer> getLastUpdate() {
+        LocalDateTime result = dao.getTime();
+        var m = new HashMap<String, Integer>();
+        m.put("kakakuupdate", result.getYear()*10000 + result.getMonthValue()+100 + result.getDayOfMonth());
+        return m;
     }
 }
