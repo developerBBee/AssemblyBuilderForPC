@@ -63,8 +63,11 @@ public class ApiResponseController {
     @GetMapping(ApiEndPoints.GET_UPDATE)
     public Map<String, Integer> getLastUpdate() {
         LocalDateTime result = dao.getTime();
+        return getUpdateMap(result);
+    }
+    private Map<String, Integer> getUpdateMap(LocalDateTime ldt) {
         var m = new HashMap<String, Integer>();
-        m.put("kakakuupdate", result.getYear()*10000 + result.getMonthValue()+100 + result.getDayOfMonth());
+        m.put("kakakuupdate", ldt.getYear()*10000 + ldt.getMonthValue()*100 + ldt.getDayOfMonth());
         return m;
     }
 }
