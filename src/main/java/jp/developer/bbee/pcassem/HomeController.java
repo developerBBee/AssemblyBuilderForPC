@@ -206,6 +206,15 @@ public class HomeController {
         return assembliesList;
     }
 
+    @GetMapping("/policy_ja")
+    String policy_ja(Model model) {
+        return "policy_ja";
+    }
+    @GetMapping("/policy_en")
+    String policy_en(Model model) {
+        return "policy_en";
+    }
+
     @GetMapping("/home")
     String home(Model model) {
         return "index";
