@@ -80,7 +80,8 @@
         </div>
       </header>
 
-      <div id="contents">
+      <div class="wrapper">
+      <div id="contents" class="main">
         <div class="savelink-container" th:classappend="${saveHeadVisible}">
           <span class="saveheadermsg">保存した構成(5つまで)：</span>
           <a class="savelink" th:each="saveheader :${saveHeaderList}" th:href="${saveheader.url}">
@@ -260,6 +261,17 @@
             </tbody>
           </table>
         </div>
+      </div>
+      <aside class="promotion">
+        <div class="widget widget--sticky">
+          <div class="ad-container">
+            <p class="side-only">Androidアプリ版</p>
+            <a class="app-img-bar" href='https://play.google.com/store/apps/details?id=jp.developer.bbee.assemblepc&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Google Play で手に入れよう' src='https://play.google.com/intl/ja/badges/static/images/badges/ja_badge_web_generic.png'/></a>
+            <p class="side-only g-trademark">Google Play および Google Play ロゴは、Google LLC の商標です。</p>
+            <p class="side-only"><img class="app-img-qr" src="./img/QR_721239.png" alt="google-play-qr"></p>
+          </div>
+        </div>
+      </aside>
       </div>
     </div>
     <script th:inline="javascript" th:src="@{/main.js?20230314}"></script>
