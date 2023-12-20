@@ -172,7 +172,7 @@ public class HomeController {
                 model.addAttribute("saveHeaderList", saveHeaderList);
             }
 
-            Map<String, Integer> assemCountMap = dao.getAssemCountList(deviceTypeList, guestId);
+            Map<String, Integer> assemCountMap = dao.getAssemCountList(guestId);
             List<DeviceInfo> assembliesList = getAssembliesList(guestId);
             assembliesList = sortList(assembliesList);
             List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList, assemCountMap);

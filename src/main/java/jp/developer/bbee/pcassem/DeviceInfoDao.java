@@ -213,15 +213,13 @@ public class DeviceInfoDao {
         return number;
     }
 
-    public Map<String, Integer> getAssemCountList(List<String> deviceList, String guestid) {
+    public Map<String, Integer> getAssemCountList(String guestid) {
+        String query = "SELECT DEVICE, COUNT(*) AS COUNT FROM assemblies WHERE guestid = ? GROUP BY device";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, guestid);
+
         Map<String, Integer> countList = new HashMap<>();
-        String query1 = "SELECT COUNT(*) FROM assemblies WHERE device = '";
-        String query2 = "' AND guestid = '";
-        for (String dev : deviceList) {
-            String query = query1 + dev + query2 + guestid + "'";
-            //System.out.println(query); // debug
-            countList.put(dev, jdbcTemplate.queryForObject(query, Integer.class));
-        }
+        result.forEach((Map<String, Object> row) ->
+                countList.put(row.get("DEVICE").toString(), Integer.parseInt(row.get("COUNT").toString())));
 
         return countList;
     }
