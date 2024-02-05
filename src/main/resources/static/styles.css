@@ -515,7 +515,15 @@ a:not(.savelink){
   align-items: center;
 }
 .g-trademark {
-  font-size: .2em;
+  font-size: .4em;
+  margin: 0 20px 0 20px;
+}
+.ad-text-head {
+  font-size: 1em;
+  margin: 20px 20px 0 20px;
+}
+.ad-text {
+  font-size: 1em;
   margin: 0 20px 0 20px;
 }
 .widget--sticky {
