@@ -65,14 +65,13 @@ public class KakakuClient {
     public static final int FLAG2_SODIMM = 1 << 23; // For determining DIMM(0) or SODIMM(1)
 
     public boolean unAcquired;
-    private List<String> urlList;
-    private List<String> devices;
-    private Map<String, String> deviceUrl;
+    private final List<String> devices;
+    private final Map<String, String> deviceUrl;
 
     KakakuClient(DeviceInfoDao dao) {
         this.dao = dao;
 
-        urlList = new ArrayList<>();
+        List<String> urlList = new ArrayList<>();
         urlList.add("/pc/pc-case/ranking_0580/"); // PC case
         urlList.add("/pc/motherboard/ranking_0540/"); // Motherboard
         urlList.add("/pc/power-supply/ranking_0590/"); // Power supply unit
@@ -105,6 +104,7 @@ public class KakakuClient {
     }
 
     public void getKakaku() throws IOException {
+        System.out.println("getKakaku()");
         SocketFactory factory = SSLSocketFactory.getDefault();
         for (String device : devices) {
             try (var soc = factory.createSocket(KAKAKU_DOMAIN, 443);
@@ -114,6 +114,7 @@ public class KakakuClient {
             ) {
                 pw.println("GET " + deviceUrl.get(device) + " HTTP/1.1");
                 pw.println("Host: " + KAKAKU_DOMAIN);
+                pw.println("Connection: close");
                 pw.println();
                 pw.flush();
                 try {
@@ -122,7 +123,7 @@ public class KakakuClient {
                         debugRows = 4000;
                     }
                     List<String> linkColumns = bur.lines()
-                            .limit(DEBUG ? debugRows : 4000)
+                            .limit(DEBUG ? debugRows : 10000)
                             .filter(s -> s.contains("rkgBoxLink"))
                             .map(s -> s.replaceAll("<a href=\"", ""))
                             .map(s -> s.replaceAll("\" class=.*", ""))
@@ -173,6 +174,7 @@ public class KakakuClient {
     int newFlag1;
     int newFlag2;
     public void updateKakaku(boolean fastUpdate) throws IOException {
+        System.out.println("updateKakaku()");
         unAcquired = false; // Acquired link url
         SocketFactory factory = SSLSocketFactory.getDefault();
 
@@ -196,6 +198,7 @@ public class KakakuClient {
                 ) {
                     pw.println("GET " + deviceInfo.url() + "spec/ HTTP/1.1");
                     pw.println("Host: " + KAKAKU_DOMAIN);
+                    pw.println("Connection: close");
                     pw.println();
                     pw.flush();
 //                    try {
@@ -212,8 +215,7 @@ public class KakakuClient {
                     newFlag1 = 0;
                     newFlag2 = 0;
                     try {
-                        boolean isGetHtml = false;
-                        if (bur.readLine().contains("200 OK")) isGetHtml = true;
+                        boolean isGetHtml = bur.readLine().contains("200 OK");
                         if (isGetHtml) {
                             bur.lines().limit(1000).forEach(str -> {
 
@@ -323,7 +325,7 @@ public class KakakuClient {
 
         try {
             String detail = buf.substring(buf.lastIndexOf(">") + 1);
-            if ("".equals(detail.replace(" ", "").replace("　", ""))) return null;
+            if (detail.replace(" ", "").replace("　", "").isEmpty()) return null;
 
             switch (device) {
                 case "pccase":
