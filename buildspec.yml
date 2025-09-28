@@ -31,7 +31,12 @@ phases:
       # JAVA_HOME環境変数の設定
       - export JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto.aarch64
       # Mavenのインストール
-      - yum install -y maven
+      - curl https://archive.apache.org/dist/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz | tar zxv
+      - sudo mkdir -p /opt/maven
+      - sudo mv apache-maven-3.6.1 /opt/maven/
+      - sudo ln -s /opt/maven/apache-maven-3.6.1 /opt/maven/default
+      - echo 'export PATH=$PATH:/opt/maven/default/bin' | sudo tee -a /etc/profile
+      - source /etc/profile
       - mvn -version
 
       - echo finish pre build.
