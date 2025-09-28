@@ -302,7 +302,7 @@ public class KakakuClient {
                     }
                 } catch (SocketException e) {
                     System.out.println("updateKakaku() SocketException reason=" + e.getMessage());
-                } catch (UncheckedIOException e) {
+                } catch (Exception e) {
                     System.out.println("updateKakaku() failed name=" + deviceInfo.name() + " reason=" + e.getMessage());
                 }
 //                try {
