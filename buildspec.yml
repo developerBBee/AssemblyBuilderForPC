@@ -31,10 +31,7 @@ phases:
       # JAVA_HOME環境変数の設定
       - export JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto.aarch64
       # Mavenのインストール
-      - wget https://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
-      - sed -i s/\$releasever/7/g /etc/yum.repos.d/epel-apache-maven.repo
-      - sed -i s/\$basearch/x86_64/g /etc/yum.repos.d/epel-apache-maven.repo
-      - yum install -y apache-maven
+      - yum install -y maven
       - mvn -version
 
       - echo finish pre build.
