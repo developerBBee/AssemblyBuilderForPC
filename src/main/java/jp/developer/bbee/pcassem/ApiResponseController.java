@@ -5,14 +5,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import params.ApiEndPoints;
+import jp.developer.bbee.pcassem.constants.ApiEndPoint;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("api/")
@@ -53,14 +51,14 @@ public class ApiResponseController {
     }
      */
 
-    @GetMapping(ApiEndPoints.GET_DEVICE)
+    @GetMapping(ApiEndPoint.GET_DEVICE)
     public Map<String, List<HomeController.DeviceInfo>> getDeviceList(@RequestParam(value="device", defaultValue="pccase") String device) {
         Map<String, List<HomeController.DeviceInfo>> results = new HashMap<>();
         results.put("results", dao.findAll(device));
         return results;
     }
 
-    @GetMapping(ApiEndPoints.GET_UPDATE)
+    @GetMapping(ApiEndPoint.GET_UPDATE)
     public Map<String, Integer> getLastUpdate() {
         LocalDateTime result = dao.getTime();
         return getUpdateMap(result);
