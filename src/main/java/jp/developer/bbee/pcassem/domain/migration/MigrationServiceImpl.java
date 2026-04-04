@@ -53,7 +53,7 @@ public class MigrationServiceImpl implements MigrationService {
         firestoreService.saveAssemblies(firebaseUid, assemblies);
         firestoreService.saveSaves(firebaseUid, guestId, saveHeads, saveItemsMap);
 
-        // 5. H2から削除（先に行うことでFirestore書き込み済みの場合のリトライを安全にする）
+        // 5. Firestoreへの書き込み完了後にH2から削除（書き込み失敗時に移行元データを失わないため）
         dao.deleteAllUserAssemByGuestId(guestId);
         dao.deleteAllSavesByGuestId(guestId);
 
