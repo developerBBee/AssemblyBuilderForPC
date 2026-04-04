@@ -141,8 +141,8 @@ public class HomeController {
                                 String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
     record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2,
                        String releasedate, Integer invisible, LocalDateTime createddate, LocalDateTime lastupdate) {}
-    record UserAssem (String id, String deviceid, String device, String guestid, LocalDateTime createddate, LocalDateTime lastupdate) {}
-    record SaveHead (String saveid, String guestid, String savename, LocalDateTime createddate, LocalDateTime lastupdate) {}
+    public record UserAssem (String id, String deviceid, String device, String guestid, LocalDateTime createddate, LocalDateTime lastupdate) {}
+    public record SaveHead (String saveid, String guestid, String savename, LocalDateTime createddate, LocalDateTime lastupdate) {}
     record SaveHeader (String url, String text) {
         static SaveHeader create(SaveHead sh, int index) {
             return new SaveHeader(DOMAIN_NAME+"rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
