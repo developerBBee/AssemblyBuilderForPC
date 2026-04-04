@@ -3,7 +3,7 @@ package jp.developer.bbee.pcassem.domain.migration;
 public interface MigrationService {
     /**
      * Firebase IDトークンで認証し、guestIdに紐づくH2データをFirestoreに移行する。
-     * 移行済みの場合は何もしない（べき等）。
+     * @return true=移行実施, false=移行済みによりスキップ
      */
-    void migrate(String idToken, String guestId) throws Exception;
+    boolean migrate(String idToken, String guestId) throws Exception;
 }

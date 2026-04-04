@@ -30,12 +30,13 @@ public class MigrationController {
                     .body(new MigrationResponse(false, "idToken is required"));
         }
         try {
-            migrationService.migrate(request.idToken, request.guestId);
-            return ResponseEntity.ok(new MigrationResponse(true, "Migration successful"));
+            boolean migrated = migrationService.migrate(request.idToken, request.guestId);
+            String message = migrated ? "Migration successful" : "Already migrated";
+            return ResponseEntity.ok(new MigrationResponse(true, message));
         } catch (Exception e) {
-            System.out.println("[MigrationController] Error: " + e.getMessage());
+            System.out.println("[MigrationController] Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             return ResponseEntity.internalServerError()
-                    .body(new MigrationResponse(false, e.getMessage()));
+                    .body(new MigrationResponse(false, "Migration failed due to an internal error"));
         }
     }
 }
