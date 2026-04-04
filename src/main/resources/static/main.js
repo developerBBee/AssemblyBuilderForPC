@@ -50,6 +50,10 @@ window.onload = function() {
 // Firebase Anonymous Auth + Migration
 (async function initFirebaseMigration() {
   try {
+    if (localStorage.getItem('migration_completed') === 'true') {
+      return;
+    }
+
     const res = await fetch('/api/firebase/config');
     if (!res.ok) throw new Error('Failed to fetch Firebase config: ' + res.status);
     const config = await res.json();
@@ -57,27 +61,36 @@ window.onload = function() {
     const app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(config);
     const auth = app.auth();
 
-    const userCredential = await auth.signInAnonymously();
-    const idToken = await userCredential.user.getIdToken();
-    console.log('Firebase signed in anonymously. uid=' + userCredential.user.uid);
+    auth.onAuthStateChanged(async (user) => {
+      try {
+        if (!user) {
+          user = (await auth.signInAnonymously()).user;
+        }
+        console.log('Firebase signed in. uid=' + user.uid);
 
-    if (guestId && guestId.length === 32) {
-      const migrateRes = await fetch('/api/migrate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken: idToken, guestId: guestId })
-      });
-      if (!migrateRes.ok) {
-        console.log('Migration API error: ' + migrateRes.status);
-        return;
+        if (guestId && guestId.length === 32) {
+          const idToken = await user.getIdToken();
+          const migrateRes = await fetch('/api/migrate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: idToken })
+          });
+          if (!migrateRes.ok) {
+            console.log('Migration API error: ' + migrateRes.status);
+            return;
+          }
+          const result = await migrateRes.json();
+          if (result.success) {
+            console.log('Migration: ' + result.message);
+            localStorage.setItem('migration_completed', 'true');
+          } else {
+            console.log('Migration failed: ' + result.message);
+          }
+        }
+      } catch (e) {
+        console.log('Firebase migration error (inner): ' + e.message);
       }
-      const result = await migrateRes.json();
-      if (result.success) {
-        console.log('Migration: ' + result.message);
-      } else {
-        console.log('Migration failed: ' + result.message);
-      }
-    }
+    });
   } catch (e) {
     console.log('Firebase migration error: ' + e.message);
   }

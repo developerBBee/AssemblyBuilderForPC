@@ -1,5 +1,6 @@
 package jp.developer.bbee.pcassem;
 
+import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,12 +152,13 @@ public class HomeController {
     static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
 
     @GetMapping("/")
-    String top(Model model, @RequestParam(value = "guestId", required = false) String guestId) {
+    String top(Model model, @RequestParam(value = "guestId", required = false) String guestId, HttpSession session) {
         model.addAttribute("restoredListDisplay", "hidden");
         model.addAttribute("deviceListDisplay", "hidden");
         model.addAttribute("updateTime", dao.getTime().format(formatter));
 
         if (guestId != null && guestId.length() == 32) {
+            session.setAttribute("guestId", guestId);
             // check user's savehead
             List<SaveHead> saveHeadList = dao.getSaveHeadRecent5(guestId);
             if (saveHeadList == null || saveHeadList.size() == 0) {
