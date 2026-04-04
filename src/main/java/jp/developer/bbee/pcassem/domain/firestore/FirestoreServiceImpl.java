@@ -4,8 +4,8 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.WriteBatch;
 import jp.developer.bbee.pcassem.DeviceInfoDao.SaveItem;
-import jp.developer.bbee.pcassem.HomeController.SaveHead;
-import jp.developer.bbee.pcassem.HomeController.UserAssem;
+import jp.developer.bbee.pcassem.model.SaveHead;
+import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,8 +38,8 @@ public class FirestoreServiceImpl implements FirestoreService {
                         .document(assem.deviceid());
                 Map<String, Object> data = new HashMap<>();
                 data.put("device", assem.device());
-                data.put("createddate", Timestamp.of(
-                        java.sql.Timestamp.valueOf(assem.createddate())));
+                data.put("createddate", Timestamp.of(java.sql.Timestamp.valueOf(assem.createddate())));
+                data.put("lastupdate", Timestamp.of(java.sql.Timestamp.valueOf(assem.lastupdate())));
                 batch.set(ref, data);
             }
             batch.commit().get();
@@ -64,6 +64,8 @@ public class FirestoreServiceImpl implements FirestoreService {
                     Map<String, Object> itemData = new HashMap<>();
                     itemData.put("deviceId", item.deviceId());
                     itemData.put("price", item.price());
+                    itemData.put("createddate", Timestamp.of(java.sql.Timestamp.valueOf(item.createddate())));
+                    itemData.put("lastupdate", Timestamp.of(java.sql.Timestamp.valueOf(item.lastupdate())));
                     items.add(itemData);
                 }
 
@@ -71,8 +73,8 @@ public class FirestoreServiceImpl implements FirestoreService {
                 data.put("firebaseUid", firebaseUid);
                 data.put("guestId", guestId);
                 data.put("saveName", head.savename());
-                data.put("createddate", Timestamp.of(
-                        java.sql.Timestamp.valueOf(head.createddate())));
+                data.put("createddate", Timestamp.of(java.sql.Timestamp.valueOf(head.createddate())));
+                data.put("lastupdate", Timestamp.of(java.sql.Timestamp.valueOf(head.lastupdate())));
                 data.put("items", items);
                 batch.set(ref, data);
             }
