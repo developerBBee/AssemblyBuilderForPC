@@ -51,10 +51,11 @@ window.onload = function() {
 (async function initFirebaseMigration() {
   try {
     const res = await fetch('/api/firebase/config');
+    if (!res.ok) throw new Error('Failed to fetch Firebase config: ' + res.status);
     const config = await res.json();
 
-    firebase.initializeApp(config);
-    const auth = firebase.auth();
+    const app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(config);
+    const auth = app.auth();
 
     const userCredential = await auth.signInAnonymously();
     const idToken = await userCredential.user.getIdToken();
@@ -66,11 +67,15 @@ window.onload = function() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken: idToken, guestId: guestId })
       });
+      if (!migrateRes.ok) {
+        console.log('Migration API error: ' + migrateRes.status);
+        return;
+      }
       const result = await migrateRes.json();
       if (result.success) {
-        console.log('Migration successful: ' + result.message);
+        console.log('Migration: ' + result.message);
       } else {
-        console.log('Migration skipped or failed: ' + result.message);
+        console.log('Migration failed: ' + result.message);
       }
     }
   } catch (e) {

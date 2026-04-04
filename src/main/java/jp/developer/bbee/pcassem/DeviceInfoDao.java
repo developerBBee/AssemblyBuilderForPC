@@ -2,8 +2,8 @@ package jp.developer.bbee.pcassem;
 
 import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
 import jp.developer.bbee.pcassem.HomeController.RestoreDevice;
-import jp.developer.bbee.pcassem.HomeController.SaveHead;
-import jp.developer.bbee.pcassem.HomeController.UserAssem;
+import jp.developer.bbee.pcassem.model.SaveHead;
+import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -302,7 +302,8 @@ public class DeviceInfoDao {
                 )).toList();
     }
 
-    public record SaveItem(String saveId, String deviceId, Integer price, LocalDateTime createddate) {}
+    public record SaveItem(String saveId, String deviceId, Integer price,
+                           LocalDateTime createddate, LocalDateTime lastupdate) {}
 
     public List<SaveItem> getSaveItemsBySaveId(String saveId) {
         String query = "SELECT * FROM savelist WHERE saveid = ?";
@@ -312,7 +313,8 @@ public class DeviceInfoDao {
                         r.get("saveid").toString(),
                         r.get("deviceid").toString(),
                         (Integer) r.get("price"),
-                        ((Timestamp) r.get("createddate")).toLocalDateTime()
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
                 )).toList();
     }
 
@@ -324,7 +326,8 @@ public class DeviceInfoDao {
                         r.get("saveid").toString(),
                         r.get("deviceid").toString(),
                         (Integer) r.get("price"),
-                        ((Timestamp) r.get("createddate")).toLocalDateTime()
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
                 )).collect(java.util.stream.Collectors.groupingBy(SaveItem::saveId));
     }
 
