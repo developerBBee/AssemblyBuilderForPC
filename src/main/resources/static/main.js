@@ -44,7 +44,7 @@ window.onscroll = function() {
 window.onload = function() {
   const body = window.document.body;
   scrollTo(0, body.getAttribute('data-scroll'));
-}
+};
 
 
 // Firebase Anonymous Auth + Migration
