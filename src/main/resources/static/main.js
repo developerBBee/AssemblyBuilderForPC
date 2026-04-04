@@ -61,8 +61,12 @@ window.onload = function() {
     const app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(config);
     const auth = app.auth();
 
-    auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      unsubscribe();
       try {
+        if (localStorage.getItem('migration_completed') === 'true') {
+          return;
+        }
         if (!user) {
           user = (await auth.signInAnonymously()).user;
         }

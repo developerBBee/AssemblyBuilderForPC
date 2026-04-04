@@ -4,6 +4,8 @@ import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.domain.migration.MigrationService;
 import jp.developer.bbee.pcassem.presentation.data.MigrationRequest;
 import jp.developer.bbee.pcassem.presentation.data.MigrationResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("api/migrate")
 public class MigrationController {
+
+    private static final Logger logger = LoggerFactory.getLogger(MigrationController.class);
 
     private final MigrationService migrationService;
 
@@ -36,7 +40,7 @@ public class MigrationController {
             String message = migrated ? "Migration successful" : "Already migrated";
             return ResponseEntity.ok(new MigrationResponse(true, message));
         } catch (Exception e) {
-            System.out.println("[MigrationController] Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            logger.error("[MigrationController] Error: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
             return ResponseEntity.internalServerError()
                     .body(new MigrationResponse(false, "Migration failed due to an internal error"));
         }
