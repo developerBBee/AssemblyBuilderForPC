@@ -52,6 +52,13 @@ CREATE TABLE IF NOT EXISTS savelist (
   FOREIGN KEY(deviceid) REFERENCES devices(id)
 );
 
+-- Firebase UID migration mapping table
+CREATE TABLE IF NOT EXISTS uid_mapping (
+  firebase_uid VARCHAR(128) PRIMARY KEY,
+  guest_id     VARCHAR(32),
+  migrated_at  TIMESTAMP
+);
+
 ALTER TABLE devices ADD COLUMN IF NOT EXISTS releasedate VARCHAR(8) DEFAULT '20000101';
 ALTER TABLE devices ADD COLUMN IF NOT EXISTS invisible INT DEFAULT 0;
 ALTER TABLE devices ADD COLUMN IF NOT EXISTS createddate TIMESTAMP DEFAULT LOCALTIMESTAMP();

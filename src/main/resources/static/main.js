@@ -47,6 +47,37 @@ window.onload = function() {
 }
 
 
+// Firebase Anonymous Auth + Migration
+(async function initFirebaseMigration() {
+  try {
+    const res = await fetch('/api/firebase/config');
+    const config = await res.json();
+
+    firebase.initializeApp(config);
+    const auth = firebase.auth();
+
+    const userCredential = await auth.signInAnonymously();
+    const idToken = await userCredential.user.getIdToken();
+    console.log('Firebase signed in anonymously. uid=' + userCredential.user.uid);
+
+    if (guestId && guestId.length === 32) {
+      const migrateRes = await fetch('/api/migrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: idToken, guestId: guestId })
+      });
+      const result = await migrateRes.json();
+      if (result.success) {
+        console.log('Migration successful: ' + result.message);
+      } else {
+        console.log('Migration skipped or failed: ' + result.message);
+      }
+    }
+  } catch (e) {
+    console.log('Firebase migration error: ' + e.message);
+  }
+})();
+
 function generateUuid() {
   // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js
   // const FORMAT: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";

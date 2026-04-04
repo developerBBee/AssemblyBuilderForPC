@@ -288,4 +288,42 @@ public class DeviceInfoDao {
                         ((Timestamp) r.get("lastupdate")).toLocalDateTime()
                 )).toList();
     }
+
+    public List<SaveHead> getSaveHeadAll(String guestId) {
+        String query = "SELECT * FROM savehead WHERE guestid = ? ORDER BY createddate asc";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, guestId);
+        return result.stream().map(
+                (Map<String, Object> r) -> new SaveHead(
+                        r.get("saveid").toString(),
+                        r.get("guestid").toString(),
+                        r.get("savename").toString(),
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
+                )).toList();
+    }
+
+    public record SaveItem(String saveId, String deviceId, Integer price, LocalDateTime createddate) {}
+
+    public List<SaveItem> getSaveItemsBySaveId(String saveId) {
+        String query = "SELECT * FROM savelist WHERE saveid = ?";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, saveId);
+        return result.stream().map(
+                (Map<String, Object> r) -> new SaveItem(
+                        r.get("saveid").toString(),
+                        r.get("deviceid").toString(),
+                        (Integer) r.get("price"),
+                        ((Timestamp) r.get("createddate")).toLocalDateTime()
+                )).toList();
+    }
+
+    public int deleteAllUserAssemByGuestId(String guestId) {
+        return jdbcTemplate.update("DELETE FROM assemblies WHERE guestid = ?", guestId);
+    }
+
+    @Transactional
+    public void deleteAllSavesByGuestId(String guestId) {
+        jdbcTemplate.update(
+                "DELETE FROM savelist WHERE saveid IN (SELECT saveid FROM savehead WHERE guestid = ?)", guestId);
+        jdbcTemplate.update("DELETE FROM savehead WHERE guestid = ?", guestId);
+    }
 }
