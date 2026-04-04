@@ -1,5 +1,8 @@
 package jp.developer.bbee.pcassem;
 
+import javax.servlet.http.HttpSession;
+import jp.developer.bbee.pcassem.model.SaveHead;
+import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -141,8 +144,6 @@ public class HomeController {
                                 String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
     record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2,
                        String releasedate, Integer invisible, LocalDateTime createddate, LocalDateTime lastupdate) {}
-    record UserAssem (String id, String deviceid, String device, String guestid, LocalDateTime createddate, LocalDateTime lastupdate) {}
-    record SaveHead (String saveid, String guestid, String savename, LocalDateTime createddate, LocalDateTime lastupdate) {}
     record SaveHeader (String url, String text) {
         static SaveHeader create(SaveHead sh, int index) {
             return new SaveHeader(DOMAIN_NAME+"rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
@@ -151,12 +152,13 @@ public class HomeController {
     static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
 
     @GetMapping("/")
-    String top(Model model, @RequestParam(value = "guestId", required = false) String guestId) {
+    String top(Model model, @RequestParam(value = "guestId", required = false) String guestId, HttpSession session) {
         model.addAttribute("restoredListDisplay", "hidden");
         model.addAttribute("deviceListDisplay", "hidden");
         model.addAttribute("updateTime", dao.getTime().format(formatter));
 
         if (guestId != null && guestId.length() == 32) {
+            session.setAttribute("guestId", guestId);
             // check user's savehead
             List<SaveHead> saveHeadList = dao.getSaveHeadRecent5(guestId);
             if (saveHeadList == null || saveHeadList.size() == 0) {

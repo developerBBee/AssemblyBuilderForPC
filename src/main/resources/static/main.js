@@ -44,8 +44,61 @@ window.onscroll = function() {
 window.onload = function() {
   const body = window.document.body;
   scrollTo(0, body.getAttribute('data-scroll'));
-}
+};
 
+
+// Firebase Anonymous Auth + Migration
+(async function initFirebaseMigration() {
+  try {
+    if (localStorage.getItem('migration_completed') === 'true') {
+      return;
+    }
+
+    const res = await fetch('/api/firebase/config');
+    if (!res.ok) throw new Error('Failed to fetch Firebase config: ' + res.status);
+    const config = await res.json();
+
+    const app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(config);
+    const auth = app.auth();
+
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      unsubscribe();
+      try {
+        if (localStorage.getItem('migration_completed') === 'true') {
+          return;
+        }
+        if (!user) {
+          user = (await auth.signInAnonymously()).user;
+        }
+        console.log('Firebase signed in. uid=' + user.uid);
+
+        if (guestId && guestId.length === 32) {
+          const idToken = await user.getIdToken();
+          const migrateRes = await fetch('/api/migrate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: idToken })
+          });
+          if (!migrateRes.ok) {
+            console.log('Migration API error: ' + migrateRes.status);
+            return;
+          }
+          const result = await migrateRes.json();
+          if (result.success) {
+            console.log('Migration: ' + result.message);
+            localStorage.setItem('migration_completed', 'true');
+          } else {
+            console.log('Migration failed: ' + result.message);
+          }
+        }
+      } catch (e) {
+        console.log('Firebase migration error (inner): ' + e.message);
+      }
+    });
+  } catch (e) {
+    console.log('Firebase migration error: ' + e.message);
+  }
+})();
 
 function generateUuid() {
   // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js

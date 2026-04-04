@@ -2,8 +2,8 @@ package jp.developer.bbee.pcassem;
 
 import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
 import jp.developer.bbee.pcassem.HomeController.RestoreDevice;
-import jp.developer.bbee.pcassem.HomeController.SaveHead;
-import jp.developer.bbee.pcassem.HomeController.UserAssem;
+import jp.developer.bbee.pcassem.model.SaveHead;
+import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -287,5 +287,58 @@ public class DeviceInfoDao {
                         ((Timestamp) r.get("createddate")).toLocalDateTime(),
                         ((Timestamp) r.get("lastupdate")).toLocalDateTime()
                 )).toList();
+    }
+
+    public List<SaveHead> getSaveHeadAll(String guestId) {
+        String query = "SELECT * FROM savehead WHERE guestid = ? ORDER BY createddate asc";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, guestId);
+        return result.stream().map(
+                (Map<String, Object> r) -> new SaveHead(
+                        r.get("saveid").toString(),
+                        r.get("guestid").toString(),
+                        r.get("savename").toString(),
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
+                )).toList();
+    }
+
+    public record SaveItem(String saveId, String deviceId, Integer price,
+                           LocalDateTime createddate, LocalDateTime lastupdate) {}
+
+    public List<SaveItem> getSaveItemsBySaveId(String saveId) {
+        String query = "SELECT * FROM savelist WHERE saveid = ?";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, saveId);
+        return result.stream().map(
+                (Map<String, Object> r) -> new SaveItem(
+                        r.get("saveid").toString(),
+                        r.get("deviceid").toString(),
+                        (Integer) r.get("price"),
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
+                )).toList();
+    }
+
+    public Map<String, List<SaveItem>> getSaveItemsByGuestId(String guestId) {
+        String query = "SELECT sl.* FROM savelist sl JOIN savehead sh ON sl.saveid = sh.saveid WHERE sh.guestid = ?";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, guestId);
+        return result.stream().map(
+                (Map<String, Object> r) -> new SaveItem(
+                        r.get("saveid").toString(),
+                        r.get("deviceid").toString(),
+                        (Integer) r.get("price"),
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
+                )).collect(java.util.stream.Collectors.groupingBy(SaveItem::saveId));
+    }
+
+    public int deleteAllUserAssemByGuestId(String guestId) {
+        return jdbcTemplate.update("DELETE FROM assemblies WHERE guestid = ?", guestId);
+    }
+
+    @Transactional
+    public void deleteAllSavesByGuestId(String guestId) {
+        jdbcTemplate.update(
+                "DELETE FROM savelist WHERE saveid IN (SELECT saveid FROM savehead WHERE guestid = ?)", guestId);
+        jdbcTemplate.update("DELETE FROM savehead WHERE guestid = ?", guestId);
     }
 }
