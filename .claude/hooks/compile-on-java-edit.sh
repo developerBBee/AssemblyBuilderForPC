@@ -10,9 +10,24 @@ if ! echo "$FILE" | grep -qE '[.]java$'; then
   exit 0
 fi
 
-cd /Users/ak/Development/IdeaProjects/AssemblyBuilderForPC
-if bash mvnw compile -q 2>&1; then
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=${REPO_ROOT:-$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)}
+
+if [ -z "$REPO_ROOT" ]; then
+  REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+fi
+
+if ! cd "$REPO_ROOT"; then
+  printf '{"systemMessage": "compile FAILED - could not resolve repo root"}\n'
+  exit 1
+fi
+
+MAVEN_LOG=$(mktemp)
+trap 'rm -f "$MAVEN_LOG"' EXIT
+
+if bash mvnw compile -q >"$MAVEN_LOG" 2>&1; then
   printf '{"systemMessage": "compile OK"}\n'
 else
-  printf '{"systemMessage": "compile FAILED - check errors above"}\n'
+  cat "$MAVEN_LOG" >&2
+  printf '{"systemMessage": "compile FAILED - see stderr for Maven output"}\n'
 fi
