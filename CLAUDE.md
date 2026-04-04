@@ -71,7 +71,7 @@ domain/gemini/GeminiServiceImpl      - Gemini API呼び出し（gemini-2.5-flash
 ### 重要な設計上の注意点
 
 - **ユーザー認証なし**: ゲストIDによる識別のみ。`guestId.length() == 32` でバリデーション
-- **`index.html`単一テンプレート**: 全ページを`index.html`で表示し、Thymeleafの`th:if`で表示切替
+- **`index.html`がメインテンプレート**: 多くのページは`index.html`を使い、Thymeleafの`th:if`で表示切替するが、`/policy_ja`や`/policy_en`など一部ルートは専用テンプレートを返す
 - **パーツ種別**: `deviceTypeList`に定義された19種類の英語キー（`pccase`, `motherboard`等）で管理。日本語名は`deviceTypeJp`マップで変換
 - **`HomeController`内のinner records**: `DeviceInfo`, `UserAssem`, `SaveHead`等のデータクラスがHomeControllerのinner recordsとして定義されており、`DeviceInfoDao`からも参照される
 
