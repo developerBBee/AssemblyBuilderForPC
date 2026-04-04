@@ -43,9 +43,10 @@ public class UidMappingDao {
 
     private UidMapping toRecord(Map<String, Object> r) {
         Timestamp ts = (Timestamp) r.get("migrated_at");
+        Object guestId = r.get("guest_id");
         return new UidMapping(
                 r.get("firebase_uid").toString(),
-                r.get("guest_id").toString(),
+                guestId != null ? guestId.toString() : null,
                 ts != null ? ts.toLocalDateTime() : null);
     }
 }

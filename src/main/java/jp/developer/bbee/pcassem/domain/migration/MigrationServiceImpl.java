@@ -10,7 +10,6 @@ import jp.developer.bbee.pcassem.UidMappingDao;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,38 +29,39 @@ public class MigrationServiceImpl implements MigrationService {
     }
 
     @Override
-    public void migrate(String idToken, String guestId) throws Exception {
+    public boolean migrate(String idToken, String guestId) throws Exception {
         // 1. Firebase IDトークンを検証してUIDを取得
         FirebaseToken token = FirebaseAuth.getInstance().verifyIdToken(idToken);
         String firebaseUid = token.getUid();
 
-        // 2. 移行済みチェック（べき等）
+        // 2. 移行済みチェック（べき等）— UID・guestId 両方で確認
         if (uidMappingDao.findByFirebaseUid(firebaseUid) != null) {
             System.out.println("[Migration] Already migrated. uid=" + firebaseUid);
-            return;
+            return false;
+        }
+        if (uidMappingDao.findByGuestId(guestId) != null) {
+            System.out.println("[Migration] guestId already migrated under a different uid. guestId=" + guestId);
+            return false;
         }
 
-        // 3. H2からユーザーデータ取得
+        // 3. H2からユーザーデータ取得（N+1回避のためsaveItemsを一括取得）
         List<UserAssem> assemblies = dao.findAllUserAssemByGuestId(guestId);
         List<SaveHead> saveHeads = dao.getSaveHeadAll(guestId);
-
-        Map<String, List<SaveItem>> saveItemsMap = new HashMap<>();
-        for (SaveHead head : saveHeads) {
-            saveItemsMap.put(head.saveid(), dao.getSaveItemsBySaveId(head.saveid()));
-        }
+        Map<String, List<SaveItem>> saveItemsMap = dao.getSaveItemsByGuestId(guestId);
 
         // 4. Firestoreへ書き込み
         firestoreService.saveAssemblies(firebaseUid, assemblies);
         firestoreService.saveSaves(firebaseUid, guestId, saveHeads, saveItemsMap);
 
-        // 5. 移行完了を記録
-        uidMappingDao.insert(firebaseUid, guestId);
-
-        // 6. H2から削除
+        // 5. H2から削除（先に行うことでFirestore書き込み済みの場合のリトライを安全にする）
         dao.deleteAllUserAssemByGuestId(guestId);
         dao.deleteAllSavesByGuestId(guestId);
 
+        // 6. 移行完了を記録（H2削除成功後）
+        uidMappingDao.insert(firebaseUid, guestId);
+
         System.out.println("[Migration] Completed. uid=" + firebaseUid
                 + " assemblies=" + assemblies.size() + " saves=" + saveHeads.size());
+        return true;
     }
 }
