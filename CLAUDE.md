@@ -20,10 +20,10 @@ Spring Boot + H2 + Thymeleaf構成。kakaku.comから価格データをスクレ
 ./mvnw test -Dtest=ApiResponseControllerTest
 
 # ローカル起動（環境変数が必要）
-export SPRING_DATASOURCE_URL=jdbc:h2:file:./data/pcassem
-export SPRING_DATASOURCE_USERNAME=sa
-export SPRING_DATASOURCE_PASSWORD=password
-export GEMINI_API_KEY=your_key
+export SPRING_DATASOURCE_URL=your_datasource_url_here
+export SPRING_DATASOURCE_USERNAME=your_db_username_here
+export SPRING_DATASOURCE_PASSWORD=your_db_password_here
+export GEMINI_API_KEY=your_gemini_api_key_here
 ./mvnw spring-boot:run
 ```
 
