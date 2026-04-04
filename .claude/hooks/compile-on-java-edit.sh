@@ -1,5 +1,11 @@
 #!/bin/bash
 # Javaファイル編集後にMavenコンパイルを実行するhookスクリプト
+
+if ! command -v jq >/dev/null 2>&1; then
+  printf '{"systemMessage": "compile skipped - jq is not installed"}\n'
+  exit 0
+fi
+
 FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty' 2>/dev/null)
 
 if [ -z "$FILE" ]; then
@@ -27,7 +33,9 @@ trap 'rm -f "$MAVEN_LOG"' EXIT
 
 if bash mvnw compile -q >"$MAVEN_LOG" 2>&1; then
   printf '{"systemMessage": "compile OK"}\n'
+  exit 0
 else
   cat "$MAVEN_LOG" >&2
   printf '{"systemMessage": "compile FAILED - see stderr for Maven output"}\n'
+  exit 1
 fi
