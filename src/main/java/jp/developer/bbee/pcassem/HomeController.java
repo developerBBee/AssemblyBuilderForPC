@@ -3,15 +3,18 @@ package jp.developer.bbee.pcassem;
 import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.UidMappingDao.UidMapping;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
+import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -148,8 +151,7 @@ public class HomeController {
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
                                 String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
-    record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2,
-                       String releasedate, Integer invisible, LocalDateTime createddate, LocalDateTime lastupdate) {}
+
     record SaveHeader (String url, String text) {
         static SaveHeader create(SaveHead sh, int index) {
             return new SaveHeader(DOMAIN_NAME+"rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
@@ -228,12 +230,9 @@ public class HomeController {
 
             // Assemblies from Firestore
             List<UserAssem> userAssems = firestoreService.getAssemblies(firebaseUid);
-            List<DeviceInfo> assembliesList = new ArrayList<>();
-            for (UserAssem ua : userAssems) {
-                DeviceInfo di = dao.findRecordById(ua.deviceid());
-                if (di != null) assembliesList.add(di);
-            }
-            assembliesList = sortList(assembliesList);
+            List<String> deviceIds = userAssems.stream().map(UserAssem::deviceid).toList();
+            var deviceInfoList = dao.findRecordByIds(deviceIds);
+            List<DeviceInfo> assembliesList = sortList(deviceInfoList);
 
             Map<String, Integer> assemCountMap = new HashMap<>();
             for (DeviceInfo di : assembliesList) {
@@ -445,7 +444,7 @@ public class HomeController {
         for (DeviceInfo di : deviceInfoList) {
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
+                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
                     di.rank().toString(), false, "middle", 1, false, di.flag1(), di.flag2()
             ));
         }
@@ -478,7 +477,7 @@ public class HomeController {
 
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
+                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
                     di.rank().toString(), false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
             ));
             if (deviceCount == countMap.get(di.device())-1) {
