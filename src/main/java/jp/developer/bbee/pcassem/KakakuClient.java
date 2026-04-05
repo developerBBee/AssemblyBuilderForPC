@@ -1,6 +1,6 @@
 package jp.developer.bbee.pcassem;
 
-import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
+import jp.developer.bbee.pcassem.model.DeviceInfo;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;

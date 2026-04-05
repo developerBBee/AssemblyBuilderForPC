@@ -1,7 +1,8 @@
 package jp.developer.bbee.pcassem;
 
-import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
 import jp.developer.bbee.pcassem.HomeController.RestoreDevice;
+import jp.developer.bbee.pcassem.constants.DateTimeConst;
+import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +58,7 @@ public class DeviceInfoDao {
             return ((Timestamp) result.get("kakakuupdate")).toLocalDateTime();
         } catch (IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
-            return LocalDateTime.of(2000,1,1,0,0,0);
+            return DateTimeConst.FALLBACK;
         }
     }
 
@@ -95,8 +97,8 @@ public class DeviceInfoDao {
                         row.get("flag2") != null ? (int) row.get("flag2") : 0,
                         row.get("releasedate") != null ? row.get("releasedate").toString() : "20000101",
                         row.get("invisible") != null ? (Integer) row.get("invisible") : 0,
-                        row.get("createddate") != null ? ((Timestamp) row.get("createddate")).toLocalDateTime() : LocalDateTime.of(2000,1,1,0,0),
-                        row.get("lastupdate") != null ? ((Timestamp) row.get("lastupdate")).toLocalDateTime() : LocalDateTime.of(2000,1,1,0,0)
+                        row.get("createddate") != null ? ((Timestamp) row.get("createddate")).toLocalDateTime() : DateTimeConst.FALLBACK,
+                        row.get("lastupdate") != null ? ((Timestamp) row.get("lastupdate")).toLocalDateTime() : DateTimeConst.FALLBACK
                 )).toList();
 
         return deviceInfoList;
@@ -122,23 +124,27 @@ public class DeviceInfoDao {
     public DeviceInfo findRecordById(String id) {
         String query = "SELECT * FROM devices WHERE id = ?";
         try {
-            Map<String, Object> result = jdbcTemplate.queryForList(query, id).get(0);
-            return new DeviceInfo(result.get("id").toString(), result.get("device").toString(), result.get("url").toString(),
-                    result.get("name").toString(), result.get("imgurl").toString(), result.get("detail").toString(),
-                    (Integer) result.get("price"), (Integer) result.get("rank"),
-                    result.getOrDefault("flag1", 0) == null ? 0 : (int) result.getOrDefault("flag1", 0),
-                    result.getOrDefault("flag2", 0) == null ? 0 : (int) result.getOrDefault("flag2", 0),
-                    result.get("releasedate").toString(), (Integer) result.get("invisible"),
-                    ((Timestamp) result.get("createddate")).toLocalDateTime(), ((Timestamp) result.get("lastupdate")).toLocalDateTime()
-            );
+            Map<String, Object> sqlResult = jdbcTemplate.queryForList(query, id).get(0);
+            return DeviceInfo.from(sqlResult);
         } catch (IndexOutOfBoundsException | ClassCastException e) {
             return null;
         }
     }
 
-    public int delete(String id) {
-        int number = jdbcTemplate.update("DELETE FROM devices WHERE id = ?", id);
-        return number;
+    public List<DeviceInfo> findRecordByIds(@NonNull List<String> ids) {
+        if (ids.isEmpty()) return List.of();
+        var placeholders = Collections.nCopies(ids.size(), "?");
+        var placeholdersText = String.join(",", placeholders);
+        var query = "SELECT * FROM devices WHERE id IN (" + placeholdersText + ")";
+        var args = ids.toArray();
+        try {
+            return jdbcTemplate.queryForList(query, args)
+                    .stream()
+                    .map(DeviceInfo::from)
+                    .toList();
+        } catch (IndexOutOfBoundsException | ClassCastException e) {
+            return List.of();
+        }
     }
 
     public int update(DeviceInfo deviceInfo) {

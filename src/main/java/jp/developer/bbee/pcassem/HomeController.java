@@ -1,10 +1,17 @@
 package jp.developer.bbee.pcassem;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
+import jp.developer.bbee.pcassem.UidMappingDao.UidMapping;
+import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
+import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -25,12 +32,15 @@ public class HomeController {
 //    public static final String DOMAIN_NAME = "https://localhost/"; // local env.
 //    public static final String DOMAIN_NAME = "http://localhost:8080/"; // local env http.
     public static final boolean DEBUG = false;
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
+    private final UidMappingDao uidMappingDao;
+    private final FirestoreService firestoreService;
     private final KakakuClient kakakuClient;
 
-    private LocalDateTime fullUpdateDate = LocalDateTime.of(2000, 1, 1, 0, 0);
+    private LocalDateTime fullUpdateDate = LocalDateTime.MIN;
 
     public Map<String, String> deviceTypeJp = new HashMap<>();
 
@@ -40,11 +50,17 @@ public class HomeController {
             );
 
     @Autowired // <- DAO auto setting
-    HomeController(DeviceInfoDao dao){
+    HomeController(DeviceInfoDao dao, UidMappingDao uidMappingDao, FirestoreService firestoreService){
         this.dao = dao;
+        this.uidMappingDao = uidMappingDao;
+        this.firestoreService = firestoreService;
         kakakuClient = new KakakuClient(dao);
-        updateKakaku();
         makeDeviceTypeJp();
+    }
+
+    @PostConstruct
+    void init() {
+        updateKakaku();
     }
 
     private void makeDeviceTypeJp() {
@@ -142,8 +158,7 @@ public class HomeController {
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
                                 String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
-    record DeviceInfo (String id, String device, String url, String name, String imgurl, String detail, Integer price, Integer rank, int flag1, int flag2,
-                       String releasedate, Integer invisible, LocalDateTime createddate, LocalDateTime lastupdate) {}
+
     record SaveHeader (String url, String text) {
         static SaveHeader create(SaveHead sh, int index) {
             return new SaveHeader(DOMAIN_NAME+"rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
@@ -159,7 +174,13 @@ public class HomeController {
 
         if (guestId != null && guestId.length() == 32) {
             session.setAttribute("guestId", guestId);
-            // check user's savehead
+
+            UidMapping uidMapping = uidMappingDao.findByGuestId(guestId);
+            if (uidMapping != null) {
+                return topFromFirestore(model, uidMapping.firebaseUid());
+            }
+
+            // H2 path (not yet migrated)
             List<SaveHead> saveHeadList = dao.getSaveHeadRecent5(guestId);
             if (saveHeadList == null || saveHeadList.size() == 0) {
                 model.addAttribute("saveHeadVisible", "hidden");
@@ -190,13 +211,61 @@ public class HomeController {
                 }
                 model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
                 if (!isZeroPrice) model.addAttribute("warnMsg1Visiblity", "hidden");
-                return "index";//"redirect:/home";
+                return "index";
             }
         } else {
             model.addAttribute("assembliesDisplay", "hidden");
         }
         return "index";
-       // return "redirect:/home";
+    }
+
+    private String topFromFirestore(Model model, String firebaseUid) {
+        try {
+            // Save heads from Firestore
+            List<SaveHead> saveHeadList = firestoreService.getSaveHeadsRecent5(firebaseUid);
+            if (saveHeadList == null || saveHeadList.isEmpty()) {
+                model.addAttribute("saveHeadVisible", "hidden");
+            } else {
+                List<SaveHeader> saveHeaderList = new ArrayList<>();
+                int index = 0;
+                for (SaveHead sh : saveHeadList) {
+                    saveHeaderList.add(SaveHeader.create(sh, index));
+                    index++;
+                }
+                model.addAttribute("saveHeaderList", saveHeaderList);
+            }
+
+            // Assemblies from Firestore
+            List<UserAssem> userAssems = firestoreService.getAssemblies(firebaseUid);
+            List<String> deviceIds = userAssems.stream().map(UserAssem::deviceid).toList();
+            var deviceInfoList = dao.findRecordByIds(deviceIds);
+            List<DeviceInfo> assembliesList = sortList(deviceInfoList);
+
+            Map<String, Integer> assemCountMap = new HashMap<>();
+            for (DeviceInfo di : assembliesList) {
+                assemCountMap.merge(di.device(), 1, Integer::sum);
+            }
+
+            List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList, assemCountMap);
+            if (assembliesList.isEmpty()) {
+                model.addAttribute("assembliesDisplay", "hidden");
+            } else {
+                model.addAttribute("assembliesList", formattedAssembliesList);
+                int totalPrice = 0;
+                boolean isZeroPrice = false;
+                for (DeviceInfo assembly : assembliesList) {
+                    totalPrice += assembly.price();
+                    if (assembly.price() == 0) isZeroPrice = true;
+                }
+                model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
+                if (!isZeroPrice) model.addAttribute("warnMsg1Visiblity", "hidden");
+            }
+        } catch (Exception e) {
+            logger.error("[HomeController] Failed to load data from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            model.addAttribute("assembliesDisplay", "hidden");
+            model.addAttribute("saveHeadVisible", "hidden");
+        }
+        return "index";
     }
 
     private List<DeviceInfo> getAssembliesList(String guestId) {
@@ -382,7 +451,7 @@ public class HomeController {
         for (DeviceInfo di : deviceInfoList) {
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
+                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
                     di.rank().toString(), false, "middle", 1, false, di.flag1(), di.flag2()
             ));
         }
@@ -415,7 +484,7 @@ public class HomeController {
 
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price),
+                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
                     di.rank().toString(), false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
             ));
             if (deviceCount == countMap.get(di.device())-1) {
