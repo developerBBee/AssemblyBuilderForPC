@@ -168,7 +168,7 @@ public class HomeController {
 
             UidMapping uidMapping = uidMappingDao.findByGuestId(guestId);
             if (uidMapping != null) {
-                return topFromFirestore(model, guestId, uidMapping.firebaseUid());
+                return topFromFirestore(model, uidMapping.firebaseUid());
             }
 
             // H2 path (not yet migrated)
@@ -210,7 +210,7 @@ public class HomeController {
         return "index";
     }
 
-    private String topFromFirestore(Model model, String guestId, String firebaseUid) {
+    private String topFromFirestore(Model model, String firebaseUid) {
         try {
             // Save heads from Firestore
             List<SaveHead> saveHeadList = firestoreService.getSaveHeadsRecent5(firebaseUid);
@@ -220,7 +220,6 @@ public class HomeController {
                 List<SaveHeader> saveHeaderList = new ArrayList<>();
                 int index = 0;
                 for (SaveHead sh : saveHeadList) {
-                    if (index >= 5) break;
                     saveHeaderList.add(SaveHeader.create(sh, index));
                     index++;
                 }
@@ -237,8 +236,8 @@ public class HomeController {
             assembliesList = sortList(assembliesList);
 
             Map<String, Integer> assemCountMap = new HashMap<>();
-            for (UserAssem ua : userAssems) {
-                assemCountMap.merge(ua.device(), 1, Integer::sum);
+            for (DeviceInfo di : assembliesList) {
+                assemCountMap.merge(di.device(), 1, Integer::sum);
             }
 
             List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList, assemCountMap);
