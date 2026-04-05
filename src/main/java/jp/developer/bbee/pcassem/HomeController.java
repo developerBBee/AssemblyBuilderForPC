@@ -7,14 +7,12 @@ import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -37,7 +35,7 @@ public class HomeController {
     private final FirestoreService firestoreService;
     private final KakakuClient kakakuClient;
 
-    private LocalDateTime fullUpdateDate = LocalDateTime.of(2000, 1, 1, 0, 0);
+    private LocalDateTime fullUpdateDate = LocalDateTime.MIN;
 
     public Map<String, String> deviceTypeJp = new HashMap<>();
 

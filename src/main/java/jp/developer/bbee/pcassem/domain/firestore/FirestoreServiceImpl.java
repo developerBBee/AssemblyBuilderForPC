@@ -5,11 +5,11 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.WriteBatch;
 import jp.developer.bbee.pcassem.DeviceInfoDao.SaveItem;
+import jp.developer.bbee.pcassem.constants.DateTimeConst;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -102,8 +102,8 @@ public class FirestoreServiceImpl implements FirestoreService {
                     deviceId,
                     device != null ? device : "",
                     "",
-                    created != null ? created.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : LocalDateTime.now(),
-                    updated != null ? updated.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : LocalDateTime.now()
+                    created != null ? created.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK,
+                    updated != null ? updated.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK
             ));
         }
         return result;
@@ -127,8 +127,8 @@ public class FirestoreServiceImpl implements FirestoreService {
                     saveId,
                     guestId != null ? guestId : "",
                     saveName != null ? saveName : "NONAME",
-                    created != null ? created.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : LocalDateTime.now(),
-                    updated != null ? updated.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : LocalDateTime.now()
+                    created != null ? created.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK,
+                    updated != null ? updated.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK
             ));
         }
         return result;
