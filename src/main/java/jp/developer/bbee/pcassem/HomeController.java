@@ -6,6 +6,8 @@ import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,6 +30,7 @@ public class HomeController {
 //    public static final String DOMAIN_NAME = "https://localhost/"; // local env.
 //    public static final String DOMAIN_NAME = "http://localhost:8080/"; // local env http.
     public static final boolean DEBUG = false;
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
@@ -252,7 +255,7 @@ public class HomeController {
                 if (!isZeroPrice) model.addAttribute("warnMsg1Visiblity", "hidden");
             }
         } catch (Exception e) {
-            System.out.println("Failed to load data from Firestore for uid=" + firebaseUid + " reason=" + e.getMessage());
+            logger.error("[HomeController] Failed to load data from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
             model.addAttribute("assembliesDisplay", "hidden");
             model.addAttribute("saveHeadVisible", "hidden");
         }
