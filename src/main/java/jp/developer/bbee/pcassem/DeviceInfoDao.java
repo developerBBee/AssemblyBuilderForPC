@@ -1,6 +1,7 @@
 package jp.developer.bbee.pcassem;
 
 import jp.developer.bbee.pcassem.HomeController.RestoreDevice;
+import jp.developer.bbee.pcassem.constants.DateTimeConst;
 import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
@@ -17,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class DeviceInfoDao {
@@ -58,7 +58,7 @@ public class DeviceInfoDao {
             return ((Timestamp) result.get("kakakuupdate")).toLocalDateTime();
         } catch (IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
-            return LocalDateTime.of(2000,1,1,0,0,0);
+            return DateTimeConst.FALLBACK;
         }
     }
 
@@ -97,8 +97,8 @@ public class DeviceInfoDao {
                         row.get("flag2") != null ? (int) row.get("flag2") : 0,
                         row.get("releasedate") != null ? row.get("releasedate").toString() : "20000101",
                         row.get("invisible") != null ? (Integer) row.get("invisible") : 0,
-                        row.get("createddate") != null ? ((Timestamp) row.get("createddate")).toLocalDateTime() : LocalDateTime.of(2000,1,1,0,0),
-                        row.get("lastupdate") != null ? ((Timestamp) row.get("lastupdate")).toLocalDateTime() : LocalDateTime.of(2000,1,1,0,0)
+                        row.get("createddate") != null ? ((Timestamp) row.get("createddate")).toLocalDateTime() : DateTimeConst.FALLBACK,
+                        row.get("lastupdate") != null ? ((Timestamp) row.get("lastupdate")).toLocalDateTime() : DateTimeConst.FALLBACK
                 )).toList();
 
         return deviceInfoList;
