@@ -11,4 +11,6 @@ public interface FirestoreService {
     void saveAssemblies(String firebaseUid, List<UserAssem> assemblies) throws Exception;
     void saveSaves(String firebaseUid, String guestId, List<SaveHead> saveHeads,
                    Map<String, List<SaveItem>> saveItemsMap) throws Exception;
+    List<UserAssem> getAssemblies(String firebaseUid) throws Exception;
+    List<SaveHead> getSaveHeadsRecent5(String firebaseUid) throws Exception;
 }
