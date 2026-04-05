@@ -2,6 +2,7 @@ package jp.developer.bbee.pcassem;
 
 import jp.developer.bbee.pcassem.UidMappingDao.UidMapping;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
+import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
 import jp.developer.bbee.pcassem.model.UserAssem;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,7 +104,7 @@ class HomeControllerTest {
                 LocalDateTime.now(), LocalDateTime.now());
         SaveHead sh = new SaveHead("saveid12345678901234567890123456", VALID_GUEST_ID,
                 "My Build", LocalDateTime.now(), LocalDateTime.now());
-        HomeController.DeviceInfo di = new HomeController.DeviceInfo(
+        DeviceInfo di = new DeviceInfo(
                 "device-001", "cpu", "http://example.com", "Intel Core i9",
                 "http://img.example.com/cpu.jpg", "detail", 50000, 1, 0, 0,
                 "2024-01-01", 0, LocalDateTime.now(), LocalDateTime.now());
@@ -111,7 +112,7 @@ class HomeControllerTest {
         when(uidMappingDao.findByGuestId(VALID_GUEST_ID)).thenReturn(uidMapping);
         when(firestoreService.getAssemblies(FIREBASE_UID)).thenReturn(List.of(ua));
         when(firestoreService.getSaveHeadsRecent5(FIREBASE_UID)).thenReturn(List.of(sh));
-        when(dao.findRecordById("device-001")).thenReturn(di);
+        when(dao.findRecordByIds(List.of("device-001"))).thenReturn(List.of(di));
 
         mockMvc.perform(get("/").param("guestId", VALID_GUEST_ID))
                 .andExpect(status().isOk())
