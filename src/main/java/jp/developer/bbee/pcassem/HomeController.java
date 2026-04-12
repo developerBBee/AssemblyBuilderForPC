@@ -580,7 +580,7 @@ public class HomeController {
     @PostMapping("/save") // Save assemblies of user's construction.
     String saveConstruction(SaveRec saveRec) {
         if (saveRec.deviceIdList() == null || saveRec.deviceIdList().isEmpty()
-                || saveRec.guestId().length() != 32) {
+                || saveRec.guestId() == null || saveRec.guestId().length() != 32) {
             return "redirect:/";
         }
         String uuid = UUID.randomUUID().toString().replace("-", "");
