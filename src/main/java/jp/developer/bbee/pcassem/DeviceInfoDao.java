@@ -180,7 +180,7 @@ public class DeviceInfoDao {
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, deviceid, guestid);
         if (result.size() > 1) {
             System.out.println("duplicate record in UserAssem : deviceid=" + deviceid + " guestid=" +guestid);
-        } else if (result.size() == 0){
+        } else if (result.isEmpty()){
             return null;
         }
         Map<String, Object> r = result.get(0);
@@ -210,7 +210,7 @@ public class DeviceInfoDao {
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, deviceid, guestid);
         if (result.size() > 1) {
             System.out.println("duplicate record in UserAssem : deviceid=" + deviceid + " guestid=" +guestid);
-        } else if (result.size() == 0){
+        } else if (result.isEmpty()){
             System.out.println("no record in UserAssem : deviceid=" + deviceid + " guestid=" +guestid);
             return -1;
         }
@@ -252,7 +252,6 @@ public class DeviceInfoDao {
         SqlParameterSource[] params =
                 sqlSaveInfoList.stream().map(BeanPropertySqlParameterSource::new)
                         .toArray(BeanPropertySqlParameterSource[]::new);
-                new BeanPropertySqlParameterSource(sqlSaveInfoList.get(0));
         SimpleJdbcInsert insertList = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("savelist");
         insertList.executeBatch(params);

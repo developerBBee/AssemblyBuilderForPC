@@ -2,7 +2,6 @@ package jp.developer.bbee.pcassem;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class StringEncoder {
@@ -45,13 +44,9 @@ public class StringEncoder {
      */
     private static String convert(String value, String src, String dest) throws UnsupportedEncodingException {
         Map<String, String> conversion = createConversionMap(src, dest);
-        char oldChar;
-        char newChar;
-        String key;
-        for (Iterator<String> itr = conversion.keySet().iterator(); itr.hasNext() ;) {
-            key = itr.next();
-            oldChar = toChar(key);
-            newChar = toChar(conversion.get(key));
+        for (String key : conversion.keySet()) {
+            char oldChar = toChar(key);
+            char newChar = toChar(conversion.get(key));
             value = value.replace(oldChar, newChar);
         }
         return value;
@@ -65,7 +60,7 @@ public class StringEncoder {
      * @return エンコードされた文字列
      */
     private static Map<String, String> createConversionMap(String src, String dest) throws UnsupportedEncodingException {
-        Map<String, String> conversion = new HashMap<String, String>();
+        Map<String, String> conversion = new HashMap<>();
         if ((src.equals("UTF-8")) && (dest.equals("SJIS"))) {
             // －（全角マイナス）
             conversion.put("U+FF0D", "U+2212");
