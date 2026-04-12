@@ -88,9 +88,7 @@ public class HomeController {
     private void updateKakaku() {
 
         if (DEBUG) return;
-        new Thread(() -> {
-            runTask(); // Run task at startup
-        }).start();
+        new Thread(this::runTask).start(); // Run task at startup
 
     }
 
@@ -128,7 +126,7 @@ public class HomeController {
     }
 
     static class MyTimerTask extends TimerTask {
-        private HomeController controller;
+        private final HomeController controller;
         MyTimerTask(HomeController hc) {
             this.controller = hc;
         }
@@ -182,7 +180,7 @@ public class HomeController {
 
             // H2 path (not yet migrated)
             List<SaveHead> saveHeadList = dao.getSaveHeadRecent5(guestId);
-            if (saveHeadList == null || saveHeadList.size() == 0) {
+            if (saveHeadList == null || saveHeadList.isEmpty()) {
                 model.addAttribute("saveHeadVisible", "hidden");
             } else {
                 List<SaveHeader> saveHeaderList = new ArrayList<>();
@@ -199,7 +197,7 @@ public class HomeController {
             List<DeviceInfo> assembliesList = getAssembliesList(guestId);
             assembliesList = sortList(assembliesList);
             List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList, assemCountMap);
-            if (assembliesList.size() == 0) {
+            if (assembliesList.isEmpty()) {
                 model.addAttribute("assembliesDisplay", "hidden");
             } else {
                 model.addAttribute("assembliesList", formattedAssembliesList);
@@ -581,7 +579,7 @@ public class HomeController {
 
     @PostMapping("/save") // Save assemblies of user's construction.
     String saveConstruction(SaveRec saveRec) {
-        if (saveRec.deviceIdList() == null || saveRec.deviceIdList().size() == 0
+        if (saveRec.deviceIdList() == null || saveRec.deviceIdList().isEmpty()
                 || saveRec.guestId().length() != 32) {
             return "redirect:/";
         }
