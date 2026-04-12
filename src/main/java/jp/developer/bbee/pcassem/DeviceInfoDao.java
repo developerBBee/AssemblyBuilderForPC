@@ -17,7 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class DeviceInfoDao {
@@ -46,8 +50,8 @@ public class DeviceInfoDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public int setTime(LocalDateTime ldt) {
-        return jdbcTemplate.update("UPDATE systemvals SET kakakuupdate = ?",
+    public void setTime(LocalDateTime ldt) {
+        jdbcTemplate.update("UPDATE systemvals SET kakakuupdate = ?",
                 Timestamp.valueOf(ldt));
     }
 
@@ -83,7 +87,7 @@ public class DeviceInfoDao {
         }
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, device);
 
-        List<DeviceInfo> deviceInfoList = result.stream().map(
+        return result.stream().map(
                 (Map<String, Object> row) -> new DeviceInfo(
                         row.get("id") != null ? row.get("id").toString() : UUID.randomUUID().toString().replace("-", ""),
                         row.get("device") != null ? row.get("device").toString() : device,
@@ -100,8 +104,6 @@ public class DeviceInfoDao {
                         row.get("createddate") != null ? ((Timestamp) row.get("createddate")).toLocalDateTime() : DateTimeConst.FALLBACK,
                         row.get("lastupdate") != null ? ((Timestamp) row.get("lastupdate")).toLocalDateTime() : DateTimeConst.FALLBACK
                 )).toList();
-
-        return deviceInfoList;
     }
 
     public DeviceInfo findRecordByUrl(String url, String device) {
@@ -193,7 +195,7 @@ public class DeviceInfoDao {
     public List<UserAssem> findAllUserAssemByGuestId(String guestid) {
         String query = "SELECT * FROM assemblies WHERE guestid = ?";
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, guestid);
-        List<UserAssem> assembliesList = result.stream().map(
+        return result.stream().map(
                 (Map<String, Object> row) -> new UserAssem(
                         row.get("id").toString(),
                         row.get("deviceid").toString(),
@@ -202,21 +204,19 @@ public class DeviceInfoDao {
                         ((Timestamp) row.get("createddate")).toLocalDateTime(),
                         ((Timestamp) row.get("lastupdate")).toLocalDateTime()
                 )).toList();
-        return assembliesList;
     }
 
-    public int deleteUserAssem(String deviceid, String guestid) {
+    public void deleteUserAssem(String deviceid, String guestid) {
         String query = "SELECT * FROM assemblies WHERE deviceid = ? AND guestid = ?";
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, deviceid, guestid);
         if (result.size() > 1) {
             System.out.println("duplicate record in UserAssem : deviceid=" + deviceid + " guestid=" +guestid);
-        } else if (result.isEmpty()){
+        } else if (result.isEmpty()) {
             System.out.println("no record in UserAssem : deviceid=" + deviceid + " guestid=" +guestid);
-            return -1;
+            return;
         }
         String id = result.get(0).get("id").toString();
-        int number = jdbcTemplate.update("DELETE FROM assemblies WHERE id = ?", id);
-        return number;
+        jdbcTemplate.update("DELETE FROM assemblies WHERE id = ?", id);
     }
 
     public Map<String, Integer> getAssemCountList(String guestid) {
@@ -230,7 +230,6 @@ public class DeviceInfoDao {
         return countList;
     }
 
-    private static final String SAVE_QUERY = "INSERT INTO savelist VALUES(?, ?, ?, ?, ?)";
     record SqlSaveHead (String saveId, String guestId, String saveName, Timestamp createddate, Timestamp lastupdate) {}
     record SqlSaveInfo (String saveId, String deviceId, Integer price, Timestamp createddate, Timestamp lastupdate) {}
 
@@ -310,19 +309,6 @@ public class DeviceInfoDao {
     public record SaveItem(String saveId, String deviceId, Integer price,
                            LocalDateTime createddate, LocalDateTime lastupdate) {}
 
-    public List<SaveItem> getSaveItemsBySaveId(String saveId) {
-        String query = "SELECT * FROM savelist WHERE saveid = ?";
-        List<Map<String, Object>> result = jdbcTemplate.queryForList(query, saveId);
-        return result.stream().map(
-                (Map<String, Object> r) -> new SaveItem(
-                        r.get("saveid").toString(),
-                        r.get("deviceid").toString(),
-                        (Integer) r.get("price"),
-                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
-                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
-                )).toList();
-    }
-
     public Map<String, List<SaveItem>> getSaveItemsByGuestId(String guestId) {
         String query = "SELECT sl.* FROM savelist sl JOIN savehead sh ON sl.saveid = sh.saveid WHERE sh.guestid = ?";
         List<Map<String, Object>> result = jdbcTemplate.queryForList(query, guestId);
@@ -336,8 +322,8 @@ public class DeviceInfoDao {
                 )).collect(java.util.stream.Collectors.groupingBy(SaveItem::saveId));
     }
 
-    public int deleteAllUserAssemByGuestId(String guestId) {
-        return jdbcTemplate.update("DELETE FROM assemblies WHERE guestid = ?", guestId);
+    public void deleteAllUserAssemByGuestId(String guestId) {
+        jdbcTemplate.update("DELETE FROM assemblies WHERE guestid = ?", guestId);
     }
 
     @Transactional

@@ -13,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
@@ -23,14 +26,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 
 @Controller
 public class HomeController {
-//    public static final String DOMAIN_NAME = "https://pcbuilding.link/"; // test server env.
     public static final String DOMAIN_NAME = "https://www.pcbuilding.link/"; // server env.
-//    public static final String DOMAIN_NAME = "https://localhost/"; // local env.
-//    public static final String DOMAIN_NAME = "http://localhost:8080/"; // local env http.
+
     public static final boolean DEBUG = false;
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
@@ -135,24 +142,6 @@ public class HomeController {
             controller.runTask();
         }
     }
-    // TODO TimerTask refactoring, avoid using MyTimerTask
-    // MEMO
-    /*
-    public void start() {
-        getTask().run();
-    }
-
-    private TimerTask getTask() {
-        Timer timer = new Timer();
-        return new TimerTask() {
-            @Override
-            public void run() {
-                System.out.println(LocalDateTime.now());
-                timer.schedule(getTask(), 1000);
-            }
-        };
-    }
-     */
 
     record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
                                 String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
@@ -397,16 +386,8 @@ public class HomeController {
     }
 
     private void makeAttr(Model model, String deviceTypeName, String deviceName1, String deviceName2) {
-        makeAttr(model, deviceTypeName, deviceName1, deviceName2, 0);
-    }
-
-    private void makeAttr(Model model, String deviceName, int sortFlag) {
-        makeAttr(model, deviceName, deviceName, null,  sortFlag);
-    }
-
-    private void makeAttr(Model model, String deviceTypeName, String deviceName1, String deviceName2, int sortFlag) {
         Integer sortFlagModel = (Integer) model.getAttribute("sortFlag");
-        int s = sortFlagModel == null ? sortFlag : sortFlagModel;
+        int s = sortFlagModel == null ? 0 : sortFlagModel;
         List<DeviceInfo> deviceInfoList = dao.findAll(deviceName1, s);
         deviceInfoList = noPriceAfter(deviceInfoList);
         List<DeviceInfoFormatted> formattedList = makeFormattedList(deviceInfoList);
@@ -458,7 +439,7 @@ public class HomeController {
 
     private List<DeviceInfoFormatted> makeFormattedList(List<DeviceInfo> deviceInfoList, Map<String, Integer> countMap) {
         List<DeviceInfoFormatted> formattedList = new ArrayList<>();
-        int rowSpan = 1;
+        int rowSpan;
         int deviceCount = 0;
         String tableStyle;
         boolean checked;
@@ -525,7 +506,7 @@ public class HomeController {
                         @RequestParam("sortFlag") String sortFlag) {
 
         if (guestId.length() != 32) { // Issue guestId
-            return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
+            return String.format("redirect:/%s", deviceTypeName);
         }
 
         if (dao.findUserAssem(id, guestId) == null) {
@@ -537,28 +518,27 @@ public class HomeController {
             System.out.println("This is already registered. deviceid=" + id + " guestid=" + guestId);
         }
 
-
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         redirectAttributes.addFlashAttribute("sortFlag", Integer.valueOf(sortFlag));
         //return devType;
-        return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
+        return String.format("redirect:/%s", deviceTypeName);
     }
 
     @GetMapping("/del") // Add device to assemblies
     String delUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
                         @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
         if (guestId.length() != 32) { // Issue guestId
-            return String.format("redirect:%s", DOMAIN_NAME);
+            return "redirect:/";
         }
 
         dao.deleteUserAssem(id, guestId);
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
-        return String.format("redirect:%s", DOMAIN_NAME);
+        return "redirect:/";
     }
 
-    private Map<String, Integer> sortMap = Map.of(
+    private final Map<String, Integer> sortMap = Map.of(
             "popular", 0,
             "lower", 1,
             "higher", 2,
@@ -572,7 +552,7 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         redirectAttributes.addFlashAttribute("sortFlag", sortMap.get(sort));
         //return devType;
-        return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
+        return String.format("redirect:/%s", deviceTypeName);
     }
 
     record SaveRec(List<String> deviceIdList, String guestId) {}
@@ -588,7 +568,7 @@ public class HomeController {
         return "redirect:/rec/" + uuid;
     }
 
-    record RestoreDevice (String saveid, String deviceid, String device, String url, String name,
+    public record RestoreDevice (String saveid, String deviceid, String device, String url, String name,
                           String imgurl, String detail, Integer oldprice, Integer newprice) {}
     record RestoreDeviceFormatted (String saveid, String deviceid, String device, String url, String name,
                           String imgurl, String detail, String oldprice, String newprice, String diffprice, String color) {
