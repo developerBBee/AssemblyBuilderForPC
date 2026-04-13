@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -400,16 +401,24 @@ public class HomeController {
 
         String gid = (String) model.getAttribute("guestId");
         if (gid != null) {
-            List<DeviceInfo> assembliesList = getAssembliesList(gid);
-            for (DeviceInfo asm : assembliesList) {
-                for (int i=0; i<formattedList.size(); i++) {
-                    if (formattedList.get(i).id().equals(asm.id())) {
-                        DeviceInfoFormatted dif = formattedList.get(i);
-                        formattedList.set(i, new DeviceInfoFormatted(
-                                dif.id(), dif.device(), dif.url(), dif.name(), dif.imgurl(), dif.detail(), dif.price(),
-                                dif.rank(), true, "middle", 1, false, dif.flag1(), dif.flag2()
-                        ));
+            UidMappingDao.UidMapping uidMapping = uidMappingDao.findByGuestId(gid);
+            if (uidMapping != null) {
+                try {
+                    List<UserAssem> userAssems = firestoreService.getAssemblies(uidMapping.firebaseUid());
+                    Set<String> registeredIds = userAssems.stream()
+                            .map(UserAssem::deviceid)
+                            .collect(java.util.stream.Collectors.toSet());
+                    for (int i = 0; i < formattedList.size(); i++) {
+                        if (registeredIds.contains(formattedList.get(i).id())) {
+                            DeviceInfoFormatted dif = formattedList.get(i);
+                            formattedList.set(i, new DeviceInfoFormatted(
+                                    dif.id(), dif.device(), dif.url(), dif.name(), dif.imgurl(), dif.detail(), dif.price(),
+                                    dif.rank(), true, "middle", 1, false, dif.flag1(), dif.flag2()
+                            ));
+                        }
                     }
+                } catch (Exception e) {
+                    logger.error("[HomeController] Failed to get assemblies from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
                 }
             }
         }
@@ -424,7 +433,6 @@ public class HomeController {
 
     }
 
-    //record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered) {}
     private List<DeviceInfoFormatted> makeFormattedList(List<DeviceInfo> deviceInfoList) {
         List<DeviceInfoFormatted> formattedList = new ArrayList<>();
         for (DeviceInfo di : deviceInfoList) {
@@ -509,13 +517,18 @@ public class HomeController {
             return String.format("redirect:/%s", deviceTypeName);
         }
 
-        if (dao.findUserAssem(id, guestId) == null) {
-            DeviceInfo di = dao.findRecordById(id);
-            UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), guestId,
-                    LocalDateTime.now(), LocalDateTime.now());
-            dao.addUserAssem(assem);
-        } else {
-            System.out.println("This is already registered. deviceid=" + id + " guestid=" + guestId);
+        UidMappingDao.UidMapping uidMapping = uidMappingDao.findByGuestId(guestId);
+        if (uidMapping == null) {
+            return "redirect:/";
+        }
+
+        DeviceInfo di = dao.findRecordById(id);
+        UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), guestId,
+                LocalDateTime.now(), LocalDateTime.now());
+        try {
+            firestoreService.addAssembly(uidMapping.firebaseUid(), assem);
+        } catch (Exception e) {
+            logger.error("[HomeController] Failed to add assembly to Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
         }
 
         redirectAttributes.addFlashAttribute("guestId", guestId);
@@ -532,7 +545,17 @@ public class HomeController {
             return "redirect:/";
         }
 
-        dao.deleteUserAssem(id, guestId);
+        UidMappingDao.UidMapping uidMapping = uidMappingDao.findByGuestId(guestId);
+        if (uidMapping == null) {
+            return "redirect:/";
+        }
+
+        try {
+            firestoreService.deleteAssembly(uidMapping.firebaseUid(), id);
+        } catch (Exception e) {
+            logger.error("[HomeController] Failed to delete assembly from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+        }
+
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         return "redirect:/";
