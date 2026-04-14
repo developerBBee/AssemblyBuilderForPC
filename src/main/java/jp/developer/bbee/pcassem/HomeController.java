@@ -523,6 +523,10 @@ public class HomeController {
         }
 
         DeviceInfo di = dao.findRecordById(id);
+        if (di == null) {
+            logger.error("[HomeController] Device not found for id: {}", id);
+            return String.format("redirect:/%s", deviceTypeName);
+        }
         UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), guestId,
                 LocalDateTime.now(), LocalDateTime.now());
         try {
