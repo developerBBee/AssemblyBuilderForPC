@@ -2,7 +2,7 @@ package jp.developer.bbee.pcassem;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
-import jp.developer.bbee.pcassem.UidMappingDao.UidMapping;
+import jp.developer.bbee.pcassem.domain.auth.IdTokenVerifier;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,7 +45,7 @@ public class HomeController {
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
-    private final UidMappingDao uidMappingDao;
+    private final IdTokenVerifier idTokenVerifier;
     private final FirestoreService firestoreService;
     private final KakakuClient kakakuClient;
 
@@ -58,12 +59,20 @@ public class HomeController {
             );
 
     @Autowired // <- DAO auto setting
-    HomeController(DeviceInfoDao dao, UidMappingDao uidMappingDao, FirestoreService firestoreService){
+    HomeController(DeviceInfoDao dao, IdTokenVerifier idTokenVerifier, FirestoreService firestoreService){
         this.dao = dao;
-        this.uidMappingDao = uidMappingDao;
+        this.idTokenVerifier = idTokenVerifier;
         this.firestoreService = firestoreService;
         kakakuClient = new KakakuClient(dao);
         makeDeviceTypeJp();
+    }
+
+    @ModelAttribute
+    public void populateFirebaseUid(HttpSession session, Model model) {
+        String uid = (String) session.getAttribute("firebaseUid");
+        if (uid != null) {
+            model.addAttribute("firebaseUid", uid);
+        }
     }
 
     @PostConstruct
@@ -155,55 +164,29 @@ public class HomeController {
     static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
 
     @GetMapping("/")
-    String top(Model model, @RequestParam(value = "guestId", required = false) String guestId, HttpSession session) {
+    String top(Model model, @RequestParam(value = "idToken", required = false) String idToken, HttpSession session) {
         model.addAttribute("restoredListDisplay", "hidden");
         model.addAttribute("deviceListDisplay", "hidden");
         model.addAttribute("updateTime", dao.getTime().format(formatter));
 
-        if (guestId != null && guestId.length() == 32) {
-            session.setAttribute("guestId", guestId);
-
-            UidMapping uidMapping = uidMappingDao.findByGuestId(guestId);
-            if (uidMapping != null) {
-                return topFromFirestore(model, uidMapping.firebaseUid());
+        String firebaseUid = null;
+        if (idToken != null && !idToken.isBlank()) {
+            try {
+                firebaseUid = idTokenVerifier.verifyAndGetUid(idToken);
+                session.setAttribute("firebaseUid", firebaseUid);
+            } catch (Exception e) {
+                logger.warn("[HomeController] Failed to verify idToken: {}", e.getMessage());
             }
-
-            // H2 path (not yet migrated)
-            List<SaveHead> saveHeadList = dao.getSaveHeadRecent5(guestId);
-            if (saveHeadList == null || saveHeadList.isEmpty()) {
-                model.addAttribute("saveHeadVisible", "hidden");
-            } else {
-                List<SaveHeader> saveHeaderList = new ArrayList<>();
-                int index = 0;
-                for (SaveHead sh : saveHeadList) {
-                    if (index >= 5) break;
-                    saveHeaderList.add(SaveHeader.create(sh, index));
-                    index++;
-                }
-                model.addAttribute("saveHeaderList", saveHeaderList);
-            }
-
-            Map<String, Integer> assemCountMap = dao.getAssemCountList(guestId);
-            List<DeviceInfo> assembliesList = getAssembliesList(guestId);
-            assembliesList = sortList(assembliesList);
-            List<DeviceInfoFormatted> formattedAssembliesList = makeFormattedList(assembliesList, assemCountMap);
-            if (assembliesList.isEmpty()) {
-                model.addAttribute("assembliesDisplay", "hidden");
-            } else {
-                model.addAttribute("assembliesList", formattedAssembliesList);
-                int totalPrice = 0;
-                boolean isZeroPrice = false;
-                for (DeviceInfo assembly : assembliesList) {
-                    totalPrice += assembly.price();
-                    if (assembly.price() == 0) isZeroPrice = true;
-                }
-                model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
-                if (!isZeroPrice) model.addAttribute("warnMsg1Visiblity", "hidden");
-                return "index";
-            }
-        } else {
-            model.addAttribute("assembliesDisplay", "hidden");
         }
+        if (firebaseUid == null) {
+            firebaseUid = (String) session.getAttribute("firebaseUid");
+        }
+        if (firebaseUid != null) {
+            return topFromFirestore(model, firebaseUid);
+        }
+
+        model.addAttribute("assembliesDisplay", "hidden");
+        model.addAttribute("saveHeadVisible", "hidden");
         return "index";
     }
 
@@ -254,15 +237,6 @@ public class HomeController {
             model.addAttribute("saveHeadVisible", "hidden");
         }
         return "index";
-    }
-
-    private List<DeviceInfo> getAssembliesList(String guestId) {
-        List<UserAssem> userAssems = dao.findAllUserAssemByGuestId(guestId);
-        List<DeviceInfo> assembliesList = new ArrayList<>();
-        for (UserAssem userAssem : userAssems) {
-            assembliesList.add(dao.findRecordById(userAssem.deviceid()));
-        }
-        return assembliesList;
     }
 
     @GetMapping("/policy_ja")
@@ -399,27 +373,24 @@ public class HomeController {
             formattedList.addAll(makeFormattedList(deviceInfoList));
         }
 
-        String gid = (String) model.getAttribute("guestId");
-        if (gid != null) {
-            UidMappingDao.UidMapping uidMapping = uidMappingDao.findByGuestId(gid);
-            if (uidMapping != null) {
-                try {
-                    List<UserAssem> userAssems = firestoreService.getAssemblies(uidMapping.firebaseUid());
-                    Set<String> registeredIds = userAssems.stream()
-                            .map(UserAssem::deviceid)
-                            .collect(java.util.stream.Collectors.toSet());
-                    for (int i = 0; i < formattedList.size(); i++) {
-                        if (registeredIds.contains(formattedList.get(i).id())) {
-                            DeviceInfoFormatted dif = formattedList.get(i);
-                            formattedList.set(i, new DeviceInfoFormatted(
-                                    dif.id(), dif.device(), dif.url(), dif.name(), dif.imgurl(), dif.detail(), dif.price(),
-                                    dif.rank(), true, "middle", 1, false, dif.flag1(), dif.flag2()
-                            ));
-                        }
+        String firebaseUid = (String) model.getAttribute("firebaseUid");
+        if (firebaseUid != null) {
+            try {
+                List<UserAssem> userAssems = firestoreService.getAssemblies(firebaseUid);
+                Set<String> registeredIds = userAssems.stream()
+                        .map(UserAssem::deviceid)
+                        .collect(java.util.stream.Collectors.toSet());
+                for (int i = 0; i < formattedList.size(); i++) {
+                    if (registeredIds.contains(formattedList.get(i).id())) {
+                        DeviceInfoFormatted dif = formattedList.get(i);
+                        formattedList.set(i, new DeviceInfoFormatted(
+                                dif.id(), dif.device(), dif.url(), dif.name(), dif.imgurl(), dif.detail(), dif.price(),
+                                dif.rank(), true, "middle", 1, false, dif.flag1(), dif.flag2()
+                        ));
                     }
-                } catch (Exception e) {
-                    logger.error("[HomeController] Failed to get assemblies from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
                 }
+            } catch (Exception e) {
+                logger.error("[HomeController] Failed to get assemblies from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
             }
         }
 
@@ -510,16 +481,12 @@ public class HomeController {
 
     @GetMapping("/add") // Add device to assemblies
     String addUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
-                        @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx,
-                        @RequestParam("sortFlag") String sortFlag) {
+                        @RequestParam("dev") String device, @RequestParam("body_scroll_px") String bodyScrollPx,
+                        @RequestParam("sortFlag") String sortFlag, HttpSession session) {
 
-        if (guestId.length() != 32) { // Issue guestId
+        String firebaseUid = (String) session.getAttribute("firebaseUid");
+        if (firebaseUid == null) {
             return String.format("redirect:/%s", deviceTypeName);
-        }
-
-        UidMappingDao.UidMapping uidMapping = uidMappingDao.findByGuestId(guestId);
-        if (uidMapping == null) {
-            return "redirect:/";
         }
 
         DeviceInfo di = dao.findRecordById(id);
@@ -527,40 +494,34 @@ public class HomeController {
             logger.error("[HomeController] Device not found for id: {}", id);
             return String.format("redirect:/%s", deviceTypeName);
         }
-        UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), guestId,
+        UserAssem assem = new UserAssem(UUID.randomUUID().toString().replace("-", ""), di.id(), di.device(), firebaseUid,
                 LocalDateTime.now(), LocalDateTime.now());
         try {
-            firestoreService.addAssembly(uidMapping.firebaseUid(), assem);
+            firestoreService.addAssembly(firebaseUid, assem);
         } catch (Exception e) {
             logger.error("[HomeController] Failed to add assembly to Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
         }
 
-        redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         redirectAttributes.addFlashAttribute("sortFlag", Integer.valueOf(sortFlag));
-        //return devType;
         return String.format("redirect:/%s", deviceTypeName);
     }
 
-    @GetMapping("/del") // Add device to assemblies
+    @GetMapping("/del") // Delete device from assemblies
     String delUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
-                        @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
-        if (guestId.length() != 32) { // Issue guestId
-            return "redirect:/";
-        }
-
-        UidMappingDao.UidMapping uidMapping = uidMappingDao.findByGuestId(guestId);
-        if (uidMapping == null) {
+                        @RequestParam("dev") String device, @RequestParam("body_scroll_px") String bodyScrollPx,
+                        HttpSession session) {
+        String firebaseUid = (String) session.getAttribute("firebaseUid");
+        if (firebaseUid == null) {
             return "redirect:/";
         }
 
         try {
-            firestoreService.deleteAssembly(uidMapping.firebaseUid(), id);
+            firestoreService.deleteAssembly(firebaseUid, id);
         } catch (Exception e) {
             logger.error("[HomeController] Failed to delete assembly from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
         }
 
-        redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         return "redirect:/";
     }
@@ -573,25 +534,23 @@ public class HomeController {
     );
     @GetMapping("/sort") // Sort devices
     String sortDevices(RedirectAttributes redirectAttributes, @RequestParam("sort") String sort, @RequestParam("devType") String deviceTypeName,
-                       @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
+                       @RequestParam("body_scroll_px") String bodyScrollPx) {
 
-        redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         redirectAttributes.addFlashAttribute("sortFlag", sortMap.get(sort));
-        //return devType;
         return String.format("redirect:/%s", deviceTypeName);
     }
 
-    record SaveRec(List<String> deviceIdList, String guestId) {}
+    record SaveRec(List<String> deviceIdList) {}
 
     @PostMapping("/save") // Save assemblies of user's construction.
-    String saveConstruction(SaveRec saveRec) {
-        if (saveRec.deviceIdList() == null || saveRec.deviceIdList().isEmpty()
-                || saveRec.guestId() == null || saveRec.guestId().length() != 32) {
+    String saveConstruction(SaveRec saveRec, HttpSession session) {
+        String firebaseUid = (String) session.getAttribute("firebaseUid");
+        if (saveRec.deviceIdList() == null || saveRec.deviceIdList().isEmpty() || firebaseUid == null) {
             return "redirect:/";
         }
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        dao.save(uuid, saveRec.guestId(), saveRec.deviceIdList());
+        dao.save(uuid, null, saveRec.deviceIdList());
         return "redirect:/rec/" + uuid;
     }
 
