@@ -12,23 +12,16 @@ gids.forEach(gid => {
 });
 const structure = document.getElementById('structure');
 structure.href += '?guestId=' + guestId;
-var link = window.location.href
-console.log(link);
-if (link == 'http://localhost:8080/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
-        || link == 'https://localhost/' || link == 'https://pcbuilding.link/' || link == 'https://www.pcbuilding.link/') {
-  var url = new URL(link);
-  url.searchParams.append('guestId', guestId);
-  location.href = url; // redirect
+// migration 未完了の場合、どのパスでも / へリダイレクトしてサーバーセッションに guestId を保存する
+if (localStorage.getItem('migration_completed') !== 'true') {
+  var currentUrl = new URL(window.location.href);
+  if (currentUrl.pathname !== '/' || !currentUrl.searchParams.get('guestId')) {
+    var redirectUrl = new URL('/', window.location.origin);
+    redirectUrl.searchParams.set('guestId', guestId);
+    location.href = redirectUrl.href;
+  }
 }
 checkedTotal();
-
-// var link = window.location.href;
-// var url = new URL(link);
-// if (!url.searchParams.get('guestId')) {
-//   url.searchParams.append('guestId', guestId);
-//   location.href = url;
-//   console.log('guestId ' + guestId);
-// }
 
 // 登録（submit）した際に、ページが上に移動するのを防ぐために、何pxスクロールしたかを求めるjavascriptです。
 window.onscroll = function() {
@@ -87,6 +80,7 @@ window.onload = function() {
           if (result.success) {
             console.log('Migration: ' + result.message);
             localStorage.setItem('migration_completed', 'true');
+            localStorage.removeItem('guestid');
           } else {
             console.log('Migration failed: ' + result.message);
           }
