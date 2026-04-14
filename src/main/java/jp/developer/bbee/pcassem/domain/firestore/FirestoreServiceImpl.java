@@ -110,6 +110,28 @@ public class FirestoreServiceImpl implements FirestoreService {
     }
 
     @Override
+    public void addAssembly(String firebaseUid, UserAssem assem) throws Exception {
+        var ref = firestore.collection("users")
+                .document(firebaseUid)
+                .collection("assemblies")
+                .document(assem.deviceid());
+        Map<String, Object> data = new HashMap<>();
+        data.put("device", assem.device());
+        data.put("createddate", Timestamp.of(java.sql.Timestamp.valueOf(assem.createddate())));
+        data.put("lastupdate", Timestamp.of(java.sql.Timestamp.valueOf(assem.lastupdate())));
+        ref.set(data).get();
+    }
+
+    @Override
+    public void deleteAssembly(String firebaseUid, String deviceId) throws Exception {
+        firestore.collection("users")
+                .document(firebaseUid)
+                .collection("assemblies")
+                .document(deviceId)
+                .delete().get();
+    }
+
+    @Override
     public List<SaveHead> getSaveHeadsRecent5(String firebaseUid) throws Exception {
         var docs = firestore.collection("saves")
                 .whereEqualTo("firebaseUid", firebaseUid)
