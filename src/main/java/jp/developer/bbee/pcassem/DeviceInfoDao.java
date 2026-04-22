@@ -322,6 +322,18 @@ public class DeviceInfoDao {
                 )).collect(java.util.stream.Collectors.groupingBy(SaveItem::saveId));
     }
 
+    public List<SaveItem> getSaveItemsBySaveId(String saveId) {
+        String query = "SELECT * FROM savelist WHERE saveid = ?";
+        return jdbcTemplate.queryForList(query, saveId).stream()
+                .map((Map<String, Object> r) -> new SaveItem(
+                        r.get("saveid").toString(),
+                        r.get("deviceid").toString(),
+                        (Integer) r.get("price"),
+                        ((Timestamp) r.get("createddate")).toLocalDateTime(),
+                        ((Timestamp) r.get("lastupdate")).toLocalDateTime()
+                )).toList();
+    }
+
     public void deleteAllUserAssemByGuestId(String guestId) {
         jdbcTemplate.update("DELETE FROM assemblies WHERE guestid = ?", guestId);
     }

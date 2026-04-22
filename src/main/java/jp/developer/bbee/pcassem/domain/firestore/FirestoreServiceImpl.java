@@ -74,7 +74,9 @@ public class FirestoreServiceImpl implements FirestoreService {
 
                 Map<String, Object> data = new HashMap<>();
                 data.put("firebaseUid", firebaseUid);
-                data.put("guestId", guestId);
+                if (guestId != null) {
+                    data.put("guestId", guestId);
+                }
                 data.put("saveName", head.savename());
                 data.put("createddate", Timestamp.of(java.sql.Timestamp.valueOf(head.createddate())));
                 data.put("lastupdate", Timestamp.of(java.sql.Timestamp.valueOf(head.lastupdate())));

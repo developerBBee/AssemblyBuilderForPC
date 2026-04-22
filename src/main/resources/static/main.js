@@ -1,34 +1,6 @@
 'use strict';
 
-var guestId = localStorage.getItem('guestid');
-if(guestId === null || guestId.length != 32) {
-  guestId = generateUuid().replaceAll('-', '');
-  localStorage.setItem('guestid', guestId);
-  console.log('Save guestId ' + guestId);
-}
-const gids = document.querySelectorAll('.gid');
-gids.forEach(gid => {
-  gid.value = guestId;
-});
-const structure = document.getElementById('structure');
-structure.href += '?guestId=' + guestId;
-var link = window.location.href
-console.log(link);
-if (link == 'http://localhost:8080/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
-        || link == 'https://localhost/' || link == 'https://pcbuilding.link/' || link == 'https://www.pcbuilding.link/') {
-  var url = new URL(link);
-  url.searchParams.append('guestId', guestId);
-  location.href = url; // redirect
-}
 checkedTotal();
-
-// var link = window.location.href;
-// var url = new URL(link);
-// if (!url.searchParams.get('guestId')) {
-//   url.searchParams.append('guestId', guestId);
-//   location.href = url;
-//   console.log('guestId ' + guestId);
-// }
 
 // 登録（submit）した際に、ページが上に移動するのを防ぐために、何pxスクロールしたかを求めるjavascriptです。
 window.onscroll = function() {
@@ -47,11 +19,15 @@ window.onload = function() {
 };
 
 
-// Firebase Anonymous Auth + Migration
-(async function initFirebaseMigration() {
+// Firebase Anonymous Auth - idToken を POST で送信してサーバーセッションを確立する（URLに露出させない）
+(async function initFirebaseAuth() {
   try {
-    if (localStorage.getItem('migration_completed') === 'true') {
-      return;
+    // 同一タブ内で認証済みかつサーバーセッションが有効な場合はスキップ（リダイレクトループ防止）
+    if (sessionStorage.getItem('auth_done') === 'true') {
+      const check = await fetch('/api/session', { credentials: 'same-origin' });
+      if (check.ok) return;
+      // サーバーセッションが失効していた場合は再認証する
+      sessionStorage.removeItem('auth_done');
     }
 
     const res = await fetch('/api/firebase/config');
@@ -64,39 +40,31 @@ window.onload = function() {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       unsubscribe();
       try {
-        if (localStorage.getItem('migration_completed') === 'true') {
-          return;
-        }
         if (!user) {
           user = (await auth.signInAnonymously()).user;
         }
         console.log('Firebase signed in. uid=' + user.uid);
 
-        if (guestId && guestId.length === 32) {
-          const idToken = await user.getIdToken();
-          const migrateRes = await fetch('/api/migrate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken: idToken })
-          });
-          if (!migrateRes.ok) {
-            console.log('Migration API error: ' + migrateRes.status);
-            return;
-          }
-          const result = await migrateRes.json();
-          if (result.success) {
-            console.log('Migration: ' + result.message);
-            localStorage.setItem('migration_completed', 'true');
-          } else {
-            console.log('Migration failed: ' + result.message);
-          }
+        const idToken = await user.getIdToken();
+        // idToken をリクエストボディでPOSTし、URLに載せてログ・履歴に残らないようにする
+        const sessionRes = await fetch('/api/session', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: idToken })
+        });
+        if (!sessionRes.ok) {
+          console.log('Firebase session error: ' + sessionRes.status);
+          return;
         }
+        sessionStorage.setItem('auth_done', 'true');
+        location.replace(location.pathname + location.search + location.hash);
       } catch (e) {
-        console.log('Firebase migration error (inner): ' + e.message);
+        console.log('Firebase auth error (inner): ' + e.message);
       }
     });
   } catch (e) {
-    console.log('Firebase migration error: ' + e.message);
+    console.log('Firebase auth error: ' + e.message);
   }
 })();
 
@@ -244,12 +212,7 @@ function checkedTotal() {
     }
   }
   // save機能
-  if (saveList.hasChildNodes && guestId != null) {
-    const input_data = document.createElement('input');
-    input_data.type = 'text';
-    input_data.name = 'guestId'; 
-    input_data.value = guestId;
-    saveList.appendChild(input_data);
+  if (saveList.hasChildNodes()) {
     saveButton.disabled = false;
   }
   const totalPriceTxt = document.getElementById('totalprice');

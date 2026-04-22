@@ -2,6 +2,7 @@ package jp.developer.bbee.pcassem;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
+import jp.developer.bbee.pcassem.domain.auth.IdTokenVerifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,6 +23,12 @@ class PcassemApplicationTests {
 
 	@MockBean
 	Firestore firestore;
+
+	// FirebaseAuth は final クラスのためモック不可。
+	// IdTokenVerifier をモックすることで FirebaseIdTokenVerifier の生成を抑制し、
+	// FirebaseConfig.firebaseAuth() bean の依存を回避する。
+	@MockBean
+	IdTokenVerifier idTokenVerifier;
 
 	@Test
 	void contextLoads() {
