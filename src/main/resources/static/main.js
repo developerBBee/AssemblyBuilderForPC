@@ -19,10 +19,10 @@ window.onload = function() {
 };
 
 
-// Firebase Anonymous Auth - セッションに firebaseUid をセットし、トップページで Firestore からデータを取得する
+// Firebase Anonymous Auth - idToken を POST で送信してサーバーセッションを確立する（URLに露出させない）
 (async function initFirebaseAuth() {
   try {
-    // セッション内で認証済みの場合はリダイレクト不要
+    // 同一タブ内で認証済みの場合はスキップ（リダイレクトループ防止）
     if (sessionStorage.getItem('auth_done') === 'true') {
       return;
     }
@@ -43,11 +43,19 @@ window.onload = function() {
         console.log('Firebase signed in. uid=' + user.uid);
 
         const idToken = await user.getIdToken();
-        // セッションフラグを立ててからリダイレクト（同一セッション内で1回のみ）
+        // idToken をリクエストボディでPOSTし、URLに載せてログ・履歴に残らないようにする
+        const sessionRes = await fetch('/api/session', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: idToken })
+        });
+        if (!sessionRes.ok) {
+          console.log('Firebase session error: ' + sessionRes.status);
+          return;
+        }
         sessionStorage.setItem('auth_done', 'true');
-        const redirectUrl = new URL('/', window.location.origin);
-        redirectUrl.searchParams.set('idToken', idToken);
-        location.href = redirectUrl.href;
+        location.replace('/');
       } catch (e) {
         console.log('Firebase auth error (inner): ' + e.message);
       }

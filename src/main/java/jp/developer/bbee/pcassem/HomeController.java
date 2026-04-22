@@ -2,7 +2,6 @@ package jp.developer.bbee.pcassem;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
-import jp.developer.bbee.pcassem.domain.auth.IdTokenVerifier;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.model.DeviceInfo;
 import jp.developer.bbee.pcassem.model.SaveHead;
@@ -45,7 +44,6 @@ public class HomeController {
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
-    private final IdTokenVerifier idTokenVerifier;
     private final FirestoreService firestoreService;
     private final KakakuClient kakakuClient;
 
@@ -59,9 +57,8 @@ public class HomeController {
             );
 
     @Autowired // <- DAO auto setting
-    HomeController(DeviceInfoDao dao, IdTokenVerifier idTokenVerifier, FirestoreService firestoreService){
+    HomeController(DeviceInfoDao dao, FirestoreService firestoreService){
         this.dao = dao;
-        this.idTokenVerifier = idTokenVerifier;
         this.firestoreService = firestoreService;
         kakakuClient = new KakakuClient(dao);
         makeDeviceTypeJp();
@@ -164,23 +161,12 @@ public class HomeController {
     static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
 
     @GetMapping("/")
-    String top(Model model, @RequestParam(value = "idToken", required = false) String idToken, HttpSession session) {
+    String top(Model model, HttpSession session) {
         model.addAttribute("restoredListDisplay", "hidden");
         model.addAttribute("deviceListDisplay", "hidden");
         model.addAttribute("updateTime", dao.getTime().format(formatter));
 
-        String firebaseUid = null;
-        if (idToken != null && !idToken.isBlank()) {
-            try {
-                firebaseUid = idTokenVerifier.verifyAndGetUid(idToken);
-                session.setAttribute("firebaseUid", firebaseUid);
-            } catch (Exception e) {
-                logger.warn("[HomeController] Failed to verify idToken: {}", e.getMessage());
-            }
-        }
-        if (firebaseUid == null) {
-            firebaseUid = (String) session.getAttribute("firebaseUid");
-        }
+        String firebaseUid = (String) session.getAttribute("firebaseUid");
         if (firebaseUid != null) {
             return topFromFirestore(model, firebaseUid);
         }
@@ -481,7 +467,7 @@ public class HomeController {
 
     @GetMapping("/add") // Add device to assemblies
     String addUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
-                        @RequestParam("dev") String device, @RequestParam("body_scroll_px") String bodyScrollPx,
+                        @RequestParam("body_scroll_px") String bodyScrollPx,
                         @RequestParam("sortFlag") String sortFlag, HttpSession session) {
 
         String firebaseUid = (String) session.getAttribute("firebaseUid");
@@ -509,7 +495,7 @@ public class HomeController {
 
     @GetMapping("/del") // Delete device from assemblies
     String delUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
-                        @RequestParam("dev") String device, @RequestParam("body_scroll_px") String bodyScrollPx,
+                        @RequestParam("body_scroll_px") String bodyScrollPx,
                         HttpSession session) {
         String firebaseUid = (String) session.getAttribute("firebaseUid");
         if (firebaseUid == null) {
@@ -550,7 +536,7 @@ public class HomeController {
             return "redirect:/";
         }
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        dao.save(uuid, null, saveRec.deviceIdList());
+        dao.save(uuid, firebaseUid, saveRec.deviceIdList());
         return "redirect:/rec/" + uuid;
     }
 
