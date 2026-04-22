@@ -137,7 +137,7 @@
                 </td>
                 <td class="price" th:text="${assembly.price}"></td>
                 <td>
-                  <form action="/del" name="submit_scroll"> <!-- action="/del" -->
+                  <form action="/del" method="post" name="submit_scroll"> <!-- action="/del" -->
                     <input name="id" type="hidden" th:value="${assembly.id}"/>
                     <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
                     <input name="body_scroll_px" class="get_body_scroll_px" type="hidden" th:value="0"/>
@@ -242,7 +242,7 @@
                 </td>
                 <td class="price" th:text="${deviceInfo.price}"></td>
                 <td>
-                  <form action="/add" name="submit_scroll"> <!-- action="/add" -->
+                  <form action="/add" method="post" name="submit_scroll"> <!-- action="/add" -->
                     <input name="id" type="hidden" th:value="${deviceInfo.id}"/>
                     <input name="devType" type="hidden" th:value="${deviceTypeName}"/>
                     <input name="sortFlag" type="hidden" th:value="${sortFlag}"/>

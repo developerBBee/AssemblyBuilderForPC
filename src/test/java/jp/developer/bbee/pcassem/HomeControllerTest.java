@@ -43,6 +43,7 @@ class HomeControllerTest {
     void setUp() {
         when(dao.getTime()).thenReturn(LocalDateTime.of(2024, 1, 1, 0, 0));
         when(dao.findRecordByIds(anyList())).thenReturn(Collections.emptyList());
+        when(dao.getSaveItemsBySaveId(anyString())).thenReturn(Collections.emptyList());
 
         HomeController controller = new HomeController(dao, firestoreService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();

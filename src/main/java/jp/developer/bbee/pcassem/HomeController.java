@@ -1,6 +1,7 @@
 package jp.developer.bbee.pcassem;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.model.DeviceInfo;
@@ -65,7 +66,9 @@ public class HomeController {
     }
 
     @ModelAttribute
-    public void populateFirebaseUid(HttpSession session, Model model) {
+    public void populateFirebaseUid(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        if (session == null) return;
         String uid = (String) session.getAttribute("firebaseUid");
         if (uid != null) {
             model.addAttribute("firebaseUid", uid);
@@ -465,7 +468,7 @@ public class HomeController {
         return retList;
     }
 
-    @GetMapping("/add") // Add device to assemblies
+    @PostMapping("/add") // Add device to assemblies
     String addUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
                         @RequestParam("body_scroll_px") String bodyScrollPx,
                         @RequestParam("sortFlag") String sortFlag, HttpSession session) {
@@ -493,7 +496,7 @@ public class HomeController {
         return String.format("redirect:/%s", deviceTypeName);
     }
 
-    @GetMapping("/del") // Delete device from assemblies
+    @PostMapping("/del") // Delete device from assemblies
     String delUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
                         @RequestParam("body_scroll_px") String bodyScrollPx,
                         HttpSession session) {
