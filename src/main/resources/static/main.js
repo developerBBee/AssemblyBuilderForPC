@@ -55,7 +55,7 @@ window.onload = function() {
           return;
         }
         sessionStorage.setItem('auth_done', 'true');
-        location.replace('/');
+        location.replace(location.pathname + location.search + location.hash);
       } catch (e) {
         console.log('Firebase auth error (inner): ' + e.message);
       }

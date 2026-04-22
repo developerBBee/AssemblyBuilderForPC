@@ -537,6 +537,15 @@ public class HomeController {
         }
         String uuid = UUID.randomUUID().toString().replace("-", "");
         dao.save(uuid, firebaseUid, saveRec.deviceIdList());
+
+        try {
+            List<DeviceInfoDao.SaveItem> items = dao.getSaveItemsBySaveId(uuid);
+            SaveHead saveHead = new SaveHead(uuid, firebaseUid, "NONAME", LocalDateTime.now(), LocalDateTime.now());
+            firestoreService.saveSaves(firebaseUid, firebaseUid, List.of(saveHead), Map.of(uuid, items));
+        } catch (Exception e) {
+            logger.error("[HomeController] Failed to save to Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+        }
+
         return "redirect:/rec/" + uuid;
     }
 

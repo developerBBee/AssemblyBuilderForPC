@@ -1,6 +1,6 @@
 package jp.developer.bbee.pcassem.presentation.controller;
 
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest;
 import jp.developer.bbee.pcassem.domain.auth.IdTokenVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +24,18 @@ public class SessionController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> createSession(@RequestBody Map<String, String> body, HttpSession session) {
+    public ResponseEntity<Void> createSession(@RequestBody Map<String, String> body, HttpServletRequest request) {
         String idToken = body.get("idToken");
         if (idToken == null || idToken.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
         try {
             String uid = idTokenVerifier.verifyAndGetUid(idToken);
-            session.setAttribute("firebaseUid", uid);
+            // セッション固定攻撃対策: 既存セッションがある場合のみIDを再生成する
+            if (request.getSession(false) != null) {
+                request.changeSessionId();
+            }
+            request.getSession(true).setAttribute("firebaseUid", uid);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             logger.warn("[SessionController] Failed to verify idToken: {}", e.getMessage());
