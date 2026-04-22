@@ -11,8 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import org.springframework.mock.web.MockHttpSession;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -64,5 +67,20 @@ class SessionControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"idToken\":\"invalid-token\"}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void checkSession_noSession_returns401() throws Exception {
+        mockMvc.perform(get("/api/session"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void checkSession_sessionHasFirebaseUid_returns200() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("firebaseUid", FIREBASE_UID);
+
+        mockMvc.perform(get("/api/session").session(session))
+                .andExpect(status().isOk());
     }
 }

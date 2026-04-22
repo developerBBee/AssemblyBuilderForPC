@@ -22,9 +22,12 @@ window.onload = function() {
 // Firebase Anonymous Auth - idToken を POST で送信してサーバーセッションを確立する（URLに露出させない）
 (async function initFirebaseAuth() {
   try {
-    // 同一タブ内で認証済みの場合はスキップ（リダイレクトループ防止）
+    // 同一タブ内で認証済みかつサーバーセッションが有効な場合はスキップ（リダイレクトループ防止）
     if (sessionStorage.getItem('auth_done') === 'true') {
-      return;
+      const check = await fetch('/api/session', { credentials: 'same-origin' });
+      if (check.ok) return;
+      // サーバーセッションが失効していた場合は再認証する
+      sessionStorage.removeItem('auth_done');
     }
 
     const res = await fetch('/api/firebase/config');

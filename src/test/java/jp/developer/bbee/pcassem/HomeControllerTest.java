@@ -19,9 +19,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -113,5 +114,48 @@ class HomeControllerTest {
                 .andExpect(view().name("index"))
                 .andExpect(model().attribute("assembliesDisplay", "hidden"))
                 .andExpect(model().attribute("saveHeadVisible", "hidden"));
+    }
+
+    @Test
+    void saveConstruction_noSession_redirectsToRoot() throws Exception {
+        mockMvc.perform(post("/save")
+                        .param("deviceIdList", "device-001"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"));
+
+        verify(dao, never()).save(anyString(), anyString(), anyList());
+        verifyNoInteractions(firestoreService);
+    }
+
+    @Test
+    void saveConstruction_withSession_savesAndRedirectsToRec() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("firebaseUid", FIREBASE_UID);
+
+        mockMvc.perform(post("/save")
+                        .session(session)
+                        .param("deviceIdList", "device-001"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/rec/*"));
+
+        verify(dao).save(anyString(), eq(FIREBASE_UID), anyList());
+        verify(firestoreService).saveSaves(eq(FIREBASE_UID), isNull(), anyList(), anyMap());
+    }
+
+    @Test
+    void saveConstruction_firestoreException_stillRedirectsToRec() throws Exception {
+        doThrow(new RuntimeException("Firestore error"))
+                .when(firestoreService).saveSaves(anyString(), any(), anyList(), anyMap());
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("firebaseUid", FIREBASE_UID);
+
+        mockMvc.perform(post("/save")
+                        .session(session)
+                        .param("deviceIdList", "device-001"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/rec/*"));
+
+        verify(dao).save(anyString(), eq(FIREBASE_UID), anyList());
     }
 }
