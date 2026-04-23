@@ -1,11 +1,13 @@
 package jp.developer.bbee.pcassem;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -17,13 +19,11 @@ import java.util.*;
 
 @Controller
 public class HomeController {
-//    public static final String DOMAIN_NAME = "https://pcbuilding.link/"; // test server env.
-    public static final String DOMAIN_NAME = "https://www.pcbuilding.link/"; // server env.
-//    public static final String DOMAIN_NAME = "https://localhost/"; // local env.
-//    public static final String DOMAIN_NAME = "http://localhost:8080/"; // local env http.
     public static final boolean DEBUG = false;
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
+    @Value("${app.domain-name}")
+    private String domainName;
     private final DeviceInfoDao dao;
     private final KakakuClient kakakuClient;
 
@@ -42,6 +42,13 @@ public class HomeController {
         kakakuClient = new KakakuClient(dao);
         updateKakaku();
         makeDeviceTypeJp();
+    }
+
+    @PostConstruct
+    private void initDomainName() {
+        if (!domainName.endsWith("/")) {
+            domainName += "/";
+        }
     }
 
     private void makeDeviceTypeJp() {
@@ -144,8 +151,8 @@ public class HomeController {
     record UserAssem (String id, String deviceid, String device, String guestid, LocalDateTime createddate, LocalDateTime lastupdate) {}
     record SaveHead (String saveid, String guestid, String savename, LocalDateTime createddate, LocalDateTime lastupdate) {}
     record SaveHeader (String url, String text) {
-        static SaveHeader create(SaveHead sh, int index) {
-            return new SaveHeader(DOMAIN_NAME+"rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
+        static SaveHeader create(SaveHead sh, String domainName, int index) {
+            return new SaveHeader(domainName + "rec/" + sh.saveid(), CIRCLE_INDEX_5[index]);
         }
     }
     static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
@@ -166,7 +173,7 @@ public class HomeController {
                 int index = 0;
                 for (SaveHead sh : saveHeadList) {
                     if (index >= 5) break;
-                    saveHeaderList.add(SaveHeader.create(sh, index));
+                    saveHeaderList.add(SaveHeader.create(sh, domainName, index));
                     index++;
                 }
                 model.addAttribute("saveHeaderList", saveHeaderList);
@@ -456,7 +463,7 @@ public class HomeController {
                         @RequestParam("sortFlag") String sortFlag) {
 
         if (guestId.length() != 32) { // Issue guestId
-            return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
+            return "redirect:/" + deviceTypeName;
         }
 
         if (dao.findUserAssem(id, guestId) == null) {
@@ -473,20 +480,20 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         redirectAttributes.addFlashAttribute("sortFlag", Integer.valueOf(sortFlag));
         //return devType;
-        return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
+        return "redirect:/" + deviceTypeName;
     }
 
     @GetMapping("/del") // Add device to assemblies
     String delUserAssem(RedirectAttributes redirectAttributes, @RequestParam("id") String id, @RequestParam("devType") String deviceTypeName,
                         @RequestParam("dev") String device, @RequestParam("guestId") String guestId, @RequestParam("body_scroll_px") String bodyScrollPx) {
         if (guestId.length() != 32) { // Issue guestId
-            return String.format("redirect:%s", DOMAIN_NAME);
+            return "redirect:/";
         }
 
         dao.deleteUserAssem(id, guestId);
         redirectAttributes.addFlashAttribute("guestId", guestId);
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
-        return String.format("redirect:%s", DOMAIN_NAME);
+        return "redirect:/";
     }
 
     private Map<String, Integer> sortMap = Map.of(
@@ -503,7 +510,7 @@ public class HomeController {
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx);
         redirectAttributes.addFlashAttribute("sortFlag", sortMap.get(sort));
         //return devType;
-        return String.format("redirect:%s", DOMAIN_NAME + deviceTypeName);
+        return "redirect:/" + deviceTypeName;
     }
 
     record SaveRec(List<String> deviceIdList, String guestId) {}
