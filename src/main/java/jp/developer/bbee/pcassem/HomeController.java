@@ -38,8 +38,6 @@ import java.util.UUID;
 
 @Controller
 public class HomeController {
-    public static final String DOMAIN_NAME = "https://www.pcbuilding.link/"; // server env.
-
     public static final boolean DEBUG = false;
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
@@ -158,7 +156,7 @@ public class HomeController {
 
     record SaveHeader (String url, String text) {
         static SaveHeader create(SaveHead sh, int index) {
-            return new SaveHeader(DOMAIN_NAME+"rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
+            return new SaveHeader("/rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
         }
     }
     static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
