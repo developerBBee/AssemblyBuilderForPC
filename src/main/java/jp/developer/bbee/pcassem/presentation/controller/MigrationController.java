@@ -1,6 +1,5 @@
 package jp.developer.bbee.pcassem.presentation.controller;
 
-import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.domain.migration.MigrationService;
 import jp.developer.bbee.pcassem.presentation.data.MigrationRequest;
 import jp.developer.bbee.pcassem.presentation.data.MigrationResponse;
@@ -25,18 +24,17 @@ public class MigrationController {
     }
 
     @PostMapping
-    public ResponseEntity<MigrationResponse> migrate(@RequestBody MigrationRequest request, HttpSession session) {
-        String guestId = (String) session.getAttribute("guestId");
-        if (guestId == null || guestId.length() != 32) {
-            return ResponseEntity.badRequest()
-                    .body(new MigrationResponse(false, "No valid session"));
-        }
+    public ResponseEntity<MigrationResponse> migrate(@RequestBody MigrationRequest request) {
         if (request.idToken == null || request.idToken.isBlank()) {
             return ResponseEntity.badRequest()
                     .body(new MigrationResponse(false, "idToken is required"));
         }
+        if (request.guestId == null || request.guestId.length() != 32) {
+            return ResponseEntity.badRequest()
+                    .body(new MigrationResponse(false, "guestId is required"));
+        }
         try {
-            boolean migrated = migrationService.migrate(request.idToken, guestId);
+            boolean migrated = migrationService.migrate(request.idToken, request.guestId);
             String message = migrated ? "Migration successful" : "Already migrated";
             return ResponseEntity.ok(new MigrationResponse(true, message));
         } catch (Exception e) {
