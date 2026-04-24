@@ -51,10 +51,25 @@ class MigrationControllerTest {
     }
 
     @Test
-    void migrate_invalidGuestId_returnsBadRequest() throws Exception {
+    void migrate_tooShortGuestId_returnsBadRequest() throws Exception {
         MigrationRequest req = new MigrationRequest();
         req.idToken = "valid-token";
         req.guestId = "tooshort";
+
+        mockMvc.perform(post("/api/migrate")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        verifyNoInteractions(migrationService);
+    }
+
+    @Test
+    void migrate_nonHexGuestId_returnsBadRequest() throws Exception {
+        MigrationRequest req = new MigrationRequest();
+        req.idToken = "valid-token";
+        req.guestId = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"; // 32 chars, non-hex
 
         mockMvc.perform(post("/api/migrate")
                         .contentType("application/json")

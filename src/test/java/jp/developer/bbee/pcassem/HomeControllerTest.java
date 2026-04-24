@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import jp.developer.bbee.pcassem.DeviceInfoDao.SaveItem;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -141,6 +142,57 @@ class HomeControllerTest {
 
         verify(dao).save(anyString(), eq(FIREBASE_UID), anyList());
         verify(firestoreService).saveSaves(eq(FIREBASE_UID), isNull(), anyList(), anyMap());
+    }
+
+    // ── /rec/{saveId} テスト ──────────────────────────────────────────
+
+    private static final String SAVE_ID = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4";
+
+    @Test
+    void restoreConstruction_firestoreHit_returnsRestoredList() throws Exception {
+        SaveItem saveItem = new SaveItem(SAVE_ID, "device-001", 50000,
+                LocalDateTime.now(), LocalDateTime.now());
+        DeviceInfo di = new DeviceInfo("device-001", "cpu", "http://example.com", "Intel Core i9",
+                "http://img.example.com/cpu.jpg", "detail", 55000, 1, 0, 0,
+                "2024-01-01", 0, LocalDateTime.now(), LocalDateTime.now());
+
+        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(List.of(saveItem));
+        when(dao.findRecordByIds(List.of("device-001"))).thenReturn(List.of(di));
+
+        mockMvc.perform(get("/rec/" + SAVE_ID))
+                .andExpect(status().isOk())
+                .andExpect(view().name("index"))
+                .andExpect(model().attributeExists("restoredList"));
+
+        verify(firestoreService).getSaveItems(SAVE_ID);
+        verify(dao, never()).restore(anyString());
+    }
+
+    @Test
+    void restoreConstruction_firestoreMiss_h2Hit_returnsRestoredList() throws Exception {
+        HomeController.RestoreDevice rd = new HomeController.RestoreDevice(
+                SAVE_ID, "device-001", "cpu", "http://example.com", "Intel Core i9",
+                "http://img.example.com/cpu.jpg", "detail", 50000, 55000);
+
+        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(null);
+        when(dao.restore(SAVE_ID)).thenReturn(List.of(rd));
+
+        mockMvc.perform(get("/rec/" + SAVE_ID))
+                .andExpect(status().isOk())
+                .andExpect(view().name("index"))
+                .andExpect(model().attributeExists("restoredList"));
+
+        verify(firestoreService).getSaveItems(SAVE_ID);
+        verify(dao).restore(SAVE_ID);
+    }
+
+    @Test
+    void restoreConstruction_neitherFound_returns404() throws Exception {
+        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(null);
+        when(dao.restore(SAVE_ID)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/rec/" + SAVE_ID))
+                .andExpect(status().isNotFound());
     }
 
     @Test

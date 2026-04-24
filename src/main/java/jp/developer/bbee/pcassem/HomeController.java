@@ -577,18 +577,19 @@ public class HomeController {
 
         List<RestoreDevice> rdList = null;
 
-        // Firestore から取得を試みる
+        // Firestore から取得を試みる（null = ドキュメントなし、非null = ドキュメントあり）
         try {
             List<DeviceInfoDao.SaveItem> saveItems = firestoreService.getSaveItems(saveId);
-            if (saveItems != null && !saveItems.isEmpty()) {
+            if (saveItems != null) {
+                // ドキュメントが存在する場合はその結果を使う（空リストでも H2 にフォールバックしない）
                 rdList = buildRestoreDevicesFromSaveItems(saveId, saveItems);
             }
         } catch (Exception e) {
             logger.error("[HomeController] Failed to get save from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
         }
 
-        // Firestore になければ H2 から取得
-        if (rdList == null || rdList.isEmpty()) {
+        // Firestore にドキュメントが存在しない場合のみ H2 から取得
+        if (rdList == null) {
             rdList = dao.restore(saveId);
         }
 

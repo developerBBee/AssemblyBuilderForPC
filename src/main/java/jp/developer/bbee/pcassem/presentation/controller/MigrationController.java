@@ -29,9 +29,9 @@ public class MigrationController {
             return ResponseEntity.badRequest()
                     .body(new MigrationResponse(false, "idToken is required"));
         }
-        if (request.guestId == null || request.guestId.length() != 32) {
+        if (request.guestId == null || !request.guestId.matches("[0-9a-fA-F]{32}")) {
             return ResponseEntity.badRequest()
-                    .body(new MigrationResponse(false, "guestId is required"));
+                    .body(new MigrationResponse(false, "guestId must be a 32-character hex string"));
         }
         try {
             boolean migrated = migrationService.migrate(request.idToken, request.guestId);
