@@ -15,4 +15,6 @@ public interface FirestoreService {
     List<SaveHead> getSaveHeadsRecent5(String firebaseUid) throws Exception;
     void addAssembly(String firebaseUid, UserAssem assem) throws Exception;
     void deleteAssembly(String firebaseUid, String deviceId) throws Exception;
+    /** saves/{saveId} の items を返す。ドキュメントが存在しない場合は null を返す。 */
+    List<SaveItem> getSaveItems(String saveId) throws Exception;
 }

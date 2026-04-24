@@ -1,6 +1,7 @@
 package jp.developer.bbee.pcassem.domain.firestore;
 
 import com.google.cloud.Timestamp;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.WriteBatch;
@@ -131,6 +132,30 @@ public class FirestoreServiceImpl implements FirestoreService {
                 .collection("assemblies")
                 .document(deviceId)
                 .delete().get();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<SaveItem> getSaveItems(String saveId) throws Exception {
+        DocumentSnapshot doc = firestore.collection("saves").document(saveId).get().get();
+        if (!doc.exists()) return null;
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) doc.get("items");
+        if (items == null || items.isEmpty()) return List.of();
+
+        return items.stream().map(item -> {
+            String deviceId = (String) item.get("deviceId");
+            int price = item.get("price") != null ? ((Number) item.get("price")).intValue() : 0;
+            Timestamp created = (Timestamp) item.get("createddate");
+            Timestamp updated = (Timestamp) item.get("lastupdate");
+            return new SaveItem(
+                    saveId,
+                    deviceId != null ? deviceId : "",
+                    price,
+                    created != null ? created.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK,
+                    updated != null ? updated.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK
+            );
+        }).toList();
     }
 
     @Override

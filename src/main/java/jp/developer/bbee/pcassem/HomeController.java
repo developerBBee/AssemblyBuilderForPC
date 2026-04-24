@@ -10,6 +10,7 @@ import jp.developer.bbee.pcassem.model.UserAssem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.ui.Model;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
+import java.util.stream.Collectors;
 import java.util.TimerTask;
 import java.util.UUID;
 
@@ -571,8 +574,29 @@ public class HomeController {
     @GetMapping("/rec/{saveId:[0-9a-fA-F]{32}}")
     String restoreConstruction(Model model, @PathVariable String saveId) {
         saveId = saveId.toLowerCase();
-        System.out.println(saveId);
-        List<RestoreDevice> rdList = dao.restore(saveId);
+
+        List<RestoreDevice> rdList = null;
+
+        // Firestore から取得を試みる
+        try {
+            List<DeviceInfoDao.SaveItem> saveItems = firestoreService.getSaveItems(saveId);
+            if (saveItems != null && !saveItems.isEmpty()) {
+                rdList = buildRestoreDevicesFromSaveItems(saveId, saveItems);
+            }
+        } catch (Exception e) {
+            logger.error("[HomeController] Failed to get save from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+        }
+
+        // Firestore になければ H2 から取得
+        if (rdList == null || rdList.isEmpty()) {
+            rdList = dao.restore(saveId);
+        }
+
+        // どちらにもなければ 404
+        if (rdList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
         List<RestoreDeviceFormatted> rdfList = rdList.stream().map(RestoreDeviceFormatted::create).toList();
         model.addAttribute("saveHeadVisible", "hidden");
         model.addAttribute("restoredList", rdfList);
@@ -580,5 +604,18 @@ public class HomeController {
         model.addAttribute("deviceListDisplay", "hidden");
         model.addAttribute("updateTime", dao.getTime().format(formatter));
         return "index";
+    }
+
+    private List<RestoreDevice> buildRestoreDevicesFromSaveItems(String saveId, List<DeviceInfoDao.SaveItem> saveItems) {
+        List<String> deviceIds = saveItems.stream().map(DeviceInfoDao.SaveItem::deviceId).toList();
+        Map<String, DeviceInfo> deviceMap = dao.findRecordByIds(deviceIds).stream()
+                .collect(Collectors.toMap(DeviceInfo::id, d -> d));
+        return saveItems.stream()
+                .filter(item -> deviceMap.containsKey(item.deviceId()))
+                .map(item -> {
+                    DeviceInfo di = deviceMap.get(item.deviceId());
+                    return new RestoreDevice(saveId, di.id(), di.device(), di.url(), di.name(),
+                            di.imgurl(), di.detail(), item.price(), di.price());
+                }).toList();
     }
 }
