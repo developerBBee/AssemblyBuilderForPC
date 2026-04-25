@@ -583,7 +583,7 @@ public class HomeController {
         try {
             Optional<List<DeviceInfoDao.SaveItem>> saveItems = firestoreService.getSaveItems(saveId);
             if (saveItems.isPresent()) {
-                // ドキュメントが存在する場合はその結果を使う（空リストでも H2 にフォールバックしない）
+                // ドキュメントと items フィールドが存在する場合はその結果を使う（空リストでも H2 にフォールバックしない）
                 rdList = buildRestoreDevicesFromSaveItems(saveId, saveItems.get());
             }
         } catch (Exception e) {
@@ -591,7 +591,7 @@ public class HomeController {
             firestoreError = true;
         }
 
-        // Firestore にドキュメントが存在しない場合のみ H2 から取得
+        // Firestore にドキュメントが存在しない、または items フィールドが存在しない場合のみ H2 から取得
         if (rdList == null) {
             rdList = dao.restore(saveId);
         }
