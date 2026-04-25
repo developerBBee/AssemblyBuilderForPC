@@ -22,12 +22,20 @@ window.onload = function() {
 // Firebase Anonymous Auth - idToken を POST で送信してサーバーセッションを確立する（URLに露出させない）
 (async function initFirebaseAuth() {
   try {
-    // 同一タブ内で認証済みかつサーバーセッションが有効な場合はスキップ（リダイレクトループ防止）
+    // 同一タブ内で認証済みの場合はサーバーセッションを確認する
     if (sessionStorage.getItem('auth_done') === 'true') {
+      const existingGuestId = localStorage.getItem('guestid');
+      const hasPendingMigration = existingGuestId
+        && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
+        && localStorage.getItem('migration_completed') !== 'true';
       const check = await fetch('/api/session', { credentials: 'same-origin' });
-      if (check.ok) return;
-      // サーバーセッションが失効していた場合は再認証する
-      sessionStorage.removeItem('auth_done');
+      if (!hasPendingMigration && check.ok) return;
+      if (!check.ok) {
+        // セッション失効: 再認証後に isFirstAuthInTab=true となるよう両フラグをクリア
+        sessionStorage.removeItem('auth_done');
+        sessionStorage.removeItem('session_established');
+      }
+      // hasPendingMigration=true かつ check.ok: セッションは有効だが移行未完了のため再認証して移行を実行
     }
 
     const res = await fetch('/api/firebase/config');
@@ -58,7 +66,52 @@ window.onload = function() {
           return;
         }
         sessionStorage.setItem('auth_done', 'true');
-        location.replace(location.pathname + location.search + location.hash);
+
+        // 未移行の guestId があれば Firestore へ移行する
+        // guestid は Firebase 導入前の旧コードで localStorage に保存されたもの。
+        // 新規ユーザーには存在せず、既存ユーザーの一回限りのデータ移行にのみ使用する。
+        // 初回認証後は常にリロード（サーバーセッション確立後の表示反映）
+        // 同一タブ内での再試行時は 5xx/エラーでリロードしない（ループ防止）
+        const isFirstAuthInTab = !sessionStorage.getItem('session_established');
+        sessionStorage.setItem('session_established', 'true');
+        let shouldReload = isFirstAuthInTab;
+
+        const existingGuestId = localStorage.getItem('guestid');
+        if (existingGuestId && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
+            && localStorage.getItem('migration_completed') !== 'true') {
+          try {
+            const migrateRes = await fetch('/api/migrate', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken: idToken, guestId: existingGuestId.toLowerCase() })
+            });
+            if (migrateRes.ok) {
+              const result = await migrateRes.json();
+              console.log('Migration: ' + result.message);
+              if (result.success) {
+                localStorage.setItem('migration_completed', 'true');
+                localStorage.removeItem('guestid');
+                shouldReload = true; // 移行成功時は常にリロード（移行後データ表示のため）
+              }
+            } else if (migrateRes.status >= 400 && migrateRes.status < 500) {
+              // 4xx はリトライしても解消しないため再試行させない
+              localStorage.setItem('migration_completed', 'true');
+              localStorage.removeItem('guestid');
+              console.log('Migration skipped (non-retryable): ' + migrateRes.status);
+            } else {
+              // 5xx: 初回認証後はリロード（認証済みビュー表示のため）
+              // 同一タブ内の再試行では isFirstAuthInTab=false のためリロードせずループを防止
+              console.log('Migration API error: ' + migrateRes.status);
+            }
+          } catch (e) {
+            console.log('Migration error: ' + e.message);
+          }
+        }
+
+        if (shouldReload) {
+          location.replace(location.pathname + location.search + location.hash);
+        }
       } catch (e) {
         console.log('Firebase auth error (inner): ' + e.message);
       }
