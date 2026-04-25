@@ -34,6 +34,7 @@ window.onload = function() {
         if (check.ok) return;
         // サーバーセッションが失効していた場合は再認証する
         sessionStorage.removeItem('auth_done');
+        sessionStorage.removeItem('session_established');
       }
     }
 
@@ -67,7 +68,12 @@ window.onload = function() {
         sessionStorage.setItem('auth_done', 'true');
 
         // 未移行の guestId があれば Firestore へ移行する
-        let shouldReload = true;
+        // 初回認証後は常にリロード（サーバーセッション確立後の表示反映）
+        // 同一タブ内での再試行時は 5xx/エラーでリロードしない（ループ防止）
+        const isFirstAuthInTab = !sessionStorage.getItem('session_established');
+        sessionStorage.setItem('session_established', 'true');
+        let shouldReload = isFirstAuthInTab;
+
         const existingGuestId = localStorage.getItem('guestid');
         if (existingGuestId && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
             && localStorage.getItem('migration_completed') !== 'true') {
@@ -84,6 +90,7 @@ window.onload = function() {
               if (result.success) {
                 localStorage.setItem('migration_completed', 'true');
                 localStorage.removeItem('guestid');
+                shouldReload = true; // 移行成功時は常にリロード（移行後データ表示のため）
               }
             } else if (migrateRes.status >= 400 && migrateRes.status < 500) {
               // 4xx はリトライしても解消しないため再試行させない
@@ -91,13 +98,11 @@ window.onload = function() {
               localStorage.removeItem('guestid');
               console.log('Migration skipped (non-retryable): ' + migrateRes.status);
             } else {
-              // 5xx は次回ロード時に再試行させるためリロードしない（ループ防止）
-              shouldReload = false;
+              // 5xx: 初回認証後はリロード（認証済みビュー表示のため）
+              // 同一タブ内の再試行では isFirstAuthInTab=false のためリロードせずループを防止
               console.log('Migration API error: ' + migrateRes.status);
             }
           } catch (e) {
-            // ネットワークエラー時も同様にリロードしない
-            shouldReload = false;
             console.log('Migration error: ' + e.message);
           }
         }
