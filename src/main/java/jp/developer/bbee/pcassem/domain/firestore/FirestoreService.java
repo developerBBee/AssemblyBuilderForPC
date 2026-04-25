@@ -6,6 +6,7 @@ import jp.developer.bbee.pcassem.model.UserAssem;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface FirestoreService {
     void saveAssemblies(String firebaseUid, List<UserAssem> assemblies) throws Exception;
@@ -15,6 +16,6 @@ public interface FirestoreService {
     List<SaveHead> getSaveHeadsRecent5(String firebaseUid) throws Exception;
     void addAssembly(String firebaseUid, UserAssem assem) throws Exception;
     void deleteAssembly(String firebaseUid, String deviceId) throws Exception;
-    /** saves/{saveId} の items を返す。ドキュメントが存在しない場合は null を返す。 */
-    List<SaveItem> getSaveItems(String saveId) throws Exception;
+    /** saves/{saveId} の items を返す。ドキュメントが存在しない場合は Optional.empty()、存在する場合は Optional.of(items) を返す。 */
+    Optional<List<SaveItem>> getSaveItems(String saveId) throws Exception;
 }

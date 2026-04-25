@@ -61,7 +61,7 @@ window.onload = function() {
 
         // 未移行の guestId があれば Firestore へ移行する
         const existingGuestId = localStorage.getItem('guestid');
-        if (existingGuestId && existingGuestId.length === 32
+        if (existingGuestId && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
             && localStorage.getItem('migration_completed') !== 'true') {
           try {
             const migrateRes = await fetch('/api/migrate', {
@@ -77,6 +77,10 @@ window.onload = function() {
                 localStorage.setItem('migration_completed', 'true');
                 localStorage.removeItem('guestid');
               }
+            } else if (migrateRes.status >= 400 && migrateRes.status < 500) {
+              // 4xx はリトライしても解消しないため再試行させない
+              localStorage.setItem('migration_completed', 'true');
+              console.log('Migration skipped (non-retryable): ' + migrateRes.status);
             } else {
               console.log('Migration API error: ' + migrateRes.status);
             }

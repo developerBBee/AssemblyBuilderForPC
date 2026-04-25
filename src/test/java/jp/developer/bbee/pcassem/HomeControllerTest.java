@@ -19,6 +19,7 @@ import jp.developer.bbee.pcassem.DeviceInfoDao.SaveItem;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -156,7 +157,7 @@ class HomeControllerTest {
                 "http://img.example.com/cpu.jpg", "detail", 55000, 1, 0, 0,
                 "2024-01-01", 0, LocalDateTime.now(), LocalDateTime.now());
 
-        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(List.of(saveItem));
+        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(Optional.of(List.of(saveItem)));
         when(dao.findRecordByIds(List.of("device-001"))).thenReturn(List.of(di));
 
         mockMvc.perform(get("/rec/" + SAVE_ID))
@@ -174,7 +175,7 @@ class HomeControllerTest {
                 SAVE_ID, "device-001", "cpu", "http://example.com", "Intel Core i9",
                 "http://img.example.com/cpu.jpg", "detail", 50000, 55000);
 
-        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(null);
+        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(Optional.empty());
         when(dao.restore(SAVE_ID)).thenReturn(List.of(rd));
 
         mockMvc.perform(get("/rec/" + SAVE_ID))
@@ -188,7 +189,7 @@ class HomeControllerTest {
 
     @Test
     void restoreConstruction_neitherFound_returns404() throws Exception {
-        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(null);
+        when(firestoreService.getSaveItems(SAVE_ID)).thenReturn(Optional.empty());
         when(dao.restore(SAVE_ID)).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/rec/" + SAVE_ID))

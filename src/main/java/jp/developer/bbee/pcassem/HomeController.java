@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Timer;
 import java.util.stream.Collectors;
@@ -577,12 +578,12 @@ public class HomeController {
 
         List<RestoreDevice> rdList = null;
 
-        // Firestore から取得を試みる（null = ドキュメントなし、非null = ドキュメントあり）
+        // Firestore から取得を試みる（empty = ドキュメントなし、present = ドキュメントあり）
         try {
-            List<DeviceInfoDao.SaveItem> saveItems = firestoreService.getSaveItems(saveId);
-            if (saveItems != null) {
+            Optional<List<DeviceInfoDao.SaveItem>> saveItems = firestoreService.getSaveItems(saveId);
+            if (saveItems.isPresent()) {
                 // ドキュメントが存在する場合はその結果を使う（空リストでも H2 にフォールバックしない）
-                rdList = buildRestoreDevicesFromSaveItems(saveId, saveItems);
+                rdList = buildRestoreDevicesFromSaveItems(saveId, saveItems.get());
             }
         } catch (Exception e) {
             logger.error("[HomeController] Failed to get save from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
@@ -608,7 +609,11 @@ public class HomeController {
     }
 
     private List<RestoreDevice> buildRestoreDevicesFromSaveItems(String saveId, List<DeviceInfoDao.SaveItem> saveItems) {
-        List<String> deviceIds = saveItems.stream().map(DeviceInfoDao.SaveItem::deviceId).toList();
+        List<String> deviceIds = saveItems.stream()
+                .map(DeviceInfoDao.SaveItem::deviceId)
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .toList();
         Map<String, DeviceInfo> deviceMap = dao.findRecordByIds(deviceIds).stream()
                 .collect(Collectors.toMap(DeviceInfo::id, d -> d));
         return saveItems.stream()

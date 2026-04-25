@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class FirestoreServiceImpl implements FirestoreService {
@@ -136,14 +137,14 @@ public class FirestoreServiceImpl implements FirestoreService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<SaveItem> getSaveItems(String saveId) throws Exception {
+    public Optional<List<SaveItem>> getSaveItems(String saveId) throws Exception {
         DocumentSnapshot doc = firestore.collection("saves").document(saveId).get().get();
-        if (!doc.exists()) return null;
+        if (!doc.exists()) return Optional.empty();
 
         List<Map<String, Object>> items = (List<Map<String, Object>>) doc.get("items");
-        if (items == null || items.isEmpty()) return List.of();
+        if (items == null || items.isEmpty()) return Optional.of(List.of());
 
-        return items.stream().map(item -> {
+        return Optional.of(items.stream().map(item -> {
             String deviceId = (String) item.get("deviceId");
             int price = item.get("price") != null ? ((Number) item.get("price")).intValue() : 0;
             Timestamp created = (Timestamp) item.get("createddate");
@@ -155,7 +156,7 @@ public class FirestoreServiceImpl implements FirestoreService {
                     created != null ? created.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK,
                     updated != null ? updated.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : DateTimeConst.FALLBACK
             );
-        }).toList();
+        }).toList());
     }
 
     @Override
