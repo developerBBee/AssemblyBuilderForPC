@@ -576,31 +576,25 @@ public class HomeController {
     String restoreConstruction(Model model, @PathVariable String saveId) {
         saveId = saveId.toLowerCase();
 
-        List<RestoreDevice> rdList = null;
-        boolean firestoreError = false;
-
-        // Firestore から取得を試みる（empty = ドキュメントなし、present = ドキュメントあり）
+        // Firestore から取得を試みる。例外時は即 503。
+        Optional<List<DeviceInfoDao.SaveItem>> saveItems;
         try {
-            Optional<List<DeviceInfoDao.SaveItem>> saveItems = firestoreService.getSaveItems(saveId);
-            if (saveItems.isPresent()) {
-                // ドキュメントが存在する場合はその結果を使う（items が空でも H2 にフォールバックしない）
-                rdList = buildRestoreDevicesFromSaveItems(saveId, saveItems.get());
-            }
+            saveItems = firestoreService.getSaveItems(saveId);
         } catch (Exception e) {
             logger.error("[HomeController] Failed to get save from Firestore: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
-            firestoreError = true;
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        // Firestore にドキュメントが存在しない場合のみ H2 から取得
-        if (rdList == null) {
+        // ドキュメントが存在する場合はその結果を使う（items が空でも H2 にフォールバックしない）
+        // ドキュメントが存在しない場合のみ H2 から取得
+        List<RestoreDevice> rdList;
+        if (saveItems.isPresent()) {
+            rdList = buildRestoreDevicesFromSaveItems(saveId, saveItems.get());
+        } else {
             rdList = dao.restore(saveId);
         }
 
         if (rdList.isEmpty()) {
-            // Firestore 障害でデータが取得できなかった可能性がある場合は 503
-            if (firestoreError) {
-                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
-            }
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 

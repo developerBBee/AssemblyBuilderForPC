@@ -68,6 +68,8 @@ window.onload = function() {
         sessionStorage.setItem('auth_done', 'true');
 
         // 未移行の guestId があれば Firestore へ移行する
+        // guestid は Firebase 導入前の旧コードで localStorage に保存されたもの。
+        // 新規ユーザーには存在せず、既存ユーザーの一回限りのデータ移行にのみ使用する。
         // 初回認証後は常にリロード（サーバーセッション確立後の表示反映）
         // 同一タブ内での再試行時は 5xx/エラーでリロードしない（ループ防止）
         const isFirstAuthInTab = !sessionStorage.getItem('session_established');
