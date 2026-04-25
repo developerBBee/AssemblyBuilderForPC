@@ -142,8 +142,7 @@ public class FirestoreServiceImpl implements FirestoreService {
         if (!doc.exists()) return Optional.empty();
 
         List<Map<String, Object>> items = (List<Map<String, Object>>) doc.get("items");
-        if (items == null) return Optional.empty(); // フィールド未存在の古いドキュメントは H2 フォールバックへ
-        if (items.isEmpty()) return Optional.of(List.of());
+        if (items == null || items.isEmpty()) return Optional.of(List.of());
 
         return Optional.of(items.stream().map(item -> {
             String deviceId = (String) item.get("deviceId");

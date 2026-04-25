@@ -18,8 +18,8 @@ public interface FirestoreService {
     void deleteAssembly(String firebaseUid, String deviceId) throws Exception;
     /**
      * saves/{saveId} の items を返す。
-     * ドキュメントが存在しない、または items フィールドが存在しない場合は Optional.empty() を返す。
-     * ドキュメントが存在し items フィールドが存在する場合は Optional.of(items) を返す（空リストも含む）。
+     * ドキュメントが存在しない場合のみ Optional.empty() を返す（H2 フォールバック用）。
+     * ドキュメントが存在する場合は items の有無にかかわらず Optional.of(items) を返す（空リストを含む）。
      */
     Optional<List<SaveItem>> getSaveItems(String saveId) throws Exception;
 }
