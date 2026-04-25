@@ -22,20 +22,20 @@ window.onload = function() {
 // Firebase Anonymous Auth - idToken を POST で送信してサーバーセッションを確立する（URLに露出させない）
 (async function initFirebaseAuth() {
   try {
-    // 同一タブ内で認証済みかつサーバーセッションが有効な場合はスキップ（リダイレクトループ防止）
-    // ただし移行未完了の guestId が残っている場合はスキップしない（5xx失敗後の再試行のため）
+    // 同一タブ内で認証済みの場合はサーバーセッションを確認する
     if (sessionStorage.getItem('auth_done') === 'true') {
       const existingGuestId = localStorage.getItem('guestid');
       const hasPendingMigration = existingGuestId
         && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
         && localStorage.getItem('migration_completed') !== 'true';
-      if (!hasPendingMigration) {
-        const check = await fetch('/api/session', { credentials: 'same-origin' });
-        if (check.ok) return;
-        // サーバーセッションが失効していた場合は再認証する
+      const check = await fetch('/api/session', { credentials: 'same-origin' });
+      if (!hasPendingMigration && check.ok) return;
+      if (!check.ok) {
+        // セッション失効: 再認証後に isFirstAuthInTab=true となるよう両フラグをクリア
         sessionStorage.removeItem('auth_done');
         sessionStorage.removeItem('session_established');
       }
+      // hasPendingMigration=true かつ check.ok: セッションは有効だが移行未完了のため再認証して移行を実行
     }
 
     const res = await fetch('/api/firebase/config');
@@ -82,7 +82,7 @@ window.onload = function() {
               method: 'POST',
               credentials: 'same-origin',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ idToken: idToken, guestId: existingGuestId })
+              body: JSON.stringify({ idToken: idToken, guestId: existingGuestId.toLowerCase() })
             });
             if (migrateRes.ok) {
               const result = await migrateRes.json();

@@ -42,7 +42,7 @@ public class MigrationController {
                     .body(new MigrationResponse(false, "guestId must be a 32-character hex string"));
         }
         try {
-            boolean migrated = migrationService.migrate(request.idToken, request.guestId);
+            boolean migrated = migrationService.migrate(request.idToken, request.guestId.toLowerCase());
             String message = migrated ? "Migration successful" : "Already migrated";
             return ResponseEntity.ok(new MigrationResponse(true, message));
         } catch (Exception e) {
