@@ -36,6 +36,17 @@ class MigrationControllerTest {
     }
 
     @Test
+    void migrate_invalidBody_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/migrate")
+                        .contentType("application/json")
+                        .content("not-valid-json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        verifyNoInteractions(migrationService);
+    }
+
+    @Test
     void migrate_missingGuestId_returnsBadRequest() throws Exception {
         MigrationRequest req = new MigrationRequest();
         req.idToken = "valid-token";

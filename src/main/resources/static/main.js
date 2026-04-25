@@ -23,11 +23,18 @@ window.onload = function() {
 (async function initFirebaseAuth() {
   try {
     // 同一タブ内で認証済みかつサーバーセッションが有効な場合はスキップ（リダイレクトループ防止）
+    // ただし移行未完了の guestId が残っている場合はスキップしない（5xx失敗後の再試行のため）
     if (sessionStorage.getItem('auth_done') === 'true') {
-      const check = await fetch('/api/session', { credentials: 'same-origin' });
-      if (check.ok) return;
-      // サーバーセッションが失効していた場合は再認証する
-      sessionStorage.removeItem('auth_done');
+      const existingGuestId = localStorage.getItem('guestid');
+      const hasPendingMigration = existingGuestId
+        && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
+        && localStorage.getItem('migration_completed') !== 'true';
+      if (!hasPendingMigration) {
+        const check = await fetch('/api/session', { credentials: 'same-origin' });
+        if (check.ok) return;
+        // サーバーセッションが失効していた場合は再認証する
+        sessionStorage.removeItem('auth_done');
+      }
     }
 
     const res = await fetch('/api/firebase/config');

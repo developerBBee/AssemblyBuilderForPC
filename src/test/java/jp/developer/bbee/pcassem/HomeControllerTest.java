@@ -197,6 +197,15 @@ class HomeControllerTest {
     }
 
     @Test
+    void restoreConstruction_firestoreError_returns503() throws Exception {
+        when(firestoreService.getSaveItems(SAVE_ID)).thenThrow(new RuntimeException("Firestore unavailable"));
+        when(dao.restore(SAVE_ID)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/rec/" + SAVE_ID))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
     void saveConstruction_firestoreException_stillRedirectsToRec() throws Exception {
         doThrow(new RuntimeException("Firestore error"))
                 .when(firestoreService).saveSaves(anyString(), any(), anyList(), anyMap());
