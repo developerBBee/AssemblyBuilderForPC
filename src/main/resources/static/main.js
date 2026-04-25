@@ -67,6 +67,7 @@ window.onload = function() {
         sessionStorage.setItem('auth_done', 'true');
 
         // 未移行の guestId があれば Firestore へ移行する
+        let shouldReload = true;
         const existingGuestId = localStorage.getItem('guestid');
         if (existingGuestId && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
             && localStorage.getItem('migration_completed') !== 'true') {
@@ -87,16 +88,23 @@ window.onload = function() {
             } else if (migrateRes.status >= 400 && migrateRes.status < 500) {
               // 4xx はリトライしても解消しないため再試行させない
               localStorage.setItem('migration_completed', 'true');
+              localStorage.removeItem('guestid');
               console.log('Migration skipped (non-retryable): ' + migrateRes.status);
             } else {
+              // 5xx は次回ロード時に再試行させるためリロードしない（ループ防止）
+              shouldReload = false;
               console.log('Migration API error: ' + migrateRes.status);
             }
           } catch (e) {
+            // ネットワークエラー時も同様にリロードしない
+            shouldReload = false;
             console.log('Migration error: ' + e.message);
           }
         }
 
-        location.replace(location.pathname + location.search + location.hash);
+        if (shouldReload) {
+          location.replace(location.pathname + location.search + location.hash);
+        }
       } catch (e) {
         console.log('Firebase auth error (inner): ' + e.message);
       }
