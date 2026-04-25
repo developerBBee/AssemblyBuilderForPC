@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Locale;
+
 @RestController
 @RequestMapping("api/migrate")
 public class MigrationController {
@@ -42,7 +44,7 @@ public class MigrationController {
                     .body(new MigrationResponse(false, "guestId must be a 32-character hex string"));
         }
         try {
-            boolean migrated = migrationService.migrate(request.idToken, request.guestId.toLowerCase());
+            boolean migrated = migrationService.migrate(request.idToken, request.guestId.toLowerCase(Locale.ROOT));
             String message = migrated ? "Migration successful" : "Already migrated";
             return ResponseEntity.ok(new MigrationResponse(true, message));
         } catch (Exception e) {
