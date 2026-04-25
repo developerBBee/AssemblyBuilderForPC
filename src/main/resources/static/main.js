@@ -1,34 +1,6 @@
 'use strict';
 
-var guestId = localStorage.getItem('guestid');
-if(guestId === null || guestId.length != 32) {
-  guestId = generateUuid().replaceAll('-', '');
-  localStorage.setItem('guestid', guestId);
-  console.log('Save guestId ' + guestId);
-}
-const gids = document.querySelectorAll('.gid');
-gids.forEach(gid => {
-  gid.value = guestId;
-});
-const structure = document.getElementById('structure');
-structure.href += '?guestId=' + guestId;
-var link = window.location.href
-console.log(link);
-if (link == 'http://localhost:8080/' || link == 'http://pcbuilding.link/' || link == 'http://www.pcbuilding.link/'
-        || link == 'https://localhost/' || link == 'https://pcbuilding.link/' || link == 'https://www.pcbuilding.link/') {
-  var url = new URL(link);
-  url.searchParams.append('guestId', guestId);
-  location.href = url; // redirect
-}
 checkedTotal();
-
-// var link = window.location.href;
-// var url = new URL(link);
-// if (!url.searchParams.get('guestId')) {
-//   url.searchParams.append('guestId', guestId);
-//   location.href = url;
-//   console.log('guestId ' + guestId);
-// }
 
 // 登録（submit）した際に、ページが上に移動するのを防ぐために、何pxスクロールしたかを求めるjavascriptです。
 window.onscroll = function() {
@@ -44,8 +16,110 @@ window.onscroll = function() {
 window.onload = function() {
   const body = window.document.body;
   scrollTo(0, body.getAttribute('data-scroll'));
-}
+};
 
+
+// Firebase Anonymous Auth - idToken を POST で送信してサーバーセッションを確立する（URLに露出させない）
+(async function initFirebaseAuth() {
+  try {
+    // 同一タブ内で認証済みの場合はサーバーセッションを確認する
+    if (sessionStorage.getItem('auth_done') === 'true') {
+      const existingGuestId = localStorage.getItem('guestid');
+      const hasPendingMigration = existingGuestId
+        && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
+        && localStorage.getItem('migration_completed') !== 'true';
+      const check = await fetch('/api/session', { credentials: 'same-origin' });
+      if (!hasPendingMigration && check.ok) return;
+      if (!check.ok) {
+        // セッション失効: 再認証後に isFirstAuthInTab=true となるよう両フラグをクリア
+        sessionStorage.removeItem('auth_done');
+        sessionStorage.removeItem('session_established');
+      }
+      // hasPendingMigration=true かつ check.ok: セッションは有効だが移行未完了のため再認証して移行を実行
+    }
+
+    const res = await fetch('/api/firebase/config');
+    if (!res.ok) throw new Error('Failed to fetch Firebase config: ' + res.status);
+    const config = await res.json();
+
+    const app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(config);
+    const auth = app.auth();
+
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      unsubscribe();
+      try {
+        if (!user) {
+          user = (await auth.signInAnonymously()).user;
+        }
+        console.log('Firebase signed in. uid=' + user.uid);
+
+        const idToken = await user.getIdToken();
+        // idToken をリクエストボディでPOSTし、URLに載せてログ・履歴に残らないようにする
+        const sessionRes = await fetch('/api/session', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: idToken })
+        });
+        if (!sessionRes.ok) {
+          console.log('Firebase session error: ' + sessionRes.status);
+          return;
+        }
+        sessionStorage.setItem('auth_done', 'true');
+
+        // 未移行の guestId があれば Firestore へ移行する
+        // guestid は Firebase 導入前の旧コードで localStorage に保存されたもの。
+        // 新規ユーザーには存在せず、既存ユーザーの一回限りのデータ移行にのみ使用する。
+        // 初回認証後は常にリロード（サーバーセッション確立後の表示反映）
+        // 同一タブ内での再試行時は 5xx/エラーでリロードしない（ループ防止）
+        const isFirstAuthInTab = !sessionStorage.getItem('session_established');
+        sessionStorage.setItem('session_established', 'true');
+        let shouldReload = isFirstAuthInTab;
+
+        const existingGuestId = localStorage.getItem('guestid');
+        if (existingGuestId && /^[0-9a-fA-F]{32}$/.test(existingGuestId)
+            && localStorage.getItem('migration_completed') !== 'true') {
+          try {
+            const migrateRes = await fetch('/api/migrate', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken: idToken, guestId: existingGuestId.toLowerCase() })
+            });
+            if (migrateRes.ok) {
+              const result = await migrateRes.json();
+              console.log('Migration: ' + result.message);
+              if (result.success) {
+                localStorage.setItem('migration_completed', 'true');
+                localStorage.removeItem('guestid');
+                shouldReload = true; // 移行成功時は常にリロード（移行後データ表示のため）
+              }
+            } else if (migrateRes.status >= 400 && migrateRes.status < 500) {
+              // 4xx はリトライしても解消しないため再試行させない
+              localStorage.setItem('migration_completed', 'true');
+              localStorage.removeItem('guestid');
+              console.log('Migration skipped (non-retryable): ' + migrateRes.status);
+            } else {
+              // 5xx: 初回認証後はリロード（認証済みビュー表示のため）
+              // 同一タブ内の再試行では isFirstAuthInTab=false のためリロードせずループを防止
+              console.log('Migration API error: ' + migrateRes.status);
+            }
+          } catch (e) {
+            console.log('Migration error: ' + e.message);
+          }
+        }
+
+        if (shouldReload) {
+          location.replace(location.pathname + location.search + location.hash);
+        }
+      } catch (e) {
+        console.log('Firebase auth error (inner): ' + e.message);
+      }
+    });
+  } catch (e) {
+    console.log('Firebase auth error: ' + e.message);
+  }
+})();
 
 function generateUuid() {
   // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js
@@ -191,12 +265,7 @@ function checkedTotal() {
     }
   }
   // save機能
-  if (saveList.hasChildNodes && guestId != null) {
-    const input_data = document.createElement('input');
-    input_data.type = 'text';
-    input_data.name = 'guestId'; 
-    input_data.value = guestId;
-    saveList.appendChild(input_data);
+  if (saveList.hasChildNodes()) {
     saveButton.disabled = false;
   }
   const totalPriceTxt = document.getElementById('totalprice');

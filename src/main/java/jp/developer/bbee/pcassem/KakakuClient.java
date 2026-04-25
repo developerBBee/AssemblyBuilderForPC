@@ -1,16 +1,26 @@
 package jp.developer.bbee.pcassem;
 
-import jp.developer.bbee.pcassem.HomeController.DeviceInfo;
+import jp.developer.bbee.pcassem.model.DeviceInfo;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.UncheckedIOException;
+import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static jp.developer.bbee.pcassem.HomeController.formatter;
 
