@@ -47,9 +47,13 @@ data class UserAssem(
 
 ### nullability の判断
 - `@NonNull` アノテーション付き → `String`（non-null）
-- アノテーションなし、または DB から取得する値 → `String?`（nullable）
+- `@Nullable` アノテーション付き → `String?`（nullable）
 - プリミティブ型（`int`, `boolean`等）→ Kotlin では `Int`, `Boolean`（non-null）
 - ラッパー型（`Integer`, `Boolean`）→ `Int?`, `Boolean?`
+- アノテーションなし → **DBスキーマとDAOの組み立て方を確認して判断する**。
+  `NOT NULL` 制約があり DAO 側でも常に値が入ることが保証されるなら non-null のまま。
+  `NULL` 許容カラムや `JdbcTemplate` の `Map<String, Object>` から取得する値（null が入り得る）は `?` を付ける。
+  一律 `?` にすると呼び出し側の `?.` / `?:` が増えてドメインの意図が見えにくくなるため、過剰な nullable 化は避けること。
 
 ### record のコンパニオンメソッド
 
@@ -71,7 +75,7 @@ data class DeviceInfo(...) {
     companion object {
         private const val DEFAULT = "20000101"
 
-        fun from(result: Map<String, Any>): DeviceInfo { ... }
+        fun from(result: Map<String, Any?>): DeviceInfo { ... }
 
         private fun toInteger(value: Any?): Int? { ... }
     }
@@ -301,7 +305,7 @@ val map = hashMapOf("key" to "value")
 変換後のファイルは元の Java ファイルと **同じディレクトリ** に置く。
 
 ```
-src/main/java/jp/developer/bbee/pcassem/
+src/main/java/jp/developer/bbee/pcassem/constants/
   ApiEndPoint.java      ← 削除
   ApiEndPoint.kt        ← 新規（同パッケージ）
 ```
