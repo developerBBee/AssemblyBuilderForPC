@@ -1,0 +1,19 @@
+{
+  "enabledPlugins": {
+    "kotlin-lsp@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw test*)",
+      "Bash(./mvnw package*)",
+      "Bash(./mvnw compile*)",
+      "Bash(./mvnw dependency:tree*)",
+      "Bash(./mvnw spring-boot:run*)",
+      "Bash(kotlinc *)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
+    ]
+  }
+}
