@@ -19,7 +19,9 @@ class GeminiServiceImpl(@Value("\${gemini.api.key}") key: String) : GeminiServic
     override fun getReview(prompt: String): ReviewResponse {
         return try {
             val response = geminiClient.models.generateContent(MODEL_NAME, prompt, null)
-            ReviewResponse(ReviewSuccess(response.text() ?: ""))
+            val text = response.text()
+            if (text != null) ReviewResponse(ReviewSuccess(text))
+            else ReviewResponse(ReviewFailure("レビューの取得に失敗しました（空レスポンス）"))
         } catch (e: Exception) {
             logger.error("Error during Gemini API call", e)
             ReviewResponse(ReviewFailure(e.message ?: "レビューの取得に失敗しました"))
