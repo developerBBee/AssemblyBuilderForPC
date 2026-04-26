@@ -111,7 +111,9 @@ Kotlin コンパイラは Java コンパイラより **先に** 動く必要が�
 ## 注意点
 
 - **混在ビルド（Java + Kotlin）**: 上記スニペットでは Kotlin ファイルも `src/main/java/` 配下に置く前提で `sourceDir` を設定している。`src/main/kotlin/` を別途設けたい場合は `<sourceDir>` にそのパスも追加すること。完全移行後は Java の `sourceDir` エントリを削除してよい。
-- **`-Xjsr305=strict`**: `@NonNull`/`@Nullable` アノテーションを Kotlin の
-  non-null/nullable 型として厳格に扱う。Spring のアノテーションが正しく解釈される。
+- **`-Xjsr305=strict`**: JSR-305（`javax.annotation` 系）の nullability アノテーションを
+  Kotlin の non-null/nullable 型として厳格に扱うための設定。
+  `org.springframework.lang.NonNull/Nullable` は JSR-305 の対象外であり、
+  Kotlin 側の type enhancement により解釈されるため、このフラグとは別の仕組みで機能する。
 - **`spring` allopen プラグイン**: `@Component`, `@Service`, `@Controller` 等に
   自動で `open` を付与し、Spring の CGLIB プロキシが正常動作するようにする。
