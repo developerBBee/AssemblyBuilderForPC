@@ -27,9 +27,7 @@ class ApiResponseControllerTest {
             val year = ymd / 10000
             val month = ymd / 100 % 100
             val day = ymd % 100
-            println("$i $ldt $ymd $year/$month/$day")
-
-            assertTrue(year >= 2023)
+assertTrue(year >= 2023)
             assertTrue(month in 1..12)
 
             when (month) {

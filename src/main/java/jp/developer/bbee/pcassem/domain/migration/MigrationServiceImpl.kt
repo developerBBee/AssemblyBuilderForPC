@@ -1,9 +1,10 @@
 package jp.developer.bbee.pcassem.domain.migration
 
-import com.google.firebase.auth.FirebaseAuth
 import jp.developer.bbee.pcassem.DeviceInfoDao
 import jp.developer.bbee.pcassem.UidMappingDao
+import jp.developer.bbee.pcassem.domain.auth.IdTokenVerifier
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -11,17 +12,20 @@ class MigrationServiceImpl(
     private val dao: DeviceInfoDao,
     private val uidMappingDao: UidMappingDao,
     private val firestoreService: FirestoreService,
+    private val idTokenVerifier: IdTokenVerifier,
 ) : MigrationService {
 
+    private val logger = LoggerFactory.getLogger(MigrationServiceImpl::class.java)
+
     override fun migrate(idToken: String, guestId: String): Boolean {
-        val firebaseUid = FirebaseAuth.getInstance().verifyIdToken(idToken).uid
+        val firebaseUid = idTokenVerifier.verifyAndGetUid(idToken)
 
         if (uidMappingDao.findByFirebaseUid(firebaseUid) != null) {
-            println("[Migration] Already migrated. uid=$firebaseUid")
+            logger.info("[Migration] Already migrated. uid={}", firebaseUid)
             return false
         }
         if (uidMappingDao.findByGuestId(guestId) != null) {
-            println("[Migration] guestId already migrated under a different uid. guestId=$guestId")
+            logger.info("[Migration] guestId already migrated under a different uid. guestId={}", guestId)
             return false
         }
 
@@ -37,7 +41,7 @@ class MigrationServiceImpl(
 
         uidMappingDao.insert(firebaseUid, guestId)
 
-        println("[Migration] Completed. uid=$firebaseUid assemblies=${assemblies.size} saves=${saveHeads.size}")
+        logger.info("[Migration] Completed. uid={} assemblies={} saves={}", firebaseUid, assemblies.size, saveHeads.size)
         return true
     }
 }

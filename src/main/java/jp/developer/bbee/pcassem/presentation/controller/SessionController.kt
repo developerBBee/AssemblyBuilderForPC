@@ -35,7 +35,7 @@ class SessionController(private val idTokenVerifier: IdTokenVerifier) {
             request.getSession(true).setAttribute("firebaseUid", uid)
             ResponseEntity.ok().build()
         } catch (e: Exception) {
-            logger.warn("[SessionController] Failed to verify idToken: {}", e.message)
+            logger.warn("[SessionController] Failed to verify idToken: {}", e.message, e)
             ResponseEntity.status(401).build()
         }
     }
