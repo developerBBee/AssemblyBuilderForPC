@@ -35,16 +35,16 @@ public record UserAssem(String id, String deviceid, String device,
 
 ```kotlin
 // Kotlin
-// 注: このリポジトリでは JdbcTemplate の Map<String, Object> から組み立てるため
-// 全フィールドが null を取り得る。DBスキーマで NOT NULL が保証されるフィールドは
-// non-null にしてよい（nullability の判断を参照）。
+// 注: DeviceInfoDao は r.get("id").toString() / ((Timestamp) r.get("createddate")).toLocalDateTime()
+// のように null チェックなしでアクセスしている。null が来れば NPE になるため、
+// DAOのアクセスパターンから全フィールドが non-null 前提と判断できる。
 data class UserAssem(
-    val id: String?,
-    val deviceid: String?,
-    val device: String?,
-    val guestid: String?,
-    val createddate: LocalDateTime?,
-    val lastupdate: LocalDateTime?
+    val id: String,
+    val deviceid: String,
+    val device: String,
+    val guestid: String,
+    val createddate: LocalDateTime,
+    val lastupdate: LocalDateTime
 )
 ```
 
@@ -53,10 +53,10 @@ data class UserAssem(
 - `@Nullable` アノテーション付き → `String?`（nullable）
 - プリミティブ型（`int`, `boolean`等）→ Kotlin では `Int`, `Boolean`（non-null）
 - ラッパー型（`Integer`, `Boolean`）→ `Int?`, `Boolean?`
-- アノテーションなし → **DBスキーマとDAOの組み立て方を確認して判断する**。
-  `NOT NULL` 制約があり DAO 側でも常に値が入ることが保証されるなら non-null のまま。
-  `NULL` 許容カラムや `JdbcTemplate` の `Map<String, Object>` から取得する値（null が入り得る）は `?` を付ける。
-  一律 `?` にすると呼び出し側の `?.` / `?:` が増えてドメインの意図が見えにくくなるため、過剰な nullable 化は避けること。
+- アノテーションなし → **フィールドごとにDBスキーマとDAOのアクセスパターンを確認して判断する**。
+  DAO が null チェックなしで `.toString()` やキャストを呼んでいるなら non-null 前提。
+  `NULL` 許容カラムで DAO が null を返し得る場合のみ `?` を付ける。
+  JdbcTemplate 経由だからといって一律 `?` にしてはならない。過剰な nullable 化は呼び出し側の `?.` / `?:` を増やしドメインの意図を損なう。
 
 ### record のコンパニオンメソッド
 

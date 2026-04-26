@@ -20,8 +20,9 @@ mechanical transliteration.
 
 ### Step 1 – Assess the build (Maven)
 
-Read `pom.xml`. If `kotlin-stdlib` and `kotlin-maven-plugin` are not yet
-present, add them before converting any source files. See
+Read `pom.xml`. If `kotlin-stdlib-jdk8` and `kotlin-maven-plugin` are not yet
+present, add them before converting any source files. The setup also requires
+`jackson-module-kotlin` and `kotlin-reflect`. See
 [references/maven-setup.md](references/maven-setup.md) for the exact snippet.
 
 Skip this step if Kotlin is already configured.
