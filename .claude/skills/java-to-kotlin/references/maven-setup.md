@@ -50,6 +50,8 @@ Kotlin コンパイラは Java コンパイラより **先に** 動く必要が�
             <!-- JPA エンティティ用（JPAを使う場合のみ） -->
             <!-- <plugin>jpa</plugin> -->
         </compilerPlugins>
+        <!-- pom.xml の java.version と揃える。省略するとデフォルト 1.8 でコンパイルされる -->
+        <jvmTarget>${java.version}</jvmTarget>
     </configuration>
     <dependencies>
         <dependency>
