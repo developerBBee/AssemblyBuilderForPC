@@ -14,9 +14,9 @@ class ApiResponseControllerTest {
 
     @Test
     fun getUpdateMapTest() {
-        val now = LocalDateTime.now()
+        val base = LocalDateTime.of(2023, 5, 5, 0, 0)
         for (i in 0 until 1000) {
-            val ldt = now.plusDays(i.toLong())
+            val ldt = base.plusDays(i.toLong())
 
             @Suppress("UNCHECKED_CAST")
             val m = method.invoke(controller, ldt) as Map<String, Int>
@@ -27,7 +27,7 @@ class ApiResponseControllerTest {
             val year = ymd / 10000
             val month = ymd / 100 % 100
             val day = ymd % 100
-assertTrue(year >= 2023)
+            assertTrue(year >= 2023)
             assertTrue(month in 1..12)
 
             when (month) {
