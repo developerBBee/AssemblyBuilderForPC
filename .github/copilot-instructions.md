@@ -52,7 +52,7 @@ domain/migration/MigrationServiceImpl ゲストIDとFirebase UIDのマッピン�
 ### 高優先度
 - **SQLインジェクション**: `JdbcTemplate` のクエリに文字列結合が含まれていないか確認。パラメータは必ず `?` プレースホルダーを使うこと。
 - **Thymeleaf XSS**: `th:utext` の使用箇所。ユーザー入力が含まれる場合は `th:text` を使うこと。
-- **Firebase IDトークン検証**: `FirebaseIdTokenVerifier` を経由せずに uid を直接信頼するコードは NG。
+- **Firebase IDトークン検証**: uid を直接信頼せず、必ず idToken を検証してから UID を取得すること。実装は `IdTokenVerifier` / `FirebaseIdTokenVerifier` の利用を推奨するが、`FirebaseAuth.getInstance().verifyIdToken(...)` による検証も許容する（`MigrationServiceImpl` 参照）。
 - **guestId バリデーション**: `POST /api/migrate` など guestId を受け取るエンドポイントで `matches("[0-9a-fA-F]{32}")` の正規表現チェックが行われているか。新規エンドポイントは `HttpSession.firebaseUid` を使うこと（guestId は移行専用）。
 - **Firestore 例外処理**: Firestore が失敗したとき、H2 フォールバックではなく 503 を返すこと（既修正済み設計）。
 
