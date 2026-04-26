@@ -19,6 +19,10 @@ class MigrationController(private val migrationService: MigrationService) {
 
     private val logger = LoggerFactory.getLogger(MigrationController::class.java)
 
+    companion object {
+        private val GUEST_ID_REGEX = Regex("[0-9a-fA-F]{32}")
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleInvalidBody(): ResponseEntity<MigrationResponse> =
         ResponseEntity.badRequest().body(MigrationResponse(false, "Invalid request body"))
@@ -30,7 +34,7 @@ class MigrationController(private val migrationService: MigrationService) {
         if (idToken.isNullOrBlank()) {
             return ResponseEntity.badRequest().body(MigrationResponse(false, "idToken is required"))
         }
-        if (guestId == null || !guestId.matches(Regex("[0-9a-fA-F]{32}"))) {
+        if (guestId == null || !guestId.matches(GUEST_ID_REGEX)) {
             return ResponseEntity.badRequest().body(MigrationResponse(false, "guestId must be a 32-character hex string"))
         }
         return try {
