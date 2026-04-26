@@ -32,7 +32,7 @@
 - [ ] SQL は `JdbcTemplate` のプレースホルダー（`?`）を使っている
 - [ ] ユーザー入力を Thymeleaf で表示する場合は `th:text` を使っている
 - [ ] Firebase IDトークンは `FirebaseIdTokenVerifier` 経由で検証している
-- [ ] エンドポイントで `guestId.length() == 32` を確認している
+- [ ] エンドポイントに応じて、legacy `guestId` は `matches("[0-9a-fA-F]{32}")` で検証し、認証必須のエンドポイントは `HttpSession` の `firebaseUid` を用いていることを確認した
 
 ## 関連 Issue / PR
 

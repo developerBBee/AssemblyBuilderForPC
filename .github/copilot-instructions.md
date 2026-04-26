@@ -13,8 +13,8 @@ kakaku.com から価格データをスクレイピングし、Gemini AI によ�
 ```
 presentation/
   controller/GeminiReviewController    POST /api/gemini/review
-  controller/MigrationController       Firebase UID → guestId 移行
-  controller/SessionController         ゲストセッション管理
+  controller/MigrationController       レガシー guestId データ → Firestore（Firebase UID 配下）への移行
+  controller/SessionController         Firebase idToken 検証 → HttpSession に firebaseUid を保持
   controller/FirebaseWebConfigController Firebase 設定配信
   data/ReviewRequest|Response|...      リクエスト/レスポンスDTO
 HomeController                         MVC: 全ページルーティング + アセンブリ管理
@@ -30,14 +30,16 @@ domain/migration/MigrationServiceImpl ゲストIDとFirebase UIDのマッピン�
 ## Database Schema (H2)
 
 - `devices` — パーツカタログ（`device` カラムでパーツ種別を区別、19種類）
-- `assemblies` — ユーザーの選択パーツ（`guestid` で紐付け）
+- `assemblies` — **レガシー/移行用テーブル**。旧ゲスト構成の移行処理でのみ参照。**現在のユーザー選択パーツのソースオブトゥルースではない**
 - `savehead` / `savelist` — 保存済み構成（`saveid` がそのまま公開URLになる）
 - `systemvals` — 最終価格更新日時
 - `uid_mapping` — Firebase UID と guestId のマッピング（移行用）
 
+**Note:** ログインユーザーの構成データは Firestore `users/{firebaseUid}/assemblies` に保存される。新機能や保守でユーザー選択パーツの永続化先として H2 `assemblies` を前提にしないこと。
+
 ## Key Design Decisions (Do NOT flag these as issues)
 
-- **認証なし設計**: ゲストID（32文字UUID、クライアント保持）による識別のみ。`guestId.length() == 32` でのバリデーションは意図的。
+- **認証/セッション設計**: Firebase Anonymous Auth を使用し、サーバー側 `HttpSession` に `firebaseUid` を保持して識別する。`guestId` は移行処理（`POST /api/migrate`）でのみ参照されるレガシー識別子であり、使用時のバリデーションは `matches("[0-9a-fA-F]{32}")` の正規表現で行う。
 - **H2 はプロダクション DB**: テスト用ではなく本番でも H2 を使用。インメモリではなくファイル永続化。
 - **TimerTask によるスケジューリング**: 起動時 + 毎日4:00 AM にスクレイピング実行。Spring Scheduler ではなく TimerTask を意図的に使用。
 - **価格更新間隔**: 週1回フルスキャン（165時間ごと）、それ以外は差分更新。マジックナンバー 165 は意図的な設定値。
@@ -51,7 +53,7 @@ domain/migration/MigrationServiceImpl ゲストIDとFirebase UIDのマッピン�
 - **SQLインジェクション**: `JdbcTemplate` のクエリに文字列結合が含まれていないか確認。パラメータは必ず `?` プレースホルダーを使うこと。
 - **Thymeleaf XSS**: `th:utext` の使用箇所。ユーザー入力が含まれる場合は `th:text` を使うこと。
 - **Firebase IDトークン検証**: `FirebaseIdTokenVerifier` を経由せずに uid を直接信頼するコードは NG。
-- **guestId バリデーション**: エンドポイントで `guestId.length() == 32` チェックが抜けていないか。
+- **guestId バリデーション**: `POST /api/migrate` など guestId を受け取るエンドポイントで `matches("[0-9a-fA-F]{32}")` の正規表現チェックが行われているか。新規エンドポイントは `HttpSession.firebaseUid` を使うこと（guestId は移行専用）。
 - **Firestore 例外処理**: Firestore が失敗したとき、H2 フォールバックではなく 503 を返すこと（既修正済み設計）。
 
 ### 中優先度
