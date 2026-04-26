@@ -12,7 +12,7 @@ interface FirestoreService {
     @Throws(Exception::class)
     fun saveSaves(
         firebaseUid: String,
-        guestId: String,
+        guestId: String?,
         saveHeads: List<SaveHead>,
         saveItemsMap: Map<String, @JvmSuppressWildcards List<SaveItem>>,
     )
