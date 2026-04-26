@@ -38,13 +38,14 @@ Kotlin コンパイラは Java コンパイラより **先に** 動く必要が�
 <plugin>
     <groupId>org.jetbrains.kotlin</groupId>
     <artifactId>kotlin-maven-plugin</artifactId>
+    <version>${kotlin.version}</version>
     <configuration>
         <args>
-            <!-- Spring の open クラス（proxy 生成）に対応 -->
+            <!-- JSR-305（@Nullable / @NonNull など）の nullability 解釈を strict にする -->
             <arg>-Xjsr305=strict</arg>
         </args>
         <compilerPlugins>
-            <!-- Spring コンポーネントに open を自動付与 -->
+            <!-- Spring コンポーネントに open を自動付与（proxy 生成対応） -->
             <plugin>spring</plugin>
             <!-- JPA エンティティ用（JPAを使う場合のみ） -->
             <!-- <plugin>jpa</plugin> -->
@@ -107,8 +108,7 @@ Kotlin コンパイラは Java コンパイラより **先に** 動く必要が�
 
 ## 注意点
 
-- **混在ビルド（Java + Kotlin）**: `sourceDir` に両方のパスを含める。
-  完全移行後は Java の `sourceDir` を削除してよい。
+- **混在ビルド（Java + Kotlin）**: 上記スニペットでは Kotlin ファイルも `src/main/java/` 配下に置く前提で `sourceDir` を設定している。`src/main/kotlin/` を別途設けたい場合は `<sourceDir>` にそのパスも追加すること。完全移行後は Java の `sourceDir` エントリを削除してよい。
 - **`-Xjsr305=strict`**: `@NonNull`/`@Nullable` アノテーションを Kotlin の
   non-null/nullable 型として厳格に扱う。Spring のアノテーションが正しく解釈される。
 - **`spring` allopen プラグイン**: `@Component`, `@Service`, `@Controller` 等に

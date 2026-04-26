@@ -289,7 +289,7 @@ val map = hashMapOf("key" to "value")
 | `@NonNull`               | Non-null 型（`String`）         | 型で表現するためアノテーション不要 |
 | `@Nullable`              | Nullable 型（`String?`）        | 同上 |
 | `@Component` 等          | そのまま使用可                  | allopen プラグインが `open` を付与 |
-| `@JvmRecord`（Java 16+）  | 不要（Kotlin の `data class` を使う） | |
+| `record`（Java 16+）      | `data class`（通常）/ `@JvmRecord` を付与した `data class`（Java との相互運用が必要な場合のみ） | `@JvmRecord` は Kotlin 側のアノテーション。Java の `record` と ABI 互換が必要なときのみ検討 |
 | `@JvmStatic`             | `companion object` 内のメソッドに付与 | Java から静的呼び出しされる場合のみ必要 |
 | `@JvmField`              | `companion object` のフィールドに付与 | Java から `Foo.FIELD` でアクセスされる場合のみ必要 |
 | `@Throws(IOException::class)` | Java から呼ばれる場合に付与 | Kotlin→Kotlin のみなら不要 |
