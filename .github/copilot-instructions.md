@@ -64,9 +64,9 @@ domain/migration/MigrationServiceImpl ゲストIDとFirebase UIDのマッピン�
 
 ### Kotlin 移行時の追加確認事項
 - Java の `null` を返すメソッドを Kotlin から呼ぶ際のプラットフォーム型（`T!`）の扱い。
-- `data class` を使う場合は `@JvmRecord` 相当の互換性を意識すること。
+- Java 側の `record` と相互運用する必要がある場合にのみ、Kotlin の `data class` で `@JvmRecord` の適用可否を検討すること。
 - Spring Bean の `@Autowired` は Kotlin では constructor injection を優先すること。
-- Kotlin の `object` / `companion object` を Java の `static` メソッドの代替として使う際の JVM 相互運用性。
+- Kotlin の `object` / `companion object` を使う場合、Java から `static` 相当として呼び出す必要がある箇所では JVM 相互運用性を確認すること。
 - coroutines を導入する場合は `@Async` との混在を避けること。
 
 ## What NOT to flag
