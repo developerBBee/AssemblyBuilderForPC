@@ -35,6 +35,9 @@ public record UserAssem(String id, String deviceid, String device,
 
 ```kotlin
 // Kotlin
+// 注: このリポジトリでは JdbcTemplate の Map<String, Object> から組み立てるため
+// 全フィールドが null を取り得る。DBスキーマで NOT NULL が保証されるフィールドは
+// non-null にしてよい（nullability の判断を参照）。
 data class UserAssem(
     val id: String?,
     val deviceid: String?,

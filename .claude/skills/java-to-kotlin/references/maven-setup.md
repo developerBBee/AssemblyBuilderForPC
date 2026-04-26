@@ -7,10 +7,10 @@ Spring Boot + Kotlin を Maven で使うために必要な最小構成を示す�
 `<dependencies>` 内に追加:
 
 ```xml
-<!-- Kotlin stdlib (JDK 8+ API のラッパーを含む) -->
+<!-- Kotlin stdlib（Spring Boot 2.x / Kotlin 1.6系では jdk8 拡張が別artifact） -->
 <dependency>
     <groupId>org.jetbrains.kotlin</groupId>
-    <artifactId>kotlin-stdlib</artifactId>
+    <artifactId>kotlin-stdlib-jdk8</artifactId>
 </dependency>
 
 <!-- Jackson の Kotlin サポート（JSON シリアライズ）-->
