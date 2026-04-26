@@ -26,7 +26,7 @@ public class GeminiServiceImpl implements GeminiService {
             return new ReviewResponse(successData);
         } catch (Exception e) {
             System.out.println("Error during Gemini API call: " + e.getMessage());
-            var failureData = new ReviewFailure(e.getMessage());
+            var failureData = new ReviewFailure(e.toString());
             return new ReviewResponse(failureData);
         }
     }
