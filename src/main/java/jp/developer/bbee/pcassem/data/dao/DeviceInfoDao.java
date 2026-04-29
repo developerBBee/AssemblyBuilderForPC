@@ -1,6 +1,6 @@
 package jp.developer.bbee.pcassem.data.dao;
 
-import jp.developer.bbee.pcassem.presentation.controller.HomeController.RestoreDevice;
+import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
 import jp.developer.bbee.pcassem.domain.DateTimeConst;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
 import jp.developer.bbee.pcassem.domain.model.SaveHead;

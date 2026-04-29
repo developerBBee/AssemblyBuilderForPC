@@ -5,6 +5,7 @@ import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.domain.PriceUpdateService;
 import jp.developer.bbee.pcassem.presentation.controller.HomeController;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
+import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
 import jp.developer.bbee.pcassem.domain.model.SaveHead;
 import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import org.junit.jupiter.api.BeforeEach;
@@ -177,7 +178,7 @@ class HomeControllerTest {
 
     @Test
     void restoreConstruction_firestoreMiss_h2Hit_returnsRestoredList() throws Exception {
-        HomeController.RestoreDevice rd = new HomeController.RestoreDevice(
+        RestoreDevice rd = new RestoreDevice(
                 SAVE_ID, "device-001", "cpu", "http://example.com", "Intel Core i9",
                 "http://img.example.com/cpu.jpg", "detail", 50000, 55000);
 
