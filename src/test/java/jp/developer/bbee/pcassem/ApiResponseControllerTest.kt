@@ -10,7 +10,7 @@ class ApiResponseControllerTest {
     private val controller = ApiResponseController(mock(DeviceInfoDao::class.java))
     private val method = ApiResponseController::class.java
         .getDeclaredMethod("getUpdateMap", LocalDateTime::class.java)
-        .also { it.isAccessible = true }
+        .also { check(it.trySetAccessible()) }
 
     @Test
     fun getUpdateMapTest() {
