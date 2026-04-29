@@ -3,6 +3,8 @@ package jp.developer.bbee.pcassem.data.client;
 import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
 import jp.developer.bbee.pcassem.data.util.StringEncoder;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
+import jp.developer.bbee.pcassem.domain.PriceUpdateService;
+import org.springframework.stereotype.Service;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -26,7 +28,8 @@ import java.util.UUID;
 
 import static jp.developer.bbee.pcassem.presentation.controller.HomeController.formatter;
 
-public class KakakuClient {
+@Service
+public class KakakuClient implements PriceUpdateService {
     public static final boolean DEBUG = false;
     public static final boolean DEBUG_FAST = false;
     public static final String KAKAKU_DOMAIN = "kakaku.com";
@@ -76,7 +79,7 @@ public class KakakuClient {
     public static final int FLAG2_DIMM_DDR5 = 1 << 18;
     public static final int FLAG2_SODIMM = 1 << 23; // For determining DIMM(0) or SODIMM(1)
 
-    public boolean unAcquired;
+    private boolean unAcquired;
     private final List<String> devices;
     private final Map<String, String> deviceUrl;
 
@@ -112,6 +115,20 @@ public class KakakuClient {
             device = device.replaceAll("-", "");
             devices.add(device);
             deviceUrl.put(device, url);
+        }
+    }
+
+    @Override
+    public void prepare(boolean fullUpdate) {
+        this.unAcquired = fullUpdate;
+    }
+
+    @Override
+    public void execute() throws IOException {
+        if (unAcquired) {
+            getKakaku();
+        } else {
+            updateKakaku(false);
         }
     }
 
