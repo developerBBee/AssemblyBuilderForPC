@@ -4,7 +4,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
-import jp.developer.bbee.pcassem.data.client.KakakuClient;
+import jp.developer.bbee.pcassem.domain.PriceUpdateService;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
 import jp.developer.bbee.pcassem.domain.model.SaveHead;
@@ -50,7 +50,7 @@ public class HomeController {
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
     private final FirestoreService firestoreService;
-    private final KakakuClient kakakuClient;
+    private final PriceUpdateService priceUpdateService;
 
     private LocalDateTime fullUpdateDate = LocalDateTime.MIN;
 
@@ -61,11 +61,11 @@ public class HomeController {
             "ossoft", "lcdmonitor", "keyboard", "mouse", "dvddrive", "bluraydrive", "soundcard", "pcspeaker", "fancontroller", "casefan"
             );
 
-    @Autowired // <- DAO auto setting
-    public HomeController(DeviceInfoDao dao, FirestoreService firestoreService){
+    @Autowired
+    public HomeController(DeviceInfoDao dao, FirestoreService firestoreService, PriceUpdateService priceUpdateService){
         this.dao = dao;
         this.firestoreService = firestoreService;
-        kakakuClient = new KakakuClient(dao);
+        this.priceUpdateService = priceUpdateService;
         makeDeviceTypeJp();
     }
 
@@ -117,16 +117,12 @@ public class HomeController {
         boolean incomplete = true;
         boolean fullUpdate = (Duration.between(fullUpdateDate, LocalDateTime.now()).toHours() > 165); // 24*7=168
 //        fullUpdate = true; // debug
-        kakakuClient.unAcquired = fullUpdate;
+        priceUpdateService.prepare(fullUpdate);
 
         int loopCount = 0;
         while (incomplete && loopCount <= MAX_RETRY) {
             try {
-                if (kakakuClient.unAcquired && fullUpdate) {
-                    kakakuClient.getKakaku();
-                } else {
-                    kakakuClient.updateKakaku(false);
-                }
+                priceUpdateService.execute();
                 incomplete = false;
                 LocalDateTime lastUpdateDate = LocalDateTime.now();
                 if (fullUpdate) fullUpdateDate = lastUpdateDate;
