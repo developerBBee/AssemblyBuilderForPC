@@ -1,4 +1,4 @@
-package jp.developer.bbee.pcassem.model
+package jp.developer.bbee.pcassem.domain.model
 
 import java.sql.Timestamp
 import java.time.LocalDateTime

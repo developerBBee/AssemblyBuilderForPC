@@ -1,7 +1,8 @@
-package jp.developer.bbee.pcassem
+package jp.developer.bbee.pcassem.presentation.controller
 
-import jp.developer.bbee.pcassem.constants.ApiEndPoint
-import jp.developer.bbee.pcassem.model.DeviceInfo
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao
+import jp.developer.bbee.pcassem.domain.model.DeviceInfo
+import jp.developer.bbee.pcassem.presentation.ApiEndPoint
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam

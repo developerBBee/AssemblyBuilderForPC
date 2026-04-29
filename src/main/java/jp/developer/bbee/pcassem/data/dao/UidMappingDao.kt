@@ -1,4 +1,4 @@
-package jp.developer.bbee.pcassem
+package jp.developer.bbee.pcassem.data.dao
 
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service

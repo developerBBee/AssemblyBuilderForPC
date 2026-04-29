@@ -1,12 +1,14 @@
-package jp.developer.bbee.pcassem;
+package jp.developer.bbee.pcassem.presentation.controller;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
+import jp.developer.bbee.pcassem.data.client.KakakuClient;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
-import jp.developer.bbee.pcassem.model.DeviceInfo;
-import jp.developer.bbee.pcassem.model.SaveHead;
-import jp.developer.bbee.pcassem.model.UserAssem;
+import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
+import jp.developer.bbee.pcassem.domain.model.SaveHead;
+import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +62,7 @@ public class HomeController {
             );
 
     @Autowired // <- DAO auto setting
-    HomeController(DeviceInfoDao dao, FirestoreService firestoreService){
+    public HomeController(DeviceInfoDao dao, FirestoreService firestoreService){
         this.dao = dao;
         this.firestoreService = firestoreService;
         kakakuClient = new KakakuClient(dao);

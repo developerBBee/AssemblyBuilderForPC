@@ -1,12 +1,13 @@
-package jp.developer.bbee.pcassem.model
+package jp.developer.bbee.pcassem.domain.model
 
 import java.time.LocalDateTime
 
 @JvmRecord
-data class SaveHead(
-    val saveid: String,
+data class UserAssem(
+    val id: String,
+    val deviceid: String,
+    val device: String,
     val guestid: String,
-    val savename: String,
     val createddate: LocalDateTime,
     val lastupdate: LocalDateTime,
 )
