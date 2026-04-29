@@ -19,6 +19,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static jp.developer.bbee.pcassem.presentation.controller.HomeController.formatter;
-
 @Service
 public class KakakuClient implements PriceUpdateService {
+    private static final DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     public static final boolean DEBUG = false;
     public static final boolean DEBUG_FAST = false;
     public static final String KAKAKU_DOMAIN = "kakaku.com";

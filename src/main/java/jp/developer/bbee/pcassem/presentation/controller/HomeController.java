@@ -61,7 +61,7 @@ public class HomeController {
             "ossoft", "lcdmonitor", "keyboard", "mouse", "dvddrive", "bluraydrive", "soundcard", "pcspeaker", "fancontroller", "casefan"
             );
 
-    @Autowired // <- DAO auto setting
+    @Autowired
     public HomeController(DeviceInfoDao dao, FirestoreService firestoreService, PriceUpdateService priceUpdateService){
         this.dao = dao;
         this.firestoreService = firestoreService;
