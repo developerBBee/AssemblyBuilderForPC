@@ -3,10 +3,13 @@
 package jp.developer.bbee.pcassem
 
 import java.io.UnsupportedEncodingException
+import java.nio.charset.Charset
+
+private val SJIS_CHARSET: Charset? = try { charset("SJIS") } catch (_: Exception) { null }
 
 @Throws(UnsupportedEncodingException::class)
 fun sjisToUtf8(value: String): String {
-    val sjis = charset("SJIS")
+    val sjis = SJIS_CHARSET ?: throw UnsupportedEncodingException("SJIS")
     var result = String(String(value.toByteArray(sjis), sjis).toByteArray(Charsets.UTF_8), Charsets.UTF_8)
     result = convert(result, "SJIS", "UTF-8")
     return result
@@ -14,7 +17,7 @@ fun sjisToUtf8(value: String): String {
 
 @Throws(UnsupportedEncodingException::class)
 fun utf8ToSjis(value: String): String {
-    val sjis = charset("SJIS")
+    val sjis = SJIS_CHARSET ?: throw UnsupportedEncodingException("SJIS")
     var result = convert(String(value.toByteArray(Charsets.UTF_8), Charsets.UTF_8), "UTF-8", "SJIS")
     result = String(result.toByteArray(sjis), sjis)
     return result

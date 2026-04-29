@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 @Service
 class UidMappingDao(private val jdbcTemplate: JdbcTemplate) {
 
-    data class UidMapping(val firebaseUid: String, val guestId: String?, val migratedAt: LocalDateTime?)
+    data class UidMapping(val firebaseUid: String, val guestId: String, val migratedAt: LocalDateTime?)
 
     fun findByFirebaseUid(firebaseUid: String): UidMapping? {
         val result = jdbcTemplate.queryForList("SELECT * FROM uid_mapping WHERE firebase_uid = ?", firebaseUid)
@@ -30,8 +30,8 @@ class UidMappingDao(private val jdbcTemplate: JdbcTemplate) {
     private fun toRecord(r: Map<String, Any?>): UidMapping {
         val ts = r["migrated_at"] as? Timestamp
         return UidMapping(
-            firebaseUid = r["firebase_uid"].toString(),
-            guestId = r["guest_id"]?.toString(),
+            firebaseUid = requireNotNull(r["firebase_uid"]).toString(),
+            guestId = requireNotNull(r["guest_id"]).toString(),
             migratedAt = ts?.toLocalDateTime(),
         )
     }
