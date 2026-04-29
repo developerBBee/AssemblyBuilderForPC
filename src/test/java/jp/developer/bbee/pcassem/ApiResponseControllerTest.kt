@@ -1,5 +1,7 @@
 package jp.developer.bbee.pcassem
 
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao
+import jp.developer.bbee.pcassem.presentation.controller.ApiResponseController
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock

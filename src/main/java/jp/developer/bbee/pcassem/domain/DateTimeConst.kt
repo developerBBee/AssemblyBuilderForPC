@@ -1,4 +1,4 @@
-package jp.developer.bbee.pcassem.constants
+package jp.developer.bbee.pcassem.domain
 
 import java.time.LocalDateTime
 

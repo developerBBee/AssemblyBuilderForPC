@@ -1,6 +1,8 @@
-package jp.developer.bbee.pcassem;
+package jp.developer.bbee.pcassem.data.client;
 
-import jp.developer.bbee.pcassem.model.DeviceInfo;
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
+import jp.developer.bbee.pcassem.data.util.StringEncoder;
+import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -22,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static jp.developer.bbee.pcassem.HomeController.formatter;
+import static jp.developer.bbee.pcassem.presentation.controller.HomeController.formatter;
 
 public class KakakuClient {
     public static final boolean DEBUG = false;
@@ -78,7 +80,7 @@ public class KakakuClient {
     private final List<String> devices;
     private final Map<String, String> deviceUrl;
 
-    KakakuClient(DeviceInfoDao dao) {
+    public KakakuClient(DeviceInfoDao dao) {
         this.dao = dao;
 
         List<String> urlList = new ArrayList<>();

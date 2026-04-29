@@ -1,7 +1,7 @@
 package jp.developer.bbee.pcassem.domain.migration
 
-import jp.developer.bbee.pcassem.DeviceInfoDao
-import jp.developer.bbee.pcassem.UidMappingDao
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao
+import jp.developer.bbee.pcassem.data.dao.UidMappingDao
 import jp.developer.bbee.pcassem.domain.auth.IdTokenVerifier
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService
 import org.slf4j.LoggerFactory

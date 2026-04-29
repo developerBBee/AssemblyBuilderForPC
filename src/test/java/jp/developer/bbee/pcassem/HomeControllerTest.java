@@ -1,9 +1,11 @@
 package jp.developer.bbee.pcassem;
 
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
-import jp.developer.bbee.pcassem.model.DeviceInfo;
-import jp.developer.bbee.pcassem.model.SaveHead;
-import jp.developer.bbee.pcassem.model.UserAssem;
+import jp.developer.bbee.pcassem.presentation.controller.HomeController;
+import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
+import jp.developer.bbee.pcassem.domain.model.SaveHead;
+import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +17,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import jp.developer.bbee.pcassem.DeviceInfoDao.SaveItem;
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao.SaveItem;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;

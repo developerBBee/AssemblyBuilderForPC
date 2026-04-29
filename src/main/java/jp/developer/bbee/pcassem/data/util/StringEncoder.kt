@@ -1,6 +1,6 @@
 @file:JvmName("StringEncoder")
 
-package jp.developer.bbee.pcassem
+package jp.developer.bbee.pcassem.data.util
 
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset

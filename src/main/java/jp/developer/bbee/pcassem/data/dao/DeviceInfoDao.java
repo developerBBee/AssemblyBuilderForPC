@@ -1,10 +1,10 @@
-package jp.developer.bbee.pcassem;
+package jp.developer.bbee.pcassem.data.dao;
 
-import jp.developer.bbee.pcassem.HomeController.RestoreDevice;
-import jp.developer.bbee.pcassem.constants.DateTimeConst;
-import jp.developer.bbee.pcassem.model.DeviceInfo;
-import jp.developer.bbee.pcassem.model.SaveHead;
-import jp.developer.bbee.pcassem.model.UserAssem;
+import jp.developer.bbee.pcassem.presentation.controller.HomeController.RestoreDevice;
+import jp.developer.bbee.pcassem.domain.DateTimeConst;
+import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
+import jp.developer.bbee.pcassem.domain.model.SaveHead;
+import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
