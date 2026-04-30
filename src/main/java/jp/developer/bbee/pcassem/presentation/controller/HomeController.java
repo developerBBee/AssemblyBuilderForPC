@@ -7,8 +7,13 @@ import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
 import jp.developer.bbee.pcassem.domain.PriceUpdateService;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
+import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
 import jp.developer.bbee.pcassem.domain.model.SaveHead;
 import jp.developer.bbee.pcassem.domain.model.UserAssem;
+import jp.developer.bbee.pcassem.presentation.data.DeviceInfoFormatted;
+import jp.developer.bbee.pcassem.presentation.data.RestoreDeviceFormatted;
+import jp.developer.bbee.pcassem.presentation.data.SaveHeader;
+import jp.developer.bbee.pcassem.presentation.data.SaveRec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,16 +157,6 @@ public class HomeController {
             controller.runTask();
         }
     }
-
-    record DeviceInfoFormatted (String id, String device, String url, String name, String imgurl, String detail, String price, String rank, boolean registered,
-                                String tablestyle, int rowspan, boolean checked, int flag1, int flag2) {}
-
-    record SaveHeader (String url, String text) {
-        static SaveHeader create(SaveHead sh, int index) {
-            return new SaveHeader("/rec/"+ sh.saveid(), CIRCLE_INDEX_5[index]);
-        }
-    }
-    static final String[] CIRCLE_INDEX_5 = {"①", "②", "③", "④", "⑤"};
 
     @GetMapping("/")
     String top(Model model, HttpSession session) {
@@ -530,8 +525,6 @@ public class HomeController {
         return String.format("redirect:/%s", deviceTypeName);
     }
 
-    record SaveRec(List<String> deviceIdList) {}
-
     @PostMapping("/save") // Save assemblies of user's construction.
     String saveConstruction(SaveRec saveRec, HttpSession session) {
         String firebaseUid = (String) session.getAttribute("firebaseUid");
@@ -550,24 +543,6 @@ public class HomeController {
         }
 
         return "redirect:/rec/" + uuid;
-    }
-
-    public record RestoreDevice (String saveid, String deviceid, String device, String url, String name,
-                          String imgurl, String detail, Integer oldprice, Integer newprice) {}
-    record RestoreDeviceFormatted (String saveid, String deviceid, String device, String url, String name,
-                          String imgurl, String detail, String oldprice, String newprice, String diffprice, String color) {
-        static RestoreDeviceFormatted create(RestoreDevice rd) {
-            int op = rd.oldprice();
-            int np = rd.newprice();
-            return new RestoreDeviceFormatted(rd.saveid(), rd.deviceid(), rd.device(), rd.url(), rd.name(),
-                    rd.imgurl(), rd.detail(),
-                    op == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(op),
-                    np == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(np),
-                    (np == 0 || op == 0) ? "" : new DecimalFormat("(+###,###);(-###,###)").format(np-op)
-                            .replace("(+0)", "(±0)"),
-                    np == op ? "black" : np > op ? "red" : "blue"
-            );
-        }
     }
 
     @GetMapping("/rec/{saveId:[0-9a-fA-F]{32}}")
