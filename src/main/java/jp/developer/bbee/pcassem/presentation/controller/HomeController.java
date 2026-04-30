@@ -9,6 +9,7 @@ import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
 import jp.developer.bbee.pcassem.domain.model.SaveHead;
 import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import jp.developer.bbee.pcassem.presentation.data.DeviceInfoFormatted;
+import jp.developer.bbee.pcassem.presentation.data.DeviceType;
 import jp.developer.bbee.pcassem.presentation.data.RestoreDeviceFormatted;
 import jp.developer.bbee.pcassem.presentation.data.SaveHeader;
 import jp.developer.bbee.pcassem.presentation.data.SaveRec;
@@ -46,18 +47,10 @@ public class HomeController {
     private final DeviceInfoDao dao;
     private final FirestoreService firestoreService;
 
-    private final Map<String, String> deviceTypeJp = new HashMap<>();
-
-    private final List<String> deviceTypeList = List.of(
-            "pccase", "motherboard", "powersupply", "cpu", "cpucooler", "pcmemory", "hdd35inch", "ssd", "videocard",
-            "ossoft", "lcdmonitor", "keyboard", "mouse", "dvddrive", "bluraydrive", "soundcard", "pcspeaker", "fancontroller", "casefan"
-            );
-
     @Autowired
     public HomeController(DeviceInfoDao dao, FirestoreService firestoreService){
         this.dao = dao;
         this.firestoreService = firestoreService;
-        makeDeviceTypeJp();
     }
 
     @ModelAttribute
@@ -68,28 +61,6 @@ public class HomeController {
         if (uid != null) {
             model.addAttribute("firebaseUid", uid);
         }
-    }
-
-    private void makeDeviceTypeJp() {
-        deviceTypeJp.put("pccase", "PCケース"); // PC case
-        deviceTypeJp.put("motherboard", "マザーボード"); // Motherboard
-        deviceTypeJp.put("powersupply", "電源"); // Power supply unit
-        deviceTypeJp.put("cpu", "CPU"); // CPU
-        deviceTypeJp.put("cpucooler", "CPUクーラー"); // CPU cooler
-        deviceTypeJp.put("pcmemory", "メモリ"); // Memory
-        deviceTypeJp.put("hdd35inch", "HDD"); // Storage HDD
-        deviceTypeJp.put("ssd", "SSD"); // Storage SSD
-        deviceTypeJp.put("videocard", "グラフィックボード"); // Graphic board
-        deviceTypeJp.put("ossoft", "OS"); // OS soft
-        deviceTypeJp.put("lcdmonitor", "ディスプレイ"); // Display
-        deviceTypeJp.put("keyboard", "キーボード"); // Keyboard
-        deviceTypeJp.put("mouse", "マウス"); // Mouse
-        deviceTypeJp.put("dvddrive", "DVDドライブ"); // DVD media drive
-        deviceTypeJp.put("bluraydrive", "BDドライブ"); // Blue-rya media drive
-        deviceTypeJp.put("soundcard", "サウンドカード"); // Sound card
-        deviceTypeJp.put("pcspeaker", "スピーカー"); // Speaker
-        deviceTypeJp.put("fancontroller", "ファンコントローラー"); // Fan controller
-        deviceTypeJp.put("casefan", "ファン"); // Case fan
     }
 
     @GetMapping("/")
@@ -326,7 +297,7 @@ public class HomeController {
         List<DeviceInfoFormatted> formattedList = new ArrayList<>();
         for (DeviceInfo di : deviceInfoList) {
             formattedList.add(new DeviceInfoFormatted(
-                    di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
+                    di.id(), DeviceType.JP_MAP.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
                     di.rank().toString(), false, "middle", 1, false, di.flag1(), di.flag2()
             ));
@@ -359,7 +330,7 @@ public class HomeController {
             }
 
             formattedList.add(new DeviceInfoFormatted(
-                    di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
+                    di.id(), DeviceType.JP_MAP.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
                     di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
                     di.rank().toString(), false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
             ));
@@ -374,7 +345,7 @@ public class HomeController {
 
     private List<DeviceInfo> sortList(List<DeviceInfo> deviceInfoList) {
         List<DeviceInfo> sortedList = new ArrayList<>();
-        for (String dev : deviceTypeList) {
+        for (String dev : DeviceType.LIST) {
             for (DeviceInfo di : deviceInfoList) {
                 if (dev.equals(di.device())) {
                     sortedList.add(di);
