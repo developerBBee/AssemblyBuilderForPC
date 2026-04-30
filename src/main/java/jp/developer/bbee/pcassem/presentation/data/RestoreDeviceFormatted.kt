@@ -35,6 +35,7 @@ data class RestoreDeviceFormatted(
                 diffprice = if (np == 0 || op == 0) "" else
                     DecimalFormat("(+###,###);(-###,###)").format(np - op).replace("(+0)", "(±0)"),
                 color = when {
+                    np == 0 || op == 0 -> "black"
                     np == op -> "black"
                     np > op -> "red"
                     else -> "blue"
