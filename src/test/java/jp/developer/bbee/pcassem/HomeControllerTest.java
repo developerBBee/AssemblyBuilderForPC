@@ -2,7 +2,6 @@ package jp.developer.bbee.pcassem;
 
 import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
-import jp.developer.bbee.pcassem.domain.PriceUpdateService;
 import jp.developer.bbee.pcassem.presentation.controller.HomeController;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
 import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
@@ -41,9 +40,6 @@ class HomeControllerTest {
     @Mock
     private FirestoreService firestoreService;
 
-    @Mock
-    private PriceUpdateService priceUpdateService;
-
     private MockMvc mockMvc;
 
     private static final String FIREBASE_UID = "firebase-uid-12345";
@@ -54,7 +50,7 @@ class HomeControllerTest {
         when(dao.findRecordByIds(anyList())).thenReturn(Collections.emptyList());
         when(dao.getSaveItemsBySaveId(anyString())).thenReturn(Collections.emptyList());
 
-        HomeController controller = new HomeController(dao, firestoreService, priceUpdateService);
+        HomeController controller = new HomeController(dao, firestoreService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

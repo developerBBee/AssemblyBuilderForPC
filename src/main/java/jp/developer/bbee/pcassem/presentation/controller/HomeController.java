@@ -1,10 +1,8 @@
 package jp.developer.bbee.pcassem.presentation.controller;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
-import jp.developer.bbee.pcassem.domain.PriceUpdateService;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
 import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
@@ -29,12 +27,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,22 +36,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Timer;
 import java.util.stream.Collectors;
-import java.util.TimerTask;
 import java.util.UUID;
 
 @Controller
 public class HomeController {
-    private static final boolean DEBUG = false;
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
-    private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
     private final FirestoreService firestoreService;
-    private final PriceUpdateService priceUpdateService;
-
-    private LocalDateTime fullUpdateDate = LocalDateTime.MIN;
 
     private final Map<String, String> deviceTypeJp = new HashMap<>();
 
@@ -67,10 +54,9 @@ public class HomeController {
             );
 
     @Autowired
-    public HomeController(DeviceInfoDao dao, FirestoreService firestoreService, PriceUpdateService priceUpdateService){
+    public HomeController(DeviceInfoDao dao, FirestoreService firestoreService){
         this.dao = dao;
         this.firestoreService = firestoreService;
-        this.priceUpdateService = priceUpdateService;
         makeDeviceTypeJp();
     }
 
@@ -82,11 +68,6 @@ public class HomeController {
         if (uid != null) {
             model.addAttribute("firebaseUid", uid);
         }
-    }
-
-    @PostConstruct
-    void init() {
-        updateKakaku();
     }
 
     private void makeDeviceTypeJp() {
@@ -109,53 +90,6 @@ public class HomeController {
         deviceTypeJp.put("pcspeaker", "スピーカー"); // Speaker
         deviceTypeJp.put("fancontroller", "ファンコントローラー"); // Fan controller
         deviceTypeJp.put("casefan", "ファン"); // Case fan
-    }
-
-    private void updateKakaku() {
-
-        if (DEBUG) return;
-        new Thread(this::runTask).start(); // Run task at startup
-
-    }
-
-    private void runTask() {
-        boolean incomplete = true;
-        boolean fullUpdate = (Duration.between(fullUpdateDate, LocalDateTime.now()).toHours() > 165); // 24*7=168
-//        fullUpdate = true; // debug
-        priceUpdateService.prepare(fullUpdate);
-
-        int loopCount = 0;
-        while (incomplete && loopCount <= MAX_RETRY) {
-            try {
-                priceUpdateService.execute();
-                incomplete = false;
-                LocalDateTime lastUpdateDate = LocalDateTime.now();
-                if (fullUpdate) fullUpdateDate = lastUpdateDate;
-                dao.setTime(lastUpdateDate);
-            } catch (IOException e) {
-                System.out.println("update kakaku failed. reason=" + e.getMessage());
-                loopCount++;
-            }
-        }
-
-        Timer timer = new Timer();
-        TimerTask task = new MyTimerTask(HomeController.this);
-        LocalDateTime nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4,0,0));
-        long delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis();
-//        delay = 300000; // debug
-        timer.schedule(task, delay); // Run task on schedule
-        System.out.println("Update scheduling, delay=" + delay + "ms");
-    }
-
-    static class MyTimerTask extends TimerTask {
-        private final HomeController controller;
-        MyTimerTask(HomeController hc) {
-            this.controller = hc;
-        }
-        @Override
-        public void run() {
-            controller.runTask();
-        }
     }
 
     @GetMapping("/")
