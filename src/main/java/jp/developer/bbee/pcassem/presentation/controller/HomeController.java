@@ -1,16 +1,15 @@
 package jp.developer.bbee.pcassem.presentation.controller;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
-import jp.developer.bbee.pcassem.domain.PriceUpdateService;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
 import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
 import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
 import jp.developer.bbee.pcassem.domain.model.SaveHead;
 import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import jp.developer.bbee.pcassem.presentation.data.DeviceInfoFormatted;
+import jp.developer.bbee.pcassem.presentation.data.DeviceType;
 import jp.developer.bbee.pcassem.presentation.data.RestoreDeviceFormatted;
 import jp.developer.bbee.pcassem.presentation.data.SaveHeader;
 import jp.developer.bbee.pcassem.presentation.data.SaveRec;
@@ -29,12 +28,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,36 +37,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Timer;
 import java.util.stream.Collectors;
-import java.util.TimerTask;
 import java.util.UUID;
 
 @Controller
 public class HomeController {
-    private static final boolean DEBUG = false;
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
-    private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
     private final FirestoreService firestoreService;
-    private final PriceUpdateService priceUpdateService;
-
-    private LocalDateTime fullUpdateDate = LocalDateTime.MIN;
-
-    private final Map<String, String> deviceTypeJp = new HashMap<>();
-
-    private final List<String> deviceTypeList = List.of(
-            "pccase", "motherboard", "powersupply", "cpu", "cpucooler", "pcmemory", "hdd35inch", "ssd", "videocard",
-            "ossoft", "lcdmonitor", "keyboard", "mouse", "dvddrive", "bluraydrive", "soundcard", "pcspeaker", "fancontroller", "casefan"
-            );
 
     @Autowired
-    public HomeController(DeviceInfoDao dao, FirestoreService firestoreService, PriceUpdateService priceUpdateService){
+    public HomeController(DeviceInfoDao dao, FirestoreService firestoreService){
         this.dao = dao;
         this.firestoreService = firestoreService;
-        this.priceUpdateService = priceUpdateService;
-        makeDeviceTypeJp();
     }
 
     @ModelAttribute
@@ -81,80 +60,6 @@ public class HomeController {
         String uid = (String) session.getAttribute("firebaseUid");
         if (uid != null) {
             model.addAttribute("firebaseUid", uid);
-        }
-    }
-
-    @PostConstruct
-    void init() {
-        updateKakaku();
-    }
-
-    private void makeDeviceTypeJp() {
-        deviceTypeJp.put("pccase", "PCケース"); // PC case
-        deviceTypeJp.put("motherboard", "マザーボード"); // Motherboard
-        deviceTypeJp.put("powersupply", "電源"); // Power supply unit
-        deviceTypeJp.put("cpu", "CPU"); // CPU
-        deviceTypeJp.put("cpucooler", "CPUクーラー"); // CPU cooler
-        deviceTypeJp.put("pcmemory", "メモリ"); // Memory
-        deviceTypeJp.put("hdd35inch", "HDD"); // Storage HDD
-        deviceTypeJp.put("ssd", "SSD"); // Storage SSD
-        deviceTypeJp.put("videocard", "グラフィックボード"); // Graphic board
-        deviceTypeJp.put("ossoft", "OS"); // OS soft
-        deviceTypeJp.put("lcdmonitor", "ディスプレイ"); // Display
-        deviceTypeJp.put("keyboard", "キーボード"); // Keyboard
-        deviceTypeJp.put("mouse", "マウス"); // Mouse
-        deviceTypeJp.put("dvddrive", "DVDドライブ"); // DVD media drive
-        deviceTypeJp.put("bluraydrive", "BDドライブ"); // Blue-rya media drive
-        deviceTypeJp.put("soundcard", "サウンドカード"); // Sound card
-        deviceTypeJp.put("pcspeaker", "スピーカー"); // Speaker
-        deviceTypeJp.put("fancontroller", "ファンコントローラー"); // Fan controller
-        deviceTypeJp.put("casefan", "ファン"); // Case fan
-    }
-
-    private void updateKakaku() {
-
-        if (DEBUG) return;
-        new Thread(this::runTask).start(); // Run task at startup
-
-    }
-
-    private void runTask() {
-        boolean incomplete = true;
-        boolean fullUpdate = (Duration.between(fullUpdateDate, LocalDateTime.now()).toHours() > 165); // 24*7=168
-//        fullUpdate = true; // debug
-        priceUpdateService.prepare(fullUpdate);
-
-        int loopCount = 0;
-        while (incomplete && loopCount <= MAX_RETRY) {
-            try {
-                priceUpdateService.execute();
-                incomplete = false;
-                LocalDateTime lastUpdateDate = LocalDateTime.now();
-                if (fullUpdate) fullUpdateDate = lastUpdateDate;
-                dao.setTime(lastUpdateDate);
-            } catch (IOException e) {
-                System.out.println("update kakaku failed. reason=" + e.getMessage());
-                loopCount++;
-            }
-        }
-
-        Timer timer = new Timer();
-        TimerTask task = new MyTimerTask(HomeController.this);
-        LocalDateTime nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4,0,0));
-        long delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis();
-//        delay = 300000; // debug
-        timer.schedule(task, delay); // Run task on schedule
-        System.out.println("Update scheduling, delay=" + delay + "ms");
-    }
-
-    static class MyTimerTask extends TimerTask {
-        private final HomeController controller;
-        MyTimerTask(HomeController hc) {
-            this.controller = hc;
-        }
-        @Override
-        public void run() {
-            controller.runTask();
         }
     }
 
@@ -209,8 +114,9 @@ public class HomeController {
                 int totalPrice = 0;
                 boolean isZeroPrice = false;
                 for (DeviceInfo assembly : assembliesList) {
-                    totalPrice += assembly.price();
-                    if (assembly.price() == 0) isZeroPrice = true;
+                    int price = assembly.price() != null ? assembly.price() : 0;
+                    totalPrice += price;
+                    if (price == 0) isZeroPrice = true;
                 }
                 model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
                 if (!isZeroPrice) model.addAttribute("warnMsg1Visiblity", "hidden");
@@ -392,9 +298,9 @@ public class HomeController {
         List<DeviceInfoFormatted> formattedList = new ArrayList<>();
         for (DeviceInfo di : deviceInfoList) {
             formattedList.add(new DeviceInfoFormatted(
-                    di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
-                    di.rank().toString(), false, "middle", 1, false, di.flag1(), di.flag2()
+                    di.id(), DeviceType.JP_MAP.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
+                    (di.price() == null || di.price() == 0) ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
+                    di.rank() != null ? di.rank().toString() : "0", false, "middle", 1, false, di.flag1(), di.flag2()
             ));
         }
         return formattedList;
@@ -425,9 +331,9 @@ public class HomeController {
             }
 
             formattedList.add(new DeviceInfoFormatted(
-                    di.id(), deviceTypeJp.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
-                    di.rank().toString(), false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
+                    di.id(), DeviceType.JP_MAP.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
+                    (di.price() == null || di.price() == 0) ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
+                    di.rank() != null ? di.rank().toString() : "0", false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
             ));
             if (deviceCount == countMap.get(di.device())-1) {
                 deviceCount = 0;
@@ -440,7 +346,7 @@ public class HomeController {
 
     private List<DeviceInfo> sortList(List<DeviceInfo> deviceInfoList) {
         List<DeviceInfo> sortedList = new ArrayList<>();
-        for (String dev : deviceTypeList) {
+        for (String dev : DeviceType.LIST) {
             for (DeviceInfo di : deviceInfoList) {
                 if (dev.equals(di.device())) {
                     sortedList.add(di);
@@ -453,7 +359,7 @@ public class HomeController {
     private List<DeviceInfo> noPriceAfter(List<DeviceInfo> list) {
         List<DeviceInfo> retList = new ArrayList<>(list);
         for (DeviceInfo l : list) {
-            if (l.price() == 0) {
+            if (l.price() == null || l.price() == 0) {
                 retList.remove(0);
                 retList.add(l);
             } else {
