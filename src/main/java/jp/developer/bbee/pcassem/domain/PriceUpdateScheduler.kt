@@ -2,6 +2,7 @@ package jp.developer.bbee.pcassem.domain
 
 import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import java.io.IOException
 import java.time.Duration
@@ -14,6 +15,7 @@ import javax.annotation.PostConstruct
 import javax.annotation.PreDestroy
 
 @Component
+@ConditionalOnProperty(name = ["price-update.scheduler.enabled"], havingValue = "true", matchIfMissing = true)
 class PriceUpdateScheduler(
     private val priceUpdateService: PriceUpdateService,
     private val dao: DeviceInfoDao,
@@ -21,6 +23,9 @@ class PriceUpdateScheduler(
     private val logger = LoggerFactory.getLogger(PriceUpdateScheduler::class.java)
     private var fullUpdateDate = LocalDateTime.MIN
     private val timer = Timer("price-update-timer", /* isDaemon= */ true)
+
+    @Volatile
+    private var destroyed = false
 
     @PostConstruct
     fun init() {
@@ -36,6 +41,7 @@ class PriceUpdateScheduler(
 
     @PreDestroy
     fun destroy() {
+        destroyed = true
         timer.cancel()
     }
 
@@ -54,19 +60,21 @@ class PriceUpdateScheduler(
                     if (fullUpdate) fullUpdateDate = now
                     dao.setTime(now)
                 } catch (e: IOException) {
-                    logger.warn("update kakaku failed. reason={}", e.message)
+                    logger.warn("update kakaku failed", e)
                     loopCount++
                 }
             }
         } catch (e: Exception) {
             logger.error("Unexpected error in price update task", e)
         } finally {
-            val nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4, 0, 0))
-            val delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis()
-            timer.schedule(object : TimerTask() {
-                override fun run() = runTask()
-            }, delay)
-            logger.info("Update scheduling, delay={}ms", delay)
+            if (!destroyed) {
+                val nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4, 0, 0))
+                val delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis()
+                timer.schedule(object : TimerTask() {
+                    override fun run() = runTask()
+                }, delay)
+                logger.info("Update scheduling, delay={}ms", delay)
+            }
         }
     }
 

@@ -14,7 +14,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 		"gemini.api.key=dummy",
 		"firebase.project.id=dummy-project",
 		"firebase.web.api-key=dummy",
-		"firebase.web.auth-domain=dummy.firebaseapp.com"
+		"firebase.web.auth-domain=dummy.firebaseapp.com",
+		"price-update.scheduler.enabled=false"
 })
 class PcassemApplicationTests {
 
