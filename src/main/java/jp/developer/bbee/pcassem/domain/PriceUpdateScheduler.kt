@@ -70,10 +70,14 @@ class PriceUpdateScheduler(
             if (!destroyed) {
                 val nextDateTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(4, 0, 0))
                 val delay = Duration.between(LocalDateTime.now(), nextDateTime).toMillis()
-                timer.schedule(object : TimerTask() {
-                    override fun run() = runTask()
-                }, delay)
-                logger.info("Update scheduling, delay={}ms", delay)
+                try {
+                    timer.schedule(object : TimerTask() {
+                        override fun run() = runTask()
+                    }, delay)
+                    logger.info("Update scheduling, delay={}ms", delay)
+                } catch (e: IllegalStateException) {
+                    logger.info("Timer already cancelled during shutdown, skipping reschedule")
+                }
             }
         }
     }
