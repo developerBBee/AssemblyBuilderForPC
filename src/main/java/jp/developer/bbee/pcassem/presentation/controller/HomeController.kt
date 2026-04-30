@@ -390,7 +390,7 @@ class HomeController(
         }
 
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx)
-        redirectAttributes.addFlashAttribute("sortFlag", sortFlag.toInt())
+        redirectAttributes.addFlashAttribute("sortFlag", sortFlag.toIntOrNull() ?: 0)
         return "redirect:/$deviceTypeName"
     }
 
