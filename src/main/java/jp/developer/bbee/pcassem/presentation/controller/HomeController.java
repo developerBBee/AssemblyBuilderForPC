@@ -114,8 +114,9 @@ public class HomeController {
                 int totalPrice = 0;
                 boolean isZeroPrice = false;
                 for (DeviceInfo assembly : assembliesList) {
-                    totalPrice += assembly.price();
-                    if (assembly.price() == 0) isZeroPrice = true;
+                    int price = assembly.price() != null ? assembly.price() : 0;
+                    totalPrice += price;
+                    if (price == 0) isZeroPrice = true;
                 }
                 model.addAttribute("totalPrice", new DecimalFormat("¥ ###,###").format(totalPrice));
                 if (!isZeroPrice) model.addAttribute("warnMsg1Visiblity", "hidden");
@@ -298,8 +299,8 @@ public class HomeController {
         for (DeviceInfo di : deviceInfoList) {
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), DeviceType.JP_MAP.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
-                    di.rank().toString(), false, "middle", 1, false, di.flag1(), di.flag2()
+                    (di.price() == null || di.price() == 0) ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
+                    di.rank() != null ? di.rank().toString() : "0", false, "middle", 1, false, di.flag1(), di.flag2()
             ));
         }
         return formattedList;
@@ -331,8 +332,8 @@ public class HomeController {
 
             formattedList.add(new DeviceInfoFormatted(
                     di.id(), DeviceType.JP_MAP.get(di.device()), di.url(), di.name(), di.imgurl(), di.detail(),
-                    di.price() == 0 ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
-                    di.rank().toString(), false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
+                    (di.price() == null || di.price() == 0) ? "価格情報なし" : new DecimalFormat("¥ ###,###").format(di.price()),
+                    di.rank() != null ? di.rank().toString() : "0", false, tableStyle, rowSpan, checked, di.flag1(), di.flag2()
             ));
             if (deviceCount == countMap.get(di.device())-1) {
                 deviceCount = 0;
@@ -358,7 +359,7 @@ public class HomeController {
     private List<DeviceInfo> noPriceAfter(List<DeviceInfo> list) {
         List<DeviceInfo> retList = new ArrayList<>(list);
         for (DeviceInfo l : list) {
-            if (l.price() == 0) {
+            if (l.price() == null || l.price() == 0) {
                 retList.remove(0);
                 retList.add(l);
             } else {

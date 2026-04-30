@@ -52,7 +52,7 @@ class PriceUpdateScheduler(
 
             var incomplete = true
             var loopCount = 0
-            while (incomplete && loopCount <= MAX_RETRY) {
+            while (incomplete && loopCount < MAX_ATTEMPTS) {
                 try {
                     priceUpdateService.execute()
                     incomplete = false
@@ -60,9 +60,12 @@ class PriceUpdateScheduler(
                     if (fullUpdate) fullUpdateDate = now
                     dao.setTime(now)
                 } catch (e: IOException) {
-                    logger.warn("update kakaku failed", e)
+                    logger.warn("update kakaku failed (attempt {}/{})", loopCount + 1, MAX_ATTEMPTS, e)
                     loopCount++
                 }
+            }
+            if (incomplete) {
+                logger.error("Price update gave up after {} attempts, will retry tomorrow", MAX_ATTEMPTS)
             }
         } catch (e: Exception) {
             logger.error("Unexpected error in price update task", e)
@@ -84,6 +87,6 @@ class PriceUpdateScheduler(
 
     companion object {
         private const val DEBUG = false
-        private const val MAX_RETRY = 3
+        private const val MAX_ATTEMPTS = 3
     }
 }
