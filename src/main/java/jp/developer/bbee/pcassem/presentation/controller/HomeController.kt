@@ -268,7 +268,7 @@ class HomeController(
         deviceInfoList.map { di ->
             DeviceInfoFormatted(
                 id = di.id,
-                device = DeviceType.JP_MAP[di.device],
+                device = di.device?.let { DeviceType.JP_MAP[it] },
                 url = di.url,
                 name = di.name,
                 imgurl = di.imgurl,
@@ -312,7 +312,7 @@ class HomeController(
             formattedList.add(
                 DeviceInfoFormatted(
                     id = di.id,
-                    device = DeviceType.JP_MAP[di.device],
+                    device = di.device?.let { DeviceType.JP_MAP[it] },
                     url = di.url,
                     name = di.name,
                     imgurl = di.imgurl,
@@ -390,7 +390,7 @@ class HomeController(
         }
 
         redirectAttributes.addFlashAttribute("bodyScrollPx", bodyScrollPx)
-        redirectAttributes.addFlashAttribute("sortFlag", sortFlag.toIntOrNull() ?: 0)
+        redirectAttributes.addFlashAttribute("sortFlag", sortFlag.toInt())
         return "redirect:/$deviceTypeName"
     }
 
