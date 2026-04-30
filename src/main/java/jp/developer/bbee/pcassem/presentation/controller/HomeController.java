@@ -49,9 +49,9 @@ import java.util.UUID;
 
 @Controller
 public class HomeController {
-    public static final boolean DEBUG = false;
+    private static final boolean DEBUG = false;
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
-    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
     private static final int MAX_RETRY = 3;
     private final DeviceInfoDao dao;
     private final FirestoreService firestoreService;
@@ -59,9 +59,9 @@ public class HomeController {
 
     private LocalDateTime fullUpdateDate = LocalDateTime.MIN;
 
-    public Map<String, String> deviceTypeJp = new HashMap<>();
+    private final Map<String, String> deviceTypeJp = new HashMap<>();
 
-    public List<String> deviceTypeList = List.of(
+    private final List<String> deviceTypeList = List.of(
             "pccase", "motherboard", "powersupply", "cpu", "cpucooler", "pcmemory", "hdd35inch", "ssd", "videocard",
             "ossoft", "lcdmonitor", "keyboard", "mouse", "dvddrive", "bluraydrive", "soundcard", "pcspeaker", "fancontroller", "casefan"
             );
@@ -118,7 +118,7 @@ public class HomeController {
 
     }
 
-    public void runTask() {
+    private void runTask() {
         boolean incomplete = true;
         boolean fullUpdate = (Duration.between(fullUpdateDate, LocalDateTime.now()).toHours() > 165); // 24*7=168
 //        fullUpdate = true; // debug

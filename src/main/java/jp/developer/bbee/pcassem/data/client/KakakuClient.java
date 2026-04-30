@@ -31,54 +31,54 @@ import java.util.UUID;
 public class KakakuClient implements PriceUpdateService {
     private static final DateTimeFormatter formatter =
             DateTimeFormatter.ofPattern("yyyy/MM/dd H:mm");
-    public static final boolean DEBUG = false;
-    public static final boolean DEBUG_FAST = false;
-    public static final String KAKAKU_DOMAIN = "kakaku.com";
+    private static final boolean DEBUG = false;
+    private static final boolean DEBUG_FAST = false;
+    private static final String KAKAKU_DOMAIN = "kakaku.com";
     private final DeviceInfoDao dao;
 
     // Flag 1 definition
-    public static final int FLAG1_PSU_FLEXATX = 1 << 0;
-    public static final int FLAG1_PSU_TFX = 1 << 1;
-    public static final int FLAG1_PSU_SFX = 1 << 2;
-    public static final int FLAG1_PSU_SFXL = 1 << 3;
-    public static final int FLAG1_PSU_ATX = 1 << 4;
-    public static final int FLAG1_PSU_EPS = 1 << 5;
-    public static final int FLAG1_PSU_BUILTIN = 1 << 7;
+    private static final int FLAG1_PSU_FLEXATX = 1 << 0;
+    private static final int FLAG1_PSU_TFX = 1 << 1;
+    private static final int FLAG1_PSU_SFX = 1 << 2;
+    private static final int FLAG1_PSU_SFXL = 1 << 3;
+    private static final int FLAG1_PSU_ATX = 1 << 4;
+    private static final int FLAG1_PSU_EPS = 1 << 5;
+    private static final int FLAG1_PSU_BUILTIN = 1 << 7;
 
-    public static final int FLAG1_MOTHER_ITX = 1 << 8;
-    public static final int FLAG1_MOTHER_FLEXATX = 1 << 9;
-    public static final int FLAG1_MOTHER_MICROATX = 1 << 10;
-    public static final int FLAG1_MOTHER_ATX = 1 << 11;
-    public static final int FLAG1_MOTHER_EATX = 1 << 12;
-    public static final int FLAG1_MOTHER_XLATX = 1 << 13;
+    private static final int FLAG1_MOTHER_ITX = 1 << 8;
+    private static final int FLAG1_MOTHER_FLEXATX = 1 << 9;
+    private static final int FLAG1_MOTHER_MICROATX = 1 << 10;
+    private static final int FLAG1_MOTHER_ATX = 1 << 11;
+    private static final int FLAG1_MOTHER_EATX = 1 << 12;
+    private static final int FLAG1_MOTHER_XLATX = 1 << 13;
 
-    public static final int FLAG1_VOLTAGE_UNIT = 10; // /10
-    public static final int FLAG1_VOLTAGE_SHIFT = 16; // *2^16
+    private static final int FLAG1_VOLTAGE_UNIT = 10; // /10
+    private static final int FLAG1_VOLTAGE_SHIFT = 16; // *2^16
 
-    public static final int FLAG1_SIZE_UNIT = 10; // /10
-    public static final int FLAG1_SIZE_SHIFT = 24; // *2^24
-    public static final int FLAG1_SIZE_RADIATOR = 1 << 31;
+    private static final int FLAG1_SIZE_UNIT = 10; // /10
+    private static final int FLAG1_SIZE_SHIFT = 24; // *2^24
+    private static final int FLAG1_SIZE_RADIATOR = 1 << 31;
 
     // Flag 2 definition
-    public static final int FLAG2_SOCKET_LGA1155 = 1 << 0;
-    public static final int FLAG2_SOCKET_LGA1150 = 1 << 1;
-    public static final int FLAG2_SOCKET_LGA1151 = 1 << 2;
-    public static final int FLAG2_SOCKET_LGA1200 = 1 << 3;
-    public static final int FLAG2_SOCKET_LGA1700 = 1 << 4;
-    public static final int FLAG2_SOCKET_LGA2011 = 1 << 5;
-    public static final int FLAG2_SOCKET_LGA20113 = 1 << 6;
-    public static final int FLAG2_SOCKET_LGA2066 = 1 << 7;
+    private static final int FLAG2_SOCKET_LGA1155 = 1 << 0;
+    private static final int FLAG2_SOCKET_LGA1150 = 1 << 1;
+    private static final int FLAG2_SOCKET_LGA1151 = 1 << 2;
+    private static final int FLAG2_SOCKET_LGA1200 = 1 << 3;
+    private static final int FLAG2_SOCKET_LGA1700 = 1 << 4;
+    private static final int FLAG2_SOCKET_LGA2011 = 1 << 5;
+    private static final int FLAG2_SOCKET_LGA20113 = 1 << 6;
+    private static final int FLAG2_SOCKET_LGA2066 = 1 << 7;
 
-    public static final int FLAG2_SOCKET_AM4 = 1 << 8;
-    public static final int FLAG2_SOCKET_AM5 = 1 << 9;
-    public static final int FLAG2_SOCKET_TR4 = 1 << 10;
-    public static final int FLAG2_SOCKET_STRX4 = 1 << 11;
-    public static final int FLAG2_SOCKET_SWRX8 = 1 << 12;
+    private static final int FLAG2_SOCKET_AM4 = 1 << 8;
+    private static final int FLAG2_SOCKET_AM5 = 1 << 9;
+    private static final int FLAG2_SOCKET_TR4 = 1 << 10;
+    private static final int FLAG2_SOCKET_STRX4 = 1 << 11;
+    private static final int FLAG2_SOCKET_SWRX8 = 1 << 12;
 
-    public static final int FLAG2_DIMM_DDR3 = 1 << 16;
-    public static final int FLAG2_DIMM_DDR4 = 1 << 17;
-    public static final int FLAG2_DIMM_DDR5 = 1 << 18;
-    public static final int FLAG2_SODIMM = 1 << 23; // For determining DIMM(0) or SODIMM(1)
+    private static final int FLAG2_DIMM_DDR3 = 1 << 16;
+    private static final int FLAG2_DIMM_DDR4 = 1 << 17;
+    private static final int FLAG2_DIMM_DDR5 = 1 << 18;
+    private static final int FLAG2_SODIMM = 1 << 23; // For determining DIMM(0) or SODIMM(1)
 
     private boolean unAcquired;
     private final List<String> devices;
@@ -133,7 +133,7 @@ public class KakakuClient implements PriceUpdateService {
         }
     }
 
-    public void getKakaku() throws IOException {
+    private void getKakaku() throws IOException {
         System.out.println("getKakaku()");
         SocketFactory factory = SSLSocketFactory.getDefault();
         for (String device : devices) {
@@ -203,7 +203,7 @@ public class KakakuClient implements PriceUpdateService {
     String newRelease;
     int newFlag1;
     int newFlag2;
-    public void updateKakaku(boolean fastUpdate) throws IOException {
+    private void updateKakaku(boolean fastUpdate) throws IOException {
         System.out.println("updateKakaku()");
         unAcquired = false; // Acquired link url
         SocketFactory factory = SSLSocketFactory.getDefault();

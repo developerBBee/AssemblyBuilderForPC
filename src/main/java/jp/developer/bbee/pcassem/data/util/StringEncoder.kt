@@ -16,7 +16,7 @@ fun sjisToUtf8(value: String): String {
 }
 
 @Throws(UnsupportedEncodingException::class)
-fun utf8ToSjis(value: String): String {
+internal fun utf8ToSjis(value: String): String {
     val sjis = SJIS_CHARSET ?: throw UnsupportedEncodingException("SJIS")
     var result = convert(String(value.toByteArray(Charsets.UTF_8), Charsets.UTF_8), "UTF-8", "SJIS")
     result = String(result.toByteArray(sjis), sjis)
