@@ -87,6 +87,6 @@ class PriceUpdateScheduler(
 
     companion object {
         private const val DEBUG = false
-        private const val MAX_ATTEMPTS = 3
+        private const val MAX_ATTEMPTS = 4
     }
 }
