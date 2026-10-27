@@ -1,9 +1,12 @@
 package jp.developer.bbee.pcassem;
 
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao;
 import jp.developer.bbee.pcassem.domain.firestore.FirestoreService;
-import jp.developer.bbee.pcassem.model.DeviceInfo;
-import jp.developer.bbee.pcassem.model.SaveHead;
-import jp.developer.bbee.pcassem.model.UserAssem;
+import jp.developer.bbee.pcassem.presentation.controller.HomeController;
+import jp.developer.bbee.pcassem.domain.model.DeviceInfo;
+import jp.developer.bbee.pcassem.domain.model.RestoreDevice;
+import jp.developer.bbee.pcassem.domain.model.SaveHead;
+import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +18,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import jp.developer.bbee.pcassem.DeviceInfoDao.SaveItem;
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao.SaveItem;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -171,7 +174,7 @@ class HomeControllerTest {
 
     @Test
     void restoreConstruction_firestoreMiss_h2Hit_returnsRestoredList() throws Exception {
-        HomeController.RestoreDevice rd = new HomeController.RestoreDevice(
+        RestoreDevice rd = new RestoreDevice(
                 SAVE_ID, "device-001", "cpu", "http://example.com", "Intel Core i9",
                 "http://img.example.com/cpu.jpg", "detail", 50000, 55000);
 

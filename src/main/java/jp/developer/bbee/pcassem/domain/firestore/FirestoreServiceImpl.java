@@ -5,10 +5,10 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.WriteBatch;
-import jp.developer.bbee.pcassem.DeviceInfoDao.SaveItem;
-import jp.developer.bbee.pcassem.constants.DateTimeConst;
-import jp.developer.bbee.pcassem.model.SaveHead;
-import jp.developer.bbee.pcassem.model.UserAssem;
+import jp.developer.bbee.pcassem.data.dao.DeviceInfoDao.SaveItem;
+import jp.developer.bbee.pcassem.domain.DateTimeConst;
+import jp.developer.bbee.pcassem.domain.model.SaveHead;
+import jp.developer.bbee.pcassem.domain.model.UserAssem;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneId;

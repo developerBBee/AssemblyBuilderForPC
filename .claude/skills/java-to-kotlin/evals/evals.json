@@ -1,0 +1,46 @@
+{
+  "skill_name": "java-to-kotlin",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ApiEndPoint.java を Kotlin に変換してください。ファイルは evals/files/ApiEndPoint.java です。",
+      "expected_output": "定数のみのクラスが Kotlin の object + const val に変換され、ApiEndPoint.kt が生成される。",
+      "files": ["evals/files/ApiEndPoint.java"],
+      "assertions": [
+        "出力ファイルが .kt 拡張子であること",
+        "Kotlin の object キーワードを含むこと",
+        "const val を含むこと",
+        "パッケージ宣言 jp.developer.bbee.pcassem.constants が維持されていること",
+        "class キーワードではなく object が使われていること（定数クラスのため）"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "UserAssem.java を Kotlin に変換してください。ファイルは evals/files/UserAssem.java です。",
+      "expected_output": "シンプルな Java record が Kotlin の data class に変換される。",
+      "files": ["evals/files/UserAssem.java"],
+      "assertions": [
+        "出力ファイルが .kt 拡張子であること",
+        "data class キーワードを含むこと",
+        "コンストラクタパラメータが val で定義されていること",
+        "パッケージ宣言 jp.developer.bbee.pcassem.model が維持されていること",
+        "6つのフィールド（id, deviceid, device, guestid, createddate, lastupdate）がすべて含まれていること"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "DeviceInfo.java を Kotlin に変換してください。ファイルは evals/files/DeviceInfo.java です。static メソッドと定数も含めてイディオマティックな Kotlin にしてください。",
+      "expected_output": "Java record が companion object を持つ data class に変換。null チェックが Kotlin のイディオムに変換される。",
+      "files": ["evals/files/DeviceInfo.java"],
+      "assertions": [
+        "出力ファイルが .kt 拡張子であること",
+        "data class キーワードを含むこと",
+        "companion object を含むこと",
+        "when 式またはスマートキャスト（is キーワード）を含むこと",
+        "エルビス演算子 ?: を含むこと",
+        "パッケージ宣言 jp.developer.bbee.pcassem.model が維持されていること",
+        "@NonNull アノテーションを含まないこと（型システムで表現するため）"
+      ]
+    }
+  ]
+}
